@@ -1,154 +1,154 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
 <head>
 <title>Ngraph script</title>
-<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <link rel="stylesheet" title="black" href="../black.css" type="text/css">
 <link rel="stylesheet" title="white" href="../white.css" type="text/css">
 </head>
 <body>
 
-<h1>�ޥ����饤�֥��</h1>
+<h1>マクロライブラリ</h1>
 <div>
-<h2>NGP �ե����뤫�� GRA �ե������ư��������ޥ���</h2>
+<h2>NGP ファイルから GRA ファイルを自動生成するマクロ</h2>
 <div>
-<p><a href="ngp2_105.lzh">Windows ��</a></p>
-<p><a href="ngp2-1.0.8.tar.gz">Linux ��</a></p>
+<p><a href="ngp2_105.lzh">Windows 版</a></p>
+<p><a href="ngp2-1.0.8.tar.gz">Linux 版</a></p>
 <p>
-NGP �ե����뤫�� GRA �ե������ ps, eps �ե�������������뤿��Υ��ޥ�ɥ�
-����ǻ��Ѥ���ޥ����Ǥ����̾�Υޥ���������ˡ���ۤʤ�Τǥɥ�����Ȥ��
-���ɤ�Ǥ����Ѥ���������
+NGP ファイルから GRA ファイルや ps, eps ファイルを生成するためのコマンドラ
+インで使用するマクロです。通常のマクロと利用法が異なるのでドキュメントをよ
+く読んでご利用ください。
 </p>
 </div>
 
-<h2>ʸ�������Ͽ����Ͽ���줿ʸ��������Ϥ�Ԥʤ��ޥ���</h2>
+<h2>文字列の登録と登録された文字列の入力を行なうマクロ</h2>
 <div>
 <p><a href="select_text-0.01.tar.gz">select_text-0.01.tar.gz</a> New(2005/12/11)</p>
 <p>
-ʸ�������Ͽ�ȡ���Ͽ���줿ʸ��������Ϥ�Ԥʤ��ޤ�������դΥ���ץ����
-�ʤɤ褯���Ϥ���ʸ�������Ͽ���Ƥ����������Ǥ���
-�¹Ԥˤ� Ruby/Gtk2 ��ɬ�פǤ���
+文字列の登録と、登録された文字列の入力を行ないます。グラフのキャプション
+などよく入力する文字列を登録しておくと便利です。
+実行には Ruby/Gtk2 が必要です。
 </p>
 </div>
 
-<h2>����ǡ�������դ��αߤ��������ޥ���</h2>
+<h2>グラデーション付きの円を作成するマクロ</h2>
 <div>
 <p><a href="arc_grad.nsc">arc_grad.nsc</a></p>
 <p>
-Ŭ�����礭�������αߤ����褷�Ƥ��餳�Υޥ�����¹Ԥ���ȺǸ�����褷���ߤ�
-����ǡ�������դ��ˤʤ�ޤ���
+適当な大きさ、色の円を描画してからこのマクロを実行すると最後に描画した円が
+グラデーション付きになります。
 </p>
 </div>
 
-<h2>��ɽ�ޥ���</h2>
+<h2>作表マクロ</h2>
 <div>
-<p><a href="table-1.0.0.tar.gz">Linux ��</a></p>
+<p><a href="table-1.0.0.tar.gz">Linux 版</a></p>
 <p>
-���֤Ƕ��ڤ�줿�ƥ����ȥե�������ɤ߹���ǡ�ɽ�ˤ���ޥ����Ǥ����¹Ԥˤ� 
-Ruby/tk ��ɬ�פǤ���
+タブで区切られたテキストファイルを読み込んで、表にするマクロです。実行には 
+Ruby/tk が必要です。
 </p>
 </div>
 
-<h2>�ץ��åȥ��������ư���ꤹ��ޥ���</h2>
+<h2>プロットスタイルを自動設定するマクロ</h2>
 <div>
-<p><a href="aset1105.lzh">Windows ��</a></p>
-<p><a href="autoset-1.0.3a.tar.gz">Linux ��</a></p>
+<p><a href="aset1105.lzh">Windows 版</a></p>
+<p><a href="autoset-1.0.3a.tar.gz">Linux 版</a></p>
 <p>
-¿���Υǡ�����ɽ��������Ȥ������ݤʥץ��åȥ������������ʥޡ��������ס�
-�饤�󥹥����롢���ˤ�ư�ǹԤ��ޤ���
+多くのデータを表示させるときに面倒なプロットスタイルの設定（マークタイプ、
+ラインスタイル、色）を自動で行います。
 </p>
 </div>
 
-<h2>�ޥ����ץ�������ƤӽФ��ޥ���</h2>
+<h2>マクロプログラムを呼び出すマクロ</h2>
 <div>
 <p><a href="script.nsc">script.nsc v1.00</a></p>
 <p>
-�̾�ޥ����ץ�������¹Ԥ����硢��˼������褦�� addin ��˥塼����
-Ͽ���뤫��Ngraph shell ��ư���ơ�������Ǽ¹Ԥ��뤳�Ȥˤʤ�ޤ���������
-�ޥ����� addin ��˥塼����Ͽ���Ƥ����С�addin ��˥塼�����ñ�˥ޥ�����
-��������¹ԤǤ��ޤ���
+通常、マクロプログラムを実行する場合、上に示したように addin メニューに登
+録するか、Ngraph shell を起動して、その中で実行することになりますが、この
+マクロを addin メニューに登録しておけば、addin メニューから簡単にマクロプ
+ログラムを実行できます。
 </p>
 </div>
 
-<h2>Ngraph �����褷������˹�碌�� gra �ե�����ι�����Ԥ��ޥ���</h2>
+<h2>Ngraph で描画した矩形に合わせて gra ファイルの合成を行うマクロ</h2>
 <div>
 <p><a href="merge.nsc">merge.nsc v1.00</a><br></p>
 <p>
-�Ǹ�����褷�����(rectangle)�˹�碌�� gra �ե�����ι�����Ԥ��ޤ���
+最後に描画した矩形(rectangle)に合わせて gra ファイルの合成を行います。
 </p>
 </div>
 	  
-<h2>Merge.nsc �ǹ�������gra ���᡼���ΰ��֡����������ѹ������ԡ��������Ԥ��ޥ���</h2>
+<h2>Merge.nsc で合成したgra イメージの位置、サイズの変更、コピー、削除を行うマクロ</h2>
 <div>
 <p><a href="merge2.nsc">merge2.nsc v1.00</a></p>
 <p>
-merge.nsc �ǹ������� gra ���᡼���ΰ��֡����������ѹ������ԡ����������
-�����������Ф������ǹԤ���ޥ����Ǥ���
+merge.nsc で合成した gra イメージの位置、サイズの変更、コピー、削除を、対
+応する矩形に対する操作で行えるマクロです。
 </p>
 </div>
 
-<h2>�ǡ�������ʬ�׻���Ԥ��ޥ���</h2>
+<h2>データの積分計算を行うマクロ</h2>
 <div>
 <p><a href="integral.nsc">integral.nsc v1.00</a></p>
 <p>
-Ngraph ��Υǡ������Ф�����ʬ�׻���Ԥ�����ʬ�ϰϤ� Polygon �����Ѥ����ɤ�
-�Ĥ֤��ޤ���ñ�˥���դ��ɤ�Ĥ֤��ޥ����Ȥ��Ƥ����ѤǤ��ޤ�����������ư��
-���٤��Τǥǡ���������¿�����ϼ���Ū�Ǥ���ޤ���
+Ngraph 上のデータに対して積分計算を行い、積分範囲を Polygon を利用して塗り
+つぶします。単にグラフを塗りつぶすマクロとしても利用できます。ただし、動作
+が遅いのでデータ点数が多い場合は実用的でありません。
 </p>
 </div>
 
-<h2>�ե�����Υ����Ȥ�Ԥ��ޥ���</h2>
+<h2>ファイルのソートを行うマクロ</h2>
 <div>
-<p><a href="sort_win.nsc">Windows ��</a></p>
-<p><a href="sort.nsc">Linux ��</a></p>
-<p>���ꤵ��Ƥ���ե������ե�����̾�����ե���������դǥ����Ȥ��ޤ���</p>
+<p><a href="sort_win.nsc">Windows 版</a></p>
+<p><a href="sort.nsc">Linux 版</a></p>
+<p>設定されているファイルをファイル名か、ファイルの日付でソートします。</p>
 </div>  
 
-<h2>�޷����ž����ޥ���</h2>
+<h2>図形を回転するマクロ</h2>
 <div>
-<p><a href="rotat110.lzh">Windows ��</a></p>
-<p><a href="rotate-1.1.0.tar.gz">Linux ��</a></p>
-<p><a href="rotate.lzh">����</a></p>
+<p><a href="rotat110.lzh">Windows 版</a></p>
+<p><a href="rotate-1.1.0.tar.gz">Linux 版</a></p>
+<p><a href="rotate.lzh">汎用</a></p>
 <p>
-������ʱߡ���ʬ��¿�ѷ����������ž����ޥ����Ǥ��� Windows �ǡ�Linux ��
-�ϳ����ץ����������Ѥ��Ƥ��ޤ��������Ǥ� Ngraph script �Τߤǽ񤫤�Ƥ�
-�ޤ���
+矩形、楕円、線分、多角形、曲線を回転するマクロです。 Windows 版、Linux 版
+は外部プログラムを利用しています。汎用版は Ngraph script のみで書かれてい
+ます。
 </p>
 </div>
 
-<h2>�ޥ������ޥ�ɤ�¹Ԥ���ޥ���</h2>
+<h2>マクロコマンドを実行するマクロ</h2>
 <div>
 <p><a href="command.nsc">command.nsc v1.00</a></p>
 <p>
-�����������ܥå��������Ϥ��줿ʸ�����ޥ������ޥ�ɤȤ��Ƽ¹Ԥ��ޤ���
-Ngraph shell �ǥ��ޥ�ɤ����Ϥ���ΤȰ㤤��Windows ɸ��Υ饤�󥨥ǥ��åȡ�
-���åȡ��ڡ����Ȥ����ѤǤ��ޤ��ΤǾ��ˤ�äƤϻȤ����꤬�������Ȼפ��ޤ���
+ダイアログボックスに入力された文字列をマクロコマンドとして実行します。
+Ngraph shell でコマンドを入力するのと違い、Windows 標準のラインエディット、
+カット＆ペーストを利用できますので場合によっては使い勝手がいいかと思います。
 </p>
 </div>
 
-<h2>�ƥ����Ȥ��Ȥ�Ĥ���ޥ���</h2>
+<h2>テキストに枠をつけるマクロ</h2>
 <div>
-<p><a href="textbox-1.0.0.tar.gz">Linux ��</a></p>
-<p>Ngraph �����褷���ƥ����Ȥ˶�����Ȥ�Ĥ���ޥ����Ǥ���</p>
+<p><a href="textbox-1.0.0.tar.gz">Linux 版</a></p>
+<p>Ngraph で描画したテキストに矩形で枠をつけるマクロです。</p>
 </div>  
 
-<h2>Ngraph ��� Bitmap ��Ž��Ĥ���ޥ���</h2>
+<h2>Ngraph 上に Bitmap を貼りつけるマクロ</h2>
 <div>
-<p><a href="bmp2gra.lzh">Windows ��</a></p>
+<p><a href="bmp2gra.lzh">Windows 版</a></p>
 <p>
-Windows ɸ��Υ���ե��å��ե�����Ǥ��� Bitmap File �� GRA File���Ѵ�����
-���ꤷ�����˻��ꤷ����������Ž��Ĥ��ޤ������Υץ�������ñ�ȤǤ� 
-Bitmap File �� GRA File ���Ѥ���ץ������Ȥ��ƻ��ѤǤ��ޤ���
+Windows 標準のグラフィックファイルである Bitmap File を GRA Fileに変換し、
+指定した場所に指定したサイズで貼りつけます。このプログラムは単独でも 
+Bitmap File を GRA File に変するプログラムとして使用できます。
 </p>
 </div>
 
-<h2>Ngraph ��˲�����Ž��Ĥ���ޥ���</h2>
+<h2>Ngraph 上に画像を貼りつけるマクロ</h2>
 <div>
-<p><A HREF="gimg2gra.tar.gz">Linux ��</a></p>
+<p><A HREF="gimg2gra.tar.gz">Linux 版</a></p>
 <p>
-�����ե������ GRA File���Ѵ������ꤷ�����˻��ꤷ����������Ž��Ĥ��ޤ���
+画像ファイルを GRA Fileに変換し指定した場所に指定したサイズで貼りつけます。
 </p>
-<p><a href="./">���</a></p>
+<p><a href="./">戻る</a></p>
 </div>	  
 </div>	  
 </body>

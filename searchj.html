@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <title>H. Ito&#39;s Tb CD Search</title>
-<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <meta http-equiv="content-script-type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <link rel="stylesheet" title="black" href="black.css" type="text/css">
@@ -13,19 +13,19 @@ span {color: red}
 <script type="text/javascript">
 
 /**************************************************************
- •«°º•ø∏°∫˜Õ— JavaScript version 0.3  Copyright (C) H.Ito 2002
+ „Éá„Éº„ÇøÊ§úÁ¥¢Áî® JavaScript version 0.3  Copyright (C) H.Ito 2002
 
- ∆∞∫Ó≥Œ«ß : Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0rc3)
+ Âãï‰ΩúÁ¢∫Ë™ç : Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0rc3)
                          Gecko/20020523, build 2002052316
 
-CD() §»•«°º•øƒÍµ¡§ÚΩÒ§≠¥π§®§Ï§–°¢§Ω§≥§Ω§≥»∆Õ—≈™§Àª»Õ—≤ƒ«Ω§¿§»
-ª◊§§§ﬁ§π°£•È•§•ª•Û•π§œ GPL §ÀΩæ§¶§‚§Œ§»§∑§ﬁ§π°£
+CD() „Å®„Éá„Éº„ÇøÂÆöÁæ©„ÇíÊõ∏„ÅçÊèõ„Åà„Çå„Å∞„ÄÅ„Åù„Åì„Åù„ÅìÊ±éÁî®ÁöÑ„Å´‰ΩøÁî®ÂèØËÉΩ„Å†„Å®
+ÊÄù„ÅÑ„Åæ„Åô„ÄÇ„É©„Ç§„Çª„É≥„Çπ„ÅØ GPL „Å´Âæì„ÅÜ„ÇÇ„ÅÆ„Å®„Åó„Åæ„Åô„ÄÇ
 ***************************************************************/
 
 JAPANISE = /^ja/.exec(window.navigator.language);
 
 /***************************************************************
-  ∏°∫˜π‡Ã‹§À±˛§∏§∆ —ππ
+  Ê§úÁ¥¢È†ÖÁõÆ„Å´Âøú„Åò„Å¶Â§âÊõ¥
 ****************************************************************/
 function CD(title, player, pieces, label){
   this.items = new Object();
@@ -36,13 +36,13 @@ function CD(title, player, pieces, label){
 }
 
 CD.prototype.item_name = new Object();
-CD.prototype.item_name['title']  = "•ø•§•»•Î";
-CD.prototype.item_name['player'] = "¡’º‘\/√ƒ¬Œ";
-CD.prototype.item_name['pieces'] = "∫Ó∂ º‘\/∂ Ãæ";
-CD.prototype.item_name['label']  = "•Ï°º•Ÿ•Î\/»÷πÊ";
+CD.prototype.item_name['title']  = "„Çø„Ç§„Éà„É´";
+CD.prototype.item_name['player'] = "Â•èËÄÖ\/Âõ£‰Ωì";
+CD.prototype.item_name['pieces'] = "‰ΩúÊõ≤ËÄÖ\/Êõ≤Âêç";
+CD.prototype.item_name['label']  = "„É¨„Éº„Éô„É´\/Áï™Âè∑";
 /***************************************************************/
 
-CD.prototype.item_name['all']    = "¡¥…Ù";
+CD.prototype.item_name['all']    = "ÂÖ®ÈÉ®";
 
 
 CD.prototype.addMatch = function (node, str, reg, replace){
@@ -173,32 +173,32 @@ CD.prototype.dispInfo = function (word, item, key, num){
 }
 
 /******************************************************************
-  ∏°∫˜•’•©°º•‡∫Ó¿Æ¥ÿøÙ
+  Ê§úÁ¥¢„Éï„Ç©„Éº„É†‰ΩúÊàêÈñ¢Êï∞
 *******************************************************************/
 CD.prototype.writeSearchForm = function (){
   var items = this.items;
   var iname = this.item_name;
 
   document.writeln('<form  onsubmit="writeResultsFromForm(); return false"><table>');
-  document.writeln('<tr><td>∏°∫˜π‡Ã‹:<\/td><td><select name="item">');
+  document.writeln('<tr><td>Ê§úÁ¥¢È†ÖÁõÆ:<\/td><td><select name="item">');
   for(i in items){
     document.writeln('<option value="' + i +'"> ' + iname[i] +'<\/option>');
   }
   document.writeln('<option name="item" value="all" selected>' + iname['all'] + '<\/option>')
   document.writeln('<\/select> ');
-  document.writeln('(∏°∫˜∑Î≤Ã§Ú<select name="sort">');
+  document.writeln('(Ê§úÁ¥¢ÁµêÊûú„Çí<select name="sort">');
   for(i in items){
     document.writeln('<option value="' + i +'"> ' + iname[i] +'<\/option>');
   }
-  document.writeln('<\/select>§«¿∞ŒÛ°£)<\/td><\/tr>');
-  document.writeln('<tr><td>∏°∫˜∏Ï∂Á:<\/td><td><input type="text"  name="word" size="20" maxlength="30">');
+  document.writeln('<\/select>„ÅßÊï¥Âàó„ÄÇ)<\/td><\/tr>');
+  document.writeln('<tr><td>Ê§úÁ¥¢Ë™ûÂè•:<\/td><td><input type="text"  name="word" size="20" maxlength="30">');
   document.writeln('<input type="button" value="search" onclick="writeResultsFromForm()"><\/td><\/tr>');
   document.writeln('<tr><td><\/td><td>');
-  document.writeln('<input type="button" value="¡¥§∆§Œ•«°º•ø§Ú…Ωº®" onclick="writeAllFromForm()">');
+  document.writeln('<input type="button" value="ÂÖ®„Å¶„ÅÆ„Éá„Éº„Çø„ÇíË°®Á§∫" onclick="writeAllFromForm()">');
   document.writeln('<\/td><\/tr><\/table><\/form>');
 
   document.writeln('<p><table name="results" id="t2" border="1">');
-  document.writeln('<tr><th>∏°∫˜∏Ï<\/th><th>∏°∫˜π‡Ã‹<\/th><th>¿∞ŒÛπ‡Ã‹<\/th><th>∑ÔøÙ<\/th><\/tr>');
+  document.writeln('<tr><th>Ê§úÁ¥¢Ë™û<\/th><th>Ê§úÁ¥¢È†ÖÁõÆ<\/th><th>Êï¥ÂàóÈ†ÖÁõÆ<\/th><th>‰ª∂Êï∞<\/th><\/tr>');
   document.writeln('<tr><td>----<\/td><td>----<\/td><td>----<\/td><td>----<\/td><\/tr>');
   document.writeln('<\/table><\/p>');
 
@@ -215,7 +215,7 @@ CD.prototype.writeSearchForm = function (){
 }
 
 /******************************************************************
-  ∏°∫˜∑Î≤Ã…Ωº®¥ÿøÙ
+  Ê§úÁ¥¢ÁµêÊûúË°®Á§∫Èñ¢Êï∞
 *******************************************************************/
 CD.prototype.writeResults = function (doc, cd, item, key, word){
   var r = new RegExp(word, "igm");
@@ -235,7 +235,7 @@ CD.prototype.writeResults = function (doc, cd, item, key, word){
 }
 
 /******************************************************************
-  ¡¥•«°º•ø…Ωº®¥ÿøÙ
+  ÂÖ®„Éá„Éº„ÇøË°®Á§∫Èñ¢Êï∞
 *******************************************************************/
 CD.prototype.writeAll = function (doc, cd, key){
   var items = this.items;
@@ -267,7 +267,7 @@ cdObj = new CD("", "", "", "");
 cdArray = new Array();
 
 /******************************************************************
-  ∞ ≤º•«°º•øƒÍµ¡…Ù
+  ‰ª•‰∏ã„Éá„Éº„ÇøÂÆöÁæ©ÈÉ®
 *******************************************************************/
 i=0
 cdArray[i++] = new CD("Excellent! TTQ FIRST ALUBUM","Tokyo Trombone Quartet","J. M. Defay : QUATRE PIECES pour Quartuor de TrombonseJ .S. Bach : FUGUE IN G MINORA. Pryor : VALSE DE CONCERTO. Heinl : DIE VARLIEBTE POSAUNE POLKAS. Konagaya : \"DREAM\" SUITE for Trombone QuartetH. Fillmore : TROMBONE FAMILYO. Heinl : POSAUNEN WALZERP. Romer : DER ARME LEIERMANN POLKAD. Dondeyne : SUITE pour Quatuor de Trombones","YAMAHAYCD-1001");
@@ -373,7 +373,7 @@ cdArray[i++] = new CD("slokar quartetessence of 25 years","Slokar Quartet","Dani
 cdArray[i++] = new CD("Le Trombone Contemprain","Benny Sluchin : Tb.Pierre-Laurent Aimard : Pf.","Henri Dutilleux : Choral, Cadence et Fugatorene Leibowitz : 4 Bagatells Op. 61Giacinto Scelsi : Tre pezzi per tromboneLuciano Berio : Sequenza VEdison Denisov : Choral Varie pour tromboneetpianoBarry Anderson : \"Sound the Tucket Sonance the note to mount\" for trombone and tapeIannis Xenakis : Keren pour trombone aeulPascal Dusapin : Indeed pour trombone seul","ADDA581087");
 cdArray[i++] = new CD("French Bel Cant Trombone","Benny Sluchin : Tb.Jeff Choen : Pf.Le Quatuor de Trombones Paris","Grat-Norbert : Solo de Concours pour trombone et pianoAmbroise Thomas : Solo de Hamlet pour trombone et pianoHedwige Chretien : Andante et Allegro pour trombone et pianoJules Cohen : Andante pour trombone et pianoJules Cohen : Andantino pour quatre trombonesSigismund Neukomm : Marche funebr pour quatre trombonesSigismund Neukomm : Marche religieuse pour quatre trombonesMarco Bordogni : Selection de sesvocalisesJules Demerssemann : Introduction et Polonaise Op. 30Jules Demerssemann : Grand Duo sur des motifs de Guillaume Tell","ADDA581247");
 cdArray[i++] = new CD("Les Quatuor Virtuoses","Le Quatuor de Trombones de Paris","Gyorgy Tibor : Introduction, theme et 8 variationsJ. G. Albrechtsberger : Double fugueB. Tamper : Art in BrassDavid Uber : Trios miniatures Op. 29Raul de Barros : Suite de danse bresilienneAnton Dovorak : Humoresque et danse slaveScott Joplin : RagtimeShin Kusakawa : Chanson Japonaise (Yuyake-Koyake)Keiko Takashima : Fantaisie (Warabe-Uta)Georg Phikip Telemann : Concert a quatre","BELLWOODBW-1001D");
-cdArray[i++] = new CD("Les Quatuor Virtuoses ≠∂","Le Quatuor de Trombones de Paris","Daniel Speer : SonataMorales : O magunum mysteriumFrancois Couperin : Passacaille et Chaconne aus Pieces de clavecinW. A. Mozart : Menuetto K. 575G. F. Handel : Sonate Op. 2 No. 8Anton Bruckner : Adagio from Symphony no. 7Keiko Takashima : \"Passepied\" for 4 trombonesBill Tamper : FableRaul de Barros : \"Brasilerinho\" de Suite de danse bresilienneWal Berg : SpiritualG. Gershwin : Fantasie","BELLWOODBW-1004D");
+cdArray[i++] = new CD("Les Quatuor Virtuoses ‚Ö°","Le Quatuor de Trombones de Paris","Daniel Speer : SonataMorales : O magunum mysteriumFrancois Couperin : Passacaille et Chaconne aus Pieces de clavecinW. A. Mozart : Menuetto K. 575G. F. Handel : Sonate Op. 2 No. 8Anton Bruckner : Adagio from Symphony no. 7Keiko Takashima : \"Passepied\" for 4 trombonesBill Tamper : FableRaul de Barros : \"Brasilerinho\" de Suite de danse bresilienneWal Berg : SpiritualG. Gershwin : Fantasie","BELLWOODBW-1004D");
 cdArray[i++] = new CD("Live in Tokyo '90","Le Quatuor de Trombones de Paris","Anton Vivaldi : Concert pour 4 TrombonesJules Cohen : Andantino pour4 TromboneD. Dondeyne : Suite pour 4 TrombonesEugene Bozza : Trois piecesJacues Charpenter : Quatuor de liturgiqueEnnio Morricone : II etait une fois dans l'questClaude Debussy : La fille aux aheveux de linScott Joplin : The entertainerRaul de Barros : Na gloriaAlbert Lasery & Bernard Hilda : Vive la Piste","BELLWOODBW-1005D");
 cdArray[i++] = new CD("La Vie Parisienne","Le Quatuor de Trombones de Paris","Offenbach : Selection OffenbachF. Kreisler : LiebesleidF. Kreisler : LiebesfreudW. A. Mozart : La Frute Enchantree, Air de SarastroW. A. Mozart : Les Petits RiensG. Destanque : Nostalgie pour 4 TrombonesG. Wood : 4 Pieces pour 4 TrombonesK. Kuwata : Ellie My LoveCarmichael : Stardust","BELLWOODBW-1007D");
 cdArray[i++] = new CD("Carmen","Le Quatuor de Trombones de Paris","G. Bizet : 11 Extraits de CarmenC. F. Gounod : La Cavatine de FaustC. Pichaureau : Extase pour Quartour TrombonesJ. M. Defaye : Quatre Pieces pour Quatour de TrombonesM. Legrand : Selection Michel LegrandC. Trenet : 8 Chansons","BELLWOODBW-1008D");
@@ -441,7 +441,7 @@ cdArray[i++] = new CD("Frank Martin dirige Frank Martin","Armin Rosin : Tb.Sebas
 cdArray[i++] = new CD("TROMBANIA","The National Slide Quartet","Tommy Pederson : South of The Border SuiteDave Ryan : ChameleonBob Cumow : Trombania SuiteGeorge Gershwin : Someone Watch Over MeTommy Pederson : SlidelockSamuel Baron : Impression of a ParadeHoagy Carmichael : Stardust","ATEMMUSIKATMU CD 94005");
 cdArray[i++] = new CD("The London Trombone Sound","Selected from London orchestras, band and music school","Crees : Fanfare for CALAMancini : Theme from ThePink pantherGershwin : Someone to Watch over meMonteverdi : Domine Ad Asinuandum from VespersBrahms : IntermezzoJosephs : Galop fromEight AphorismsGabrieli Sonata Pian e ForteBarber : AdagioClapton : LaylaWillson : 76 Trombones","CALACACD0108");
 cdArray[i++] = new CD("Ernst Bloch : Symphony for Trombone and OrchestraSamuel Feinberg : Piano Concert No. 3 in C Minor","Grigory Khersonsky : Tb.USSR Symphony orchestraVladimir Kozhukhar : Cond.Vladimir Bunin : Pf.Ostankino Large Sympony OrchestraGennadi Cherkasov : Cond.","Ernst Bloch : Symphony for Trombone and OrchestraSamuel Feinberg : Piano Concert No. 3 in C Minor","CONSONANCE81-0002");
-cdArray[i++] = new CD("Trumpets & Trombone","ø∑∆¸À‹•’•£•Î•œ°º•‚•À°º∏Ú∂¡≥⁄√ƒ•»•Ì•Û•‹°º•Û£¥Ω≈¡’√ƒ≈ƒµ‹∑¯∆Û•»•È•Û•⁄•√•»•Ω•Ì•§•π•ƒ","K. Wolkow : Four Pieces for Three TrumpetsB. Krol : Pezzo Festivo, Op. 95bT. Hirayoshi : Rhapsody for 4 TrumpetsR. Chapman : Suite of Three Cities for Four TrombonesD. Uber : Three Miniatures for Four Trombone, Op. 29D. Dondeyne : Suite pour Quartuor de TrombonesJ. Koetsier : Cinq Impromptus pour Quatre Trombones, Op. 55","≈Ïº«£≈£Õ£…TOCZ-9261");
+cdArray[i++] = new CD("Trumpets & Trombone","Êñ∞Êó•Êú¨„Éï„Ç£„É´„Éè„Éº„É¢„Éã„Éº‰∫§ÈüøÊ•ΩÂõ£„Éà„É≠„É≥„Éú„Éº„É≥ÔºîÈáçÂ•èÂõ£Áî∞ÂÆÆÂ†Ö‰∫å„Éà„É©„É≥„Éö„ÉÉ„Éà„ÇΩ„É≠„Ç§„Çπ„ÉÑ","K. Wolkow : Four Pieces for Three TrumpetsB. Krol : Pezzo Festivo, Op. 95bT. Hirayoshi : Rhapsody for 4 TrumpetsR. Chapman : Suite of Three Cities for Four TrombonesD. Uber : Three Miniatures for Four Trombone, Op. 29D. Dondeyne : Suite pour Quartuor de TrombonesJ. Koetsier : Cinq Impromptus pour Quatre Trombones, Op. 55","Êù±ËäùÔº•Ôº≠Ôº©TOCZ-9261");
 cdArray[i++] = new CD("DAVID TAYLOR BASS TROMBONE","David Taylor : Bass Tb.Frederic RzewskiDavid LiebmanEric EwazenLucia Dlugoszewski","Frederic Rzewski : Moonrise With MemoriesDavid Liebman : RemembranceEric Ewazen : Dagon IILucia Dlugoszewski : Duende Quidditas","NEW WORLD RECORDS80494-2");
 cdArray[i++] = new CD("David Taylor PAST TELLS","David Taylor : Bass Tb.","J. S. Bach : Aria, Herr, so du wiltCharles Ives : The Things Our Fathers LovedCharles Ives : The IndiansTraditional : Chanson hebraiqueAndreas Szollosy : One Hundred Bars for Tom EverettDuke Ellington : Come SundayDavid Schiff : ShtikDavid Noon : Tailor-Made Op. 112David Taylor : Past Tells","NEW WORLD RECORDS80436-2");
 cdArray[i++] = new CD("The Berlin-New York ProjectJazz meets Kurt Weill and Gershwin","David Taylor : Tb.Daniel Schnyder : Sax.Kenny Drew Jr. : Pf.","Daniel Schnyder : Bass Trombone SonataKurt Weill : Sute from The Threepenny OperaDaniel Schnyder : Sonata for Soprano SaxophoneGeorge Gershwin : Song SuiteDaniel Schnyder : Colossus Of Sound","KOCH JAZZ3-6969-2");
@@ -458,7 +458,7 @@ cdArray[i++] = new CD("intermezzo\n","Muncher posaunen quartett\n","Paul Peuerl 
 cdArray[i++] = new CD("ALL-AMERICAN TROMBONE","Dennis Smith : Tb.The Oakland University Wind SymphonyDr. James Dawson : Director","Arthur Pryor : Thoughts of LoveArthur Pryor : Exposition EchosGardell Simons : Atlantic ZephyrsArthur Pryor : Blue Bells of ScotlandArthur Pryor : Fantastic PolkaArthur Pryor : Starlight WaltzArthur Pryor : The Tip TopperArthur Pryor : Love's EnchantmentArthur Pryor : The Patriot","CORONETCD COR 400-7");
 cdArray[i++] = new CD("NICK HUDSONANTHOLOGY","Nick HudsonBritannia Building Society BandHOWARD Snell : Cond.","Philip Wilby : White Knuckle RideJimmy van Heusen : Here's That Rainy DayGareth Wood : Four Pieces for Four TrombonesDonald Kneale : Blue JohnRobert Redhead : Whisper a Little PrayerTraditional : Scaborough FairAlfred Newman : Street SceneLeonard Bernstein : Elegy for Mippy IIMaschwitz : A Nightingale Sang in Berkeley SquareAlexander Guilmant : Morceau SymphoniqueRob Willis : BluesleevesTraditional Londonderry AirGiuseppe Tartini : AdagioCole Poter : Every Time We Say GoodbyeThe Eternal Quest","poliphonicQPRL 076D");
 cdArray[i++] = new CD("Virtuose Posaunenmusikaus 5 Jahrhunderten","Paul Schreckenbergerund sein Posaunenensemble","Geprg Daniel Speer: Sonata fur 4 PosaunenArcangelo Corelli : Sonata fur 2 Posaunen in g-mollGiulelmus Monachus : Instrumentalstucke fur 3 PosaunenGeprg Daniel Speer: Sonata fur 3 PosaunenJohann Hermann Schein : Padouana fur 4 PosaunenHenry Purcell : Fantazia fur3 PosaunenLudwig van Beethoven : Drei Equale fur 4 PosaunenGeorg Philipp Telemann : Konzert fur 4 PosaunenMoritz Landgraf von Hessen : Pavana del Tomaso di Canora fur 5 PosaunenTiburtio Massaino : Canzone fur 8 Posaunen","RBMRBM CD 63036");
-cdArray[i++] = new CD("∆˙§Œ»‡ ˝§À•»•Ì•Û•‹°º•Û§Œ§ø§·§Œ•´•È•™•±CD","Takashi Kondo : Tb","Harold Arlen : Over the RainbowStephen C. Foster : Beautiful DreamerDavid Gates : IfGeorge Bassman : I'm Getting Sentimental Over YouJohn Lennon & Paul McCartney : And I Love HerMel Torme & Robert Wells : The Cristmas Song","BRAINBOCD-8307");
+cdArray[i++] = new CD("Ëôπ„ÅÆÂΩºÊñπ„Å´„Éà„É≠„É≥„Éú„Éº„É≥„ÅÆ„Åü„ÇÅ„ÅÆ„Ç´„É©„Ç™„Ç±CD","Takashi Kondo : Tb","Harold Arlen : Over the RainbowStephen C. Foster : Beautiful DreamerDavid Gates : IfGeorge Bassman : I'm Getting Sentimental Over YouJohn Lennon & Paul McCartney : And I Love HerMel Torme & Robert Wells : The Cristmas Song","BRAINBOCD-8307");
 cdArray[i++] = new CD("Trompete*Posaune*Orgel","Frantisek Vlasak : Tp.Guy-Noel Conus : Tb.Dorothee Steinle : Org.","Johannes Prentzel : Sonata for C Trumpet, Bassoon and Basso ContinuoG. F. Handel : Ombra mai fu, Ayre from the opera Xerxes, HWV 40/2J. S. Bach : Nun lob, mein Seel, den Herren, Chorale from Cantata BWV 167J. S. Bach : Air from Suite No. 3 D dur, BWV 1068John Hingeston :fantasia for Cornetto, Sackbut and Organ ContinuoJ. S. Bach : Ich ruf zu dir, Herr Jeu Christ, Chorale from the \"Orgel-Buchlein\" BWV 639J. S. Bach : Arioso from Cantata BWV 156J. S. Bach : Herr Christ, der einig Gottes Sohn, Chorale from Cantata BWV 22G. F. Handel : Waft her, angels, Ayre from the opera Jephtha, HWV 40/2Henry Purcell : The Queens DolourJohannes Prentzel : Sonata No. 75 from the collection Bicinia variorum instrumentorum","LUPULUSLUP 008-2");
 cdArray[i++] = new CD("Trombone & Orgue","Roland Schnorhk : TbGeorges Athanasiades : Org.","Georg Friedrich Haendel : Concerto en fa minorGeorg Friedrich Haendel : LargoHrnry Purcell : RondeauJ. S. Bach : Sanotina de l'Actus tragicus pour orgueMelchior Franck : Suite dedancsesJean-Francois : Dandrieu : Offertoire sur \"O filli et filiae\" pour orgueJean-Baptiste Loeillet : Sonate en la bemolJohn Stanley : Introduction et Trumpet tune pour orgueJohann-Christoph Petzold : Suite de danses","RESONANCED2544");
 cdArray[i++] = new CD("Quatuors de trombones de Liege","Quatuors de trombones de Liege","Daniel Speer : SonataJohann Hermann Schein : PadouanaLudwid van Beethoven : Drei EqualeAnton Arensky : Serenade Op. 39 No. 3Anton Bruckner : Motet Virga JesseEric Satie : Gymnopedie No. 1Flor Peeters : Suite Op. 82A. Leontyev : Folk SongFrigys Hidas : Scherzo e coralePatric Mc Carty : ecitative and fugueBryan E. Lynn : Four for fourWalter Ross : Trombone quartetGareth Wood : Four Pieces for four TrombonesIrving Berlin : Alexander's Ragtime Band","aurophonCD AU 31457");
@@ -605,7 +605,7 @@ cdArray[i++] = new CD("SERIOUS SONGS, SAD FACES\nSONGS OF SORROW, LOSS AND CONSO
 cdArray[i++] = new CD("The Classical Trombone\n","Kiril Ribarski : Tb.\nMilica Sperovik Ribarski : Pf.\n","J.Fr.Handel : Sonata Op.1 No.4\nG.Ph.Telemann : Concerto inD\nR.Schumann : Romances Op.94\nD.Detoni : Assonance 1\nS.Baudo : Petite Suite\nJ.Brahms : Danse Hongroise No.5\nJ.Brahms : Danse Hongroise No.6\nE.Grieg : Chant du Rossignol\nG.Gagliardi : Solo mino\nA.Pryor : Blue Bells of Scotland\nJ.S.Bach : Badinerie\nA.Nancevski/T.Trajcevski : Macedonian Dance\n","Arcobaleno\nAAOC-94582\n");
 cdArray[i++] = new CD("Michael Haydn: Concerto in D Major for 2 Trombone and Orchestra\n","Otmar Gaiswinkler : Tb.\nWalter Voglmayr : Tb.\nHeinrich Bruckner : Tp.\nReinhard Wieser : Cl.\nReinhard Suss : Pf.\nYun-Sung Chang : Cond.\nWIENER CONCERTO-VEREIN\n","Leopold Mozart : Serenade for Trumpet, Trombone and Orchestra\nMichael Haydn : Concerto in D Major for 2 Trombone and Orchestra\nJean Francaix : Theme and Variations for Clarinet and 11 Strings\nReinhard Suss : \"Fortuna Desperata\" Concerto for Piano and Chamber Ensemble\n","Camerata\nCMCD-28030\n");
 cdArray[i++] = new CD("Sonntagsposaunenstuck\n","Sebastian Krause : Tb.\nGabriele Wadewitz : Org.\n","Carl August Fischer : Fantasie op.21\nRichard Bartmuss : Rezitativ und Arioso op.24\nBernhard Edward Muller : Gebet op.65b\nGioacchino Rossini : Aria \"Cujus animam\" aus \"Stabat mater\"\nGustav Holst : Duet for Trombone and Organ\nFranz Liszt : Ave Maria\nFriedrich August Belcke : Fantasia op.58\nFranz Liszt : Via crucis-Die vierzehn Stationen des Kreuzweges\nFranz Liszt : Hosannah. Ein Sonntagsposaunenstuck\nFranz Liszt : Orpheus\nJulius Schneider : \"Was Gott tut, das ist wohlgetan\"\n","RAUM KLANG\nRK9805\n");
-cdArray[i++] = new CD("ABSOLUTE TIMES\n","Yoich Murata : Tb.\n","Felicidade\nTwenty First Century Schizoid Man\nStone Free\nNow You're Not Here\n•ø•Û•¥/Last Tango In Juku\nª˛§Ë\nDiamond Head\nBolero\n'Round Midnight\nToo Little Time\nOrange Was The Color Of Her Dress Then Blue Silk\nL'Amour Looks Something Like You\n","JVC\nVICJ-61129\n");
+cdArray[i++] = new CD("ABSOLUTE TIMES\n","Yoich Murata : Tb.\n","Felicidade\nTwenty First Century Schizoid Man\nStone Free\nNow You're Not Here\n„Çø„É≥„Ç¥/Last Tango In Juku\nÊôÇ„Çà\nDiamond Head\nBolero\n'Round Midnight\nToo Little Time\nOrange Was The Color Of Her Dress Then Blue Silk\nL'Amour Looks Something Like You\n","JVC\nVICJ-61129\n");
 cdArray[i++] = new CD("TUTTI CAMERATA\nTUTTI'S TRUMPETS AND TROMBINES\n","Dick Nash : Tb.\nJoe Howard : Tb.\nTommy Pederson : Tb.\nErnie Tack : Tb.\nKenny Shroyer : Tb.\nFrank Rosolino : Tb.\nHoyt Bohannon : Tb.\nHerbie Harper : Tb.\nGil Falco : Tb.\nLloyd Ulyate : Tb.\nMannie Klein\nUan Rasey : Tp.\nPete Candoli : Tp.\nConrad Gozzo : Tp.\nJoe Triscari : Tp.\nShorty Shrock : Tp.\n","I Can't get started\nBoy meets horn\nWhat's new?\nTrumpet Soliloquy\nTrumpet Tango\nStardust\nBugle Blues\nTenderly\nLouis\nTrumpeter's Prayer\nSouthland\nThe sweetest sounds\nBlueberry hill\nI feel pretty\nThe Pink Panther Theme\nThe girl from Ipanema\nLassus Trombone\nFour Brothers\nMr Lucky Theme\nTwelfth Street Rag\nJust a closer walk with thee\nTutti's Trombones\n","AVID ENTERTAINMENT\nAMSC 739\n");
 cdArray[i++] = new CD("More 4 Freshmaen and 5 Trombones\n","FOUR FRESHMEN\nFrank Rosolino : Tb.\nHarry Bets Jr. : Tb.\nMilt Bernhart : Tb.\nTommy Pederson : Tb.\nGeorge Roberts : Tb.\n","Hello, Dolly\nI Left My HEart in San Francisco\nMidnight Sun\nThe Girl from Ipanema\nDays of Wine and Roses\nCall Me Irresponsible\nMore\nMisty\nA Taste of Honey\nWhat Kind of Fool  Am I?\nSecond Time Around\n","Collectors' Choice MUSIC\nCCM-278-2\n");
 cdArray[i++] = new CD("Gloria\n","Megumi Kanda : Tb.\n","Gregorian Chant :  Puer natus est nobi\nT.L.Victoria : Ave Maria\nG.Caccini : Ave Maria\nJ.Pachelbel : Canon\nJ.S.Bach : No.39 Have mercy, St.Matthew Passion BWV 244\nG.B.Pergolesi : Duet No.1 Stabat Mater Dolorosa\nG.F.Handel : Ombra mai fu\nJ.S.Bach : No.35 Patience!, St.Matthew Passion BWV 244\nJ.S.Bach : Jesu, Joy of Man's Desiring, Cantata BWV 147\nGregorian Chant : Victamae paschali laudes\nJ.S.Bach : No.54 O sacred head sore wounded, St.Matthew Passion BWV 244\nJ.S.Bach : Ave Maria\nA.L.Webber : Piw Jesu, Requiem\nN.sato : Departure\n","VICTOR ENTERTAINMENT\nVICC-60361\n");
@@ -662,7 +662,7 @@ cdArray[i++] = new CD("CHARLES VERNON, BASS TROMBONE","Charles Vernon : Tb.\nEri
 cdArray[i++] = new CD("Romantik pur\n","Armin Rosin : Tb.\nUri Segal : Cond.\nNurnberger Symphoniker","Friedebald Grafe : Konzert in B-Dur\nErnst Sachse : Konzert in B-Dur\nEugen Reiche : Konzert No2 in A-Dur\nJosef Serafin Alschausky : Walzer-Arie No 6\nJan Koetsier : Konzert fir Trompete, Posaune und Orchester\n","COLOSSEUM CLASSICSCOL 9034.2");
 cdArray[i++] = new CD("The Return of the Alto\n","Ronald Barron : Tb.\nEric Ewazen : Pf.\nVytas Baksys : Pf.\nPeter Skyes : Org.\nThomas G. Everett : Cond\nHarvard University Wind Ensemble","Eric Ewazen : Palmetto Suite\nHannes Meyer : Sonata in C-minor on themes of G.B.Pergolesi\nAlfred Hornoff : Suite for Four Trombones\nNorman Bolter : Sky Dreams\nCorrado Saglietti : Suite for Alto Trombone and String Quartet\nLeopold Mozart : Concerto from Serenede in D-major\nMarc-Antoine Charpentier : Prelude from Te Deum\n","BOSTON BRASS SeriesBB-1008CD");
 cdArray[i++] = new CD("Von Bach bis Broadway\nOPUS 4","OPUS 4","Johann Georg Christian Storl : Turmmusik\nJohann Hermann Schein : Padouana\nMelchior Frank : Suite in 4 Satzen\nJohann Sebastian Bach  : Aria D-Dur BWV 1068\nJohann Sebastian Bach : Paludium a-Moll BWV 555\nTylmann Susato : Suite\nAnton Bruckner : Ave Maria\nJacques Charpentier : Quatuor de forme Liturgique\nGeorge Gershwin : A Portrait\nAram Chatschaturian : Sabeltanz\nPat Ballard : Mr.Sandman\n","querstand\nVKJK 0420");
-cdArray[i++] = new CD("Brilliant Days","Hideya Matsunaga : Tb.\n","flower of fire\n•‹•Ï•Ì\n•Œ•π•ø•Î•∏•¢\npour toi\nTime ti Say Goodbye\nBlooming of happiness\nMy Favorite ThingsA fusion of spaces\n","YAMAHA MUSIC COMMUNICATIONSYCCS-10007");
+cdArray[i++] = new CD("Brilliant Days","Hideya Matsunaga : Tb.\n","flower of fire\n„Éú„É¨„É≠\n„Éé„Çπ„Çø„É´„Ç∏„Ç¢\npour toi\nTime ti Say Goodbye\nBlooming of happiness\nMy Favorite ThingsA fusion of spaces\n","YAMAHA MUSIC COMMUNICATIONSYCCS-10007");
 cdArray[i++] = new CD("JORGEN VAN RIJENTROMBONE","Jorgen Van Rijen : Tb.\n","Heinrich Ignaz Franz von Biber : Sonata  a 3\nHenri Dutilleux : Chorale, Cadence et Fugato\nBernhard Krol : Capriccio de camera op.35\nJoseph-guy Ropartz : Piece en mi bemol mineur\nMartijn Padding : First Piece\nAxel Jorgenson : Romance opus 21\nJames Fulkerson : Force Fields and spaces\nGyorgy Kurtag : A Kis Csava\nHenri Tomasi : Concerto\n","CHANNEL CLASSICSCCS SA 22305");
 cdArray[i++] = new CD("Cristian Lindberg\nA Composer's Portrait\n","Cristian Lindberg : Tb., Cond.\nSharon Bezaly : Fl.\nOle Edvard Antonsen : Tp.\n","Cristian Lindberg : Helikon Wasp\nCristian Lindberg : The World of Montuagretta\nCristian Lindberg :Condor Canyon\nCristian Lindberg : '... TY SOLEN AR UPPE!'\nCristian Lindberg : Behac Monroh\n","BIS\nBIS-CD-1428\n");
 cdArray[i++] = new CD("bones apart\nno more blues\n","bones apart\n","Sousa : Stars and Stripes Forever\nRodgers : My Fubby Valentine\nVivaldi : Allegero\nLegrand : Windmills of Your Mind\nHandel : The Harmonious Blacksmith\nGershwin : Someone to Watch Over Me\nJobim : No More Blues\nBrian Lynn : Kathy\nBruckner : Locus Iste\nCarmichael : Georgia on my Mind\nSchumann : Traumerei\nKern : All the Things You Are\n","ba CD101\n");
@@ -687,7 +687,7 @@ cdArray[i++] = new CD("The Tiger Of San Pedro\n","Bill Watrous : Tb.\n","Bill Wa
 cdArray[i++] = new CD("Manhattan Wildlife Refuge\n","Bill Watrous : Tb.\n","C.Corea : Spain\nB.Berry : Sho\nJhon La Barbera : Dichotomy\nB.Kelly : Zip City\nBill Watrous : Fourth Floor Walk-Up\nBill Watrous : Dee Dee\nW.Andre : Ayo\n","Wounded Bird Records\nWOU 3090\n");
 cdArray[i++] = new CD("SCARAMOUCHE\n","Hiroyuki Odagiri : Tb.\nKeiko Odagiri : Pf.\n","Francis POULENC : Improvisations\nFrancis POULENC : Les Chemins de l'amour\nJohannes BRAHMS : Waltz Op.39-15\nDarius MILHAUD : Scaramouche\nMagne AMDAHL : Elegi\nJeanine RUEFF : Rhapsodie\nTony CLIFF : Four Sketches for Trombone and Piano\nToshio MASHIMA : Quiet Sunset\n","MEISTER MUSIC\nMM-1185\n");
 cdArray[i++] = new CD("Bone Tones\n","Hiroyuki Odagiri  : Tb.\nKeiko Odagiri : Pf.\n","Bruce STARK : Bone Tones\nJoseph Edouard BARAT : Andante and Allegro\nEugene BIGOT : Impromptu\nPaul BONNEAU : Capriccio\nPhilip SPARKE : Song for Ina\nAstor PIAZZOLLA : Oblivion\nFrancis POULENC : Nocturne No.7\nFrancis POULENC : Novelette\nFrancis POULENC : Melancolie\nFrancis POULENC : C\nFelix MENDELSSOHN : Auf Fludgeln de Gesanges\nTraditional : Londonderry Air\n","MEISTER MUSIC\nMM-1220\n");
-cdArray[i++] = new CD("POSAUNEN TEUFEL\n","Tokyo Metropolitan Trombone Quartet\n","Gioachino ROSSINI : Overture (William Tell)\nJohann Sebastian BACH : Contrapunctus (Die Kunst der Fuge BWV.1080)\nGordon JACOB : Suite for 4 Trombones\nClaude DEBUSSY : The little shepherd\nBela BARTOK : 9 Pieces\nGeorg Lohmann : Posaunen Teufel\nJerome Naulais : Choral\nFrancis Poulenc : Les chemins de l°«amour\nA.Sbarbaro, E.B.Edwards, H.W.Ragas, L.Shields & H.D.Costa : Tiger Rag\nIngo Luis : Three Jazzy Pieces Vol.II\nVaclav Nelhybel : 6 Pieces for 4 Trombones\n","MEISTER MUSIC\nMM-1197\n");
+cdArray[i++] = new CD("POSAUNEN TEUFEL\n","Tokyo Metropolitan Trombone Quartet\n","Gioachino ROSSINI : Overture (William Tell)\nJohann Sebastian BACH : Contrapunctus (Die Kunst der Fuge BWV.1080)\nGordon JACOB : Suite for 4 Trombones\nClaude DEBUSSY : The little shepherd\nBela BARTOK : 9 Pieces\nGeorg Lohmann : Posaunen Teufel\nJerome Naulais : Choral\nFrancis Poulenc : Les chemins de l‚Äôamour\nA.Sbarbaro, E.B.Edwards, H.W.Ragas, L.Shields & H.D.Costa : Tiger Rag\nIngo Luis : Three Jazzy Pieces Vol.II\nVaclav Nelhybel : 6 Pieces for 4 Trombones\n","MEISTER MUSIC\nMM-1197\n");
 cdArray[i++] = new CD("COLORS\n","Akira Kuwata : Tb.\nShigeyoshi Ida : Cond.\nTokai University Dai-yon High School Wind Orchestra\n","Bert Appermont : Colors\nLauny Grondahl : Concerto for Trombone and Band\nWilliam Goldstein : Colloquy for Trombone and Band\nToshiaki Minami : March \"Spring Breeze\"\nAram Il'ich Khachaturian : Ballet Suite \"Gayane\"\n","CAFUA\nCACG-0079\n");
 cdArray[i++] = new CD("OCTOBONE II\n","Michel Becquet : Tb., Cond.\nOctobone\n","Walter S. Hartley : Canzona for Eight Trombones\nEnrique Crespo : Bruckner-Etude for the Bass Brass\nJean-Michel Defaye : Fluctuation\nEdward Elgar : Enigma Variations\nDerek Bourgeois : Scherzo Funebre Op.86\nNino Rota : La Strada\nMichel Legrand : Summer Knows\nManuel Penella : Los Miuras\nJerome Naulais : Latin District\n","CRYSTON\nOVCC-00055\n");
 cdArray[i++] = new CD("Trombone Classics 1\n","Branimir Slokar : Tb.\nSlokar Trombone Quartet\n","Michael Praetorius : Franzosische Tanze\nAlessandro Besozzi : Sonate Bb Major\nDaniel Speer: 3 Sonatas\nJean Baptiste Loeillet : Sonate G Minor\nJohann Georg Albrechtsberger : Concerto\nG.F.Handel: Sonate G Minor\n","MARCOPHON\nCD 7053\n");
@@ -714,7 +714,7 @@ cdArray[i++] = new CD("Tranquille\n","Joel Vaisse : Tb.\nOrchestre National de F
 cdArray[i++] = new CD("MYTHS AND LEGENDS\n","Stentorian Consort\n","Eric Ewazen : Myths & Legends\nLeslie Bassett : Quartet\nCharles Wuorinen : Consort of Four Trombones\nFisher Tull : Quartet\nJohn La Montaine : Quartet\nPhillip Schroeder : For Jim\nPhil Snedecor : Toccata\n","Albany Records\nTROY948\n");
 cdArray[i++] = new CD("Um Pouquinho de Brasil\n","Brazilian Trombone Ensemble\n","Cazuza : Brasil\nDominguinhos : De Volta Pro Aconchego\nDamaso Perez Prado : Manbo Jambo\nTim Maia : Nao Vou Ficar\nEduardo Souto Neto : Tema da Vitoria\nFrancisco Ferreira Lima : Nenem Mulher\nGilberto Gil : Se Eu Quiser Falar Com Deus\nGonzaguinha : O que e O que e?\nGilberto Gil : Andar com fe\nAry Barroso : Isto aqui, O que e?\nMilton Nascimento : Nos bailes da vida\nDjavan : Samurai\nAnderson Cunha : Festa\n","Gravadora\nCPC 539\n");
 /******************************************************************
-  •«°º•øƒÍµ¡…ÙΩ™§Ô§Í
+  „Éá„Éº„ÇøÂÆöÁæ©ÈÉ®ÁµÇ„Çè„Çä
 *******************************************************************/
 </script>
 </head>
@@ -729,11 +729,11 @@ cdArray[i++] = new CD("Um Pouquinho de Brasil\n","Brazilian Trombone Ensemble\n"
 cdObj.writeSearchForm();
 </script>
 <noscript>
-<p>JavaScript §Úº¬π‘§«§≠§Î¥ƒ∂≠§¨…¨Õ◊§«§π°£</p>
+<p>JavaScript „ÇíÂÆüË°å„Åß„Åç„ÇãÁí∞Â¢É„ÅåÂøÖË¶Å„Åß„Åô„ÄÇ</p>
 </noscript>
 <hr>
 <p>
-∆∞∫Ó≥Œ«ß : Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0rc3)Gecko/20020523, build 2002052316
+Âãï‰ΩúÁ¢∫Ë™ç : Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0rc3)Gecko/20020523, build 2002052316
 </p>
 </body>
 </html>

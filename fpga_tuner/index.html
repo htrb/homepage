@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <title>FPGA FM tuner</title>
-<meta http-equiv="Content-Type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" title="black" href="../black.css" type="text/css">
 <link rel="stylesheet" title="white" href="../white.css" type="text/css">
 </head>
@@ -10,65 +10,65 @@
 
 <h1>FPGA FM tuner</h1>
 
-<p>ɽ�̼����Ѥߤ�<a href="http://homepage3.nifty.com/RadioGaGa/FM/">FPGA
-FM tuner</a>���Ĥ�����ۤ������������ʼ��������㡼���ù��ʤɤ�Ԥʤ��ޤ�����</p>
-<p>�饤��Ͽ���ʤɵ��Ťʲ�����¿�� NHK-FM �Υꥹ�˥󥰡����������å��˳������Ƥ��ޤ���</p>
+<p>表面実装済みの<a href="http://homepage3.nifty.com/RadioGaGa/FM/">FPGA
+FM tuner</a>基板を御頒布いただき、部品実装、シャーシ加工などを行ないました。</p>
+<p>ライブ録音など貴重な音源の多い NHK-FM のリスニング、エアチェックに活躍しています。</p>
 
 <ul>
- <li> DDT�����°���Ĥ�ȤäƤ��ޤ���
- <li> �Ÿ��ϥ����å����Ÿ���¢�Ȥ��ޤ�����
- <li> �Ÿ���ADC ���С��� LED ��<a href="http://akizukidenshi.com/catalog/g/gP-00241/">�ݥԥ�ɣå����å�</a>��ͳ�ǥ��㡼���Υե���ȥѥͥ���դ��Ƥ��ޤ���
- <li> �ǥ��åץ����å���<a href="http://akizukidenshi.com/catalog/g/gP-00241/">�ݥԥ�ɣå����å�</a>��ͳ�ǥե���ȥѥͥ�Υȥ��륹���å���
-      �������ꥹ���å�����³���ޤ�����
- <li> �������ȿ���3�ˡ�4�ʤΥ������ꥹ���å�������Ǥ���褦�ˤ��ޤ�����
-      1��;��Τǡ�LED 4�Ĥ���³���ơ����򤷤����꡼���ֹ�򼨤��褦�ˤ��ޤ�����
- <li> ���ƥ쥪��AFC �� LED �� FPGA ���ľ�˼�������Ƥ��ꡢ���˼��Ф��ʤ��Τǡ�
-      FPGA �Υԥ����֡��ץ������򾯤��ѹ����� AUX Connector #2 �� P7, P8 �˽��Ϥ���褦�ˤ��ޤ�����
-      �Хåե���IC��ͳ�ǥե���ȥѥͥ�ˤ� LED ����³���Ƥ��ޤ����ޤ������ľ�� LED �Ͼ�������ˤʤ�褦�ˤ��Ƥ��ޤ���
- <li> ���ƥ쥪��AFC�����꡼ɽ���� LED ���Ÿ��� FPGA ���Ĥ��Ÿ����ͥ����ѥѥ�����˥ԥ�إå����դ��ƻ��Ѥ��Ƥ��ޤ���
- <li> ������Υ�롢�����Ӱ��� (396kHz, 252kHz) �ϥե���ȥѥͥ�Υȥ��륹���å����ڤ��ؤ�����褦�ˤ��ޤ�����
- <li> AFC �Ͼ�� ON �Ǹ���ˤ��Ƥ��ޤ���
- <li> �⤦��ĤΥȥ��륹���å��� AUX Connector #1 �� P3, P4 ����³���ޤ�����FPGA �Υץ��������ѹ�����DAC �� MUTE on/off ���ؤ�Ǥ���褦�ˤ��Ƥ��ޤ���
- <li> �ԥ�إå��� LED�������å��ʤɤ���³�ˤ�<a href="http://www.linkman.jp/user/shohin.php?p=60336">2�ԥ�����ѥԥ󥽥��å�</a>����Ѥ��Ƥ��ޤ���
- <li> ��ӥ󥰤Υ����ƥ���Ȥ߹���Τǡ����㡼���Ͼ������äƥ�������<a href="http://www.takachi-el.co.jp/data/pdf/09-29.pdf">YER����å�������</a>
-      YER8820S ����Ѥ��ޤ�����
- <li> �������꡼�����å��ΥΥ֤⥷�㡼���˹礦�褦�˥�������Τ�� (<a href="http://www.marutsu.co.jp/shohin_65045/">Linkman 25X15BPS</a>)����Ѥ��Ƥ��ޤ���
- <li> LED ��4���Ȥ��ޤ��������ְ쿧�Τۤ�������夤��ʷ�ϵ��ˤʤäƤ褫�ä����⤷��ʤ��Ȼפ��ޤ�����
+ <li> DDT誌の付属基板を使っています。
+ <li> 電源はスイッチング電源内蔵としました。
+ <li> 電源、ADC オバーの LED は<a href="http://akizukidenshi.com/catalog/g/gP-00241/">丸ピンＩＣソケット</a>経由でシャーシのフロントパネルに付けています。
+ <li> ディップスイッチも<a href="http://akizukidenshi.com/catalog/g/gP-00241/">丸ピンＩＣソケット</a>経由でフロントパネルのトグルスイッチ、
+      ロータリスイッチに接続しました。
+ <li> 受信周波数は3極、4段のロータリスイッチで選択できるようにしました。
+      1極余るので、LED 4個を接続して、選択したメモリーの番号を示すようにしました。
+ <li> ステレオ、AFC の LED は FPGA 基板上に実装されており、外に取り出せないので、
+      FPGA のピン配置、プログラムを少し変更して AUX Connector #2 の P7, P8 に出力するようにしました。
+      バッファーIC経由でフロントパネルにの LED に接続しています。また、基板上の LED は常時消灯になるようにしています。
+ <li> ステレオ、AFC、メモリー表示の LED 用電源は FPGA 基板の電源コネクタ用パターンにピンヘッダを付けて使用しています。
+ <li> 強制モノラル、受信帯域幅 (396kHz, 252kHz) はフロントパネルのトグルスイッチで切り替えられるようにしました。
+ <li> AFC は常時 ON で固定にしています。
+ <li> もう一つのトグルスイッチは AUX Connector #1 の P3, P4 に接続しました。FPGA のプログラムを変更し、DAC の MUTE on/off 切替をできるようにしています。
+ <li> ピンヘッダと LED、スイッチなどの接続には<a href="http://www.linkman.jp/user/shohin.php?p=60336">2ピン基板用ピンソケット</a>を使用しています。
+ <li> リビングのシステムに組み込むので、シャーシは少々奢ってタカチの<a href="http://www.takachi-el.co.jp/data/pdf/09-29.pdf">YER型ラックケース</a>
+      YER8820S を使用しました。
+ <li> ロータリースイッチのノブもシャーシに合うようにアルミ製のもの (<a href="http://www.marutsu.co.jp/shohin_65045/">Linkman 25X15BPS</a>)を使用しています。
+ <li> LED は4色使いましたが、赤一色のほうが落ち着いた雰囲気になってよかったかもしれないと思いました。
 </ul>
 
-<p><img src="front.png" alt="�ե���ȥѥͥ�"></p>
-<p><img src="rear.png" alt="�ꥢ�ѥͥ�"></p>
-<p><img src="top.png" alt="����"></p>
+<p><img src="front.png" alt="フロントパネル"></p>
+<p><img src="rear.png" alt="リアパネル"></p>
+<p><img src="top.png" alt="内部"></p>
 
-<p>�߷׼Ԥ��Ӥ��󤫤���ǫ�ʥ����Ȥ򤤤������ޤ��������������������ˤȤ�
-��ͭ�Ѥʾ���Ȼפ��ޤ��Τǡ���λ������ޤ��Ƥ�����Ǹ���������ĺ���ޤ���</p>
+<p>設計者の林さんから丁寧なコメントをいただきました。今後作成される方にとっ
+て有用な情報と思いますので、ご了解を得ましてこちらで公開させて頂きます。</p>
 <hr>
 
-<p>�������������ȡ�����ñ�ΤǼ¸���¬�ꤷ�Ƥ���������١��㴳�Υ������
-�뤬�夬�뤳�Ȥ�����ޤ���SW�Ÿ�����¢�������ˡ����ΥΥ����αƶ����Ф�
-���Ȥ�����Τȡ��ʲ���2�ĤΤ��Ȥ��礭���ƶ������礬����ޤ���</p>
+<p>ケースに入れると、基板単体で実験、測定していた時に比べ、若干ノイズレベ
+ルが上がることがあります。SW電源を内蔵した場合に、そのノイズの影響が出る
+ことがあるのと、以下の2つのことが大きく影響する場合があります。</p>
 
 <ol>
- <li> SPDIF�θ����ͥ����򥱡����Υѥͥ�˼���դ����硢���ȥ�󥹥ߥå�
-      ��PLT133�Υԥ�ΤȤ�������û�ǥХ��ѥ������100nF�ˤ��ɲä��뤳�ȡ�
-      �����ľ��˥ǥ��åץ���Ѥ�22�����٤��񹳤�����뤳�Ȥ����פǤ���
-      ������դ�ȡ�PLT133�ؤ��������Υ����򻵤����餷����Ĵ���ϤΥΥ���
-      �����ä�и����ޤ���������饤������̤Υ�����������������ޤ���
- <li> ����ƥʤ�F���ͥ��������̥ѥͥ�˽Ф���硢F���ͥ�����GND�����̥ѥ�
-      �뤫���ŵ�Ū���⤫���������Υ�����٥�򲼤��뤳�Ȥ��Ǥ����礬¿
-      ���Ǥ�������ϡ�����ƥʤ���³�����̥ѥͥ���ͳ���������Ĥ�F����
-      ������ľ����³���뤳�Ȥǻ���Ȥ��Ǥ��ޤ���FPGA���Ĥ��Ÿ���ή�Ϸ�
-      ���Υ������ʤΤǡ�����¦�ȥ���ƥʥ��ͥ�����2���ǥ�������GND����³
-      ����ȡ����ΥΥ��������Ÿ���ή������ƥʤ�ʬή���뤳�Ȥ�ȯ�������
-      ���Ǥ������饨�ݤδ��Ĥ��ڤ�ü�������̥ѥͥ�Υ��ͥ�����GND����魯
-      ��ȸ��̤�����ޤ���
+ <li> SPDIFの光コネクタをケースのパネルに取り付ける場合、光トランスミッタ
+      のPLT133のピンのところ、最短でバイパスコン（100nF）を追加すること、
+      さらに直列にデカップリング用に22Ω程度の抵抗を入れることが重要です。
+      これを怠ると、PLT133への配線がノイズを撒き散らし、復調出力のノイズ
+      の増加を経験しました。信号ラインは普通のシールド線で配線します。
+ <li> アンテナのFコネクタを背面パネルに出す場合、FコネクタのGNDを背面パネ
+      ルから電気的に浮かせる方がノイズレベルを下げることができる場合が多
+      いです。これは、アンテナの接続を、背面パネルを経由せず、基板のFコネ
+      クタに直接接続することで試すことができます。FPGA基板の電源電流は結
+      構ノイジーなので、基板側とアンテナコネクタの2点でケースのGNDに接続
+      すると、そのノイジーな電源電流がアンテナに分流することが発生するよ
+      うです。ガラエポの基板の切れ端等で背面パネルのコネクタのGNDを絶縁す
+      ると効果があります。
 </ol>
 
-�Ÿ��Ǥ���������ˤ���7-8����Ÿ���AC�����ץ��ˤ�Ȥä����Ҥä�����ޤ�
-������5.0V2.3A�����ʡ�600�ߡˤ�����äȤ�Υ�����٥뤬�㤯�����Υ����ץ�
-�ʤ顢��˥��μ¸��Ѳ����Ÿ���¬�ꤷ������SN��Ʊ����SN��¬��Ǥ��ޤ�������
-�����Ȥ߹���ݡ����Υ����ץ��򤽤Τޤޡ�ξ�̥ơ��פǥ����������Ž���դ�
-�Ƥ�������¿���Ǥ���
+電源ですが、秋月にある7-8種の電源（ACアダプタ）をとっかえひっかえ試しまし
+たが、5.0V2.3Aの製品（600円）が、もっともノイズレベルが低く、このアダプタ
+なら、リニアの実験用可変電源で測定した時のSNと同等のSNが測定できます。ケー
+スに組み込む際、このアダプタをそのまま、両面テープでケースの中に貼り付け
+ている方も多いです。
 
 </body>
 </html>

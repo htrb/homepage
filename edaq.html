@@ -1,15 +1,15 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <title>H. Ito. Home Page</title>
-<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <link rel="stylesheet" title="black" href="black.css" type="text/css">
 </head>
 <body>
-Linux(HedHat Linux 5.2) ¤Ç National Instruments ¤Î PCI-6052E DAQ ¥Ü¡¼¥É¤ò
-»È¤Ã¤Æ¤ß¤Ş¤·¤¿¡£
+Linux(HedHat Linux 5.2) ã§ National Instruments ã® PCI-6052E DAQ ãƒœãƒ¼ãƒ‰ã‚’
+ä½¿ã£ã¦ã¿ã¾ã—ãŸã€‚
 
-Æ°ºî³ÎÇ§´Ä¶­
+å‹•ä½œç¢ºèªç’°å¢ƒ
 
 $ cat /etc/redhat-release 
 Red Hat Linux release 5.2 (Apollo)
@@ -24,12 +24,12 @@ $ rpm -q kernel
 kernel-2.0.36-0.7
 
 
-http://www.ni.com/linux/daq_eseriesdl.htm ¤«¤é edaq-0.9.5.tar.gz
-¤ò¥À¥¦¥ó¥í¡¼¥É¡£
+http://www.ni.com/linux/daq_eseriesdl.htm ã‹ã‚‰ edaq-0.9.5.tar.gz
+ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã€‚
 
-¥Ç¥Õ¥©¥ë¥È¤Î driver/Makefile ¤Ç NG
--DMODVERSIONS ¤¬¤Ê¤¤¤È  "Unresolved symbols" ¤¬¤Ç¤ë¡£
-/sbin/depmod -ae ¤Î½ĞÎÏ·ë²Ì
+ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã® driver/Makefile ã§ NG
+-DMODVERSIONS ãŒãªã„ã¨  "Unresolved symbols" ãŒã§ã‚‹ã€‚
+/sbin/depmod -ae ã®å‡ºåŠ›çµæœ
 
 # /sbin/depmod -ae
 /lib/modules/2.0.36/misc/edaq.o: unresolved symbol(s)
@@ -57,29 +57,29 @@ http://www.ni.com/linux/daq_eseriesdl.htm ¤«¤é edaq-0.9.5.tar.gz
         printk
 
 Vine 2.1.5(Kernel 2.2.14) NG
-"Unresolved symbols" ¤¬¤Ç¤ë¡£
+"Unresolved symbols" ãŒã§ã‚‹ã€‚
 
-driver/niboards ¤Ë PCI-6052E ¤Î¥¨¥ó¥È¥ê¤òÄÉ²Ã
+driver/niboards ã« PCI-6052E ã®ã‚¨ãƒ³ãƒˆãƒªã‚’è¿½åŠ 
 
-RedHat ·Ï¤Ç¤Ï cd /usr/include ; ln -s linux-2.0.36-lv3 linux-2.0.36 Åù
+RedHat ç³»ã§ã¯ cd /usr/include ; ln -s linux-2.0.36-lv3 linux-2.0.36 ç­‰
 
-driver/ai.c (int AIIOCtl (pd dev, unsigned int cmd, unsigned long arg)) ¤Î½¤Àµ
+driver/ai.c (int AIIOCtl (pd dev, unsigned int cmd, unsigned long arg)) ã®ä¿®æ­£
 
 
 
-comedi (http://stm.lbl.gov/comedi) ¤Ï¸½»şÅÀ¤Ç¤Ïµ¡Ç½ÉÔÂ­¤Î´¶¤¢¤ê¡£
+comedi (http://stm.lbl.gov/comedi) ã¯ç¾æ™‚ç‚¹ã§ã¯æ©Ÿèƒ½ä¸è¶³ã®æ„Ÿã‚ã‚Šã€‚
 
-Debian ÍÑ¥Ñ¥Ã¥±¡¼¥¸¤¬Â¸ºß¤¹¤ë¤¬¡¢¤³¤ì¤Ï comedilib (¶¦ÄÌ API) ¤Î¤ß¡£
-comedi (¥É¥é¥¤¥Ğ) ¤ÏÊÌÅÓ¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ëÉ¬Í×¤¬¤¢¤ë¡£
-comedi ¤Î¥³¥ó¥Ñ¥¤¥ë¤Ë¤Ï /usr/src/linux/.config ¤¬É¬Í×¡£
+Debian ç”¨ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ãŒå­˜åœ¨ã™ã‚‹ãŒã€ã“ã‚Œã¯ comedilib (å…±é€š API) ã®ã¿ã€‚
+comedi (ãƒ‰ãƒ©ã‚¤ãƒ) ã¯åˆ¥é€”ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹å¿…è¦ãŒã‚ã‚‹ã€‚
+comedi ã®ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã«ã¯ /usr/src/linux/.config ãŒå¿…è¦ã€‚
 
-Debian ¤Î¾ì¹ç
+Debian ã®å ´åˆ
 
 cd /usr/src/linux
-cp¡¡/boot/config-2.2.17¡¡.config
-(make¡¡oldconfig)
+cpã€€/boot/config-2.2.17ã€€.config
+(makeã€€oldconfig)
 
-¤Ç .config ¤òºîÀ®¤¹¤ëÉ¬Í×¤¬¤¢¤ë¡£
+ã§ .config ã‚’ä½œæˆã™ã‚‹å¿…è¦ãŒã‚ã‚‹ã€‚
 
 
 </body>

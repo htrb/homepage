@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <title>fbs: Utilities for Linux framebuffer</title>
-<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <link rel="stylesheet" title="black" href="../black.css" type="text/css">
 <link rel="stylesheet" title="white" href="../white.css" type="text/css">
 </head>
 <body>
-<h1>Linux framebuffer �Ѳ�����¸�ץ������</h1>
+<h1>Linux framebuffer 用画面保存プログラム</h1>
 <div>
 <hr>
 
@@ -16,35 +16,35 @@
 <a href="fbs-0.3.tar.gz">fbs-0.3.tar.gz</a>
 </p>
 
-<h2>�󶡤�����</h2>
+<h2>提供するもの</h2>
 <ul>
-  <li>fbs : �����꡼�󥷥�åȤ� PNG ����¸
+  <li>fbs : スクリーンショットを PNG で保存
 </ul>
 
-<h2>ɬ�פʤ��</h2>
+<h2>必要なもの</h2>
 <ul>
   <li>libpng, zlib
-  <li>Linux �� framebuffer �����ѤǤ���Ķ�
+  <li>Linux の framebuffer を利用できる環境
 </ul>
 
-<h2>����ˡ</h2>
+<h2>利用法</h2>
 <ul>
   <li>fbs filename [wait]
       <dl>
        <dt>filename</dt>
-       <dd> ��¸����ե�����̾</dd>
+       <dd> 保存するファイル名</dd>
        <dt>wait</dt>
-       <dd>��ư�������� wait �ø�˲��̤���¸���ޤ���</dd>
+       <dd>起動したあと wait 秒後に画面を保存します。</dd>
       </dl>
 </ul>
 
-<h2>������</h2>
+<h2>制限等</h2>
 <ul>
-  <li>framebuffer �� 15,16,24,32bpp PACKED-PIXELS TRUE-COLOR
-      8bpp  PACKED-PIXELS PSEUDOCOLOR ���б����Ƥ��ޤ���
+  <li>framebuffer は 15,16,24,32bpp PACKED-PIXELS TRUE-COLOR
+      8bpp  PACKED-PIXELS PSEUDOCOLOR に対応しています。
 </ul>
 
-<h2>��ȯ�Ķ�</h2>
+<h2>開発環境</h2>
 <ul>
  <li> linux 2.4.18 (Vine Linux 2.5)
  <li> gcc 2.95.3
@@ -60,37 +60,37 @@
       </pre>
 </ul>
 
-<h2>����¾</h2>
+<h2>その他</h2>
 <ul>
-  <li>framebuffer ����ط��Υ����ɤϡ���ޤ������󤸤���Υ���ץ�ץ���
-    �����Ȥˤ��Ƥ��ޤ�(�Ȥ������ۤȤ�ɤ��ΤޤޤǤ�)��
- <li>PNG ����Ϥ��륳���ɤ� imlib2-1.0.6.tar.gz �˴ޤޤ�� loader_png.c
-    �򻲹ͤˤ��ޤ�����
+  <li>framebuffer 描画関係のコードは、やまさきしんじさんのサンプルプログ
+    ラムをもとにしています(というかほとんどそのままです)。
+ <li>PNG を出力するコードは imlib2-1.0.6.tar.gz に含まれる loader_png.c
+    を参考にしました。
 
-  <li>�ޤ���ȯ�Ӿ�Ǥ��ꡢư���ǧ���Խ�ʬ�Ǥ������Ѥ����ݤϤ����Ȥ���Ǥ
-    �Ǥ��ꤤ���ޤ���
+  <li>まだ開発途上であり、動作確認も不十分です。使用される際はご自身の責任
+    でお願いします。
 </ul>
 
-<H2>��Ϣ URI</H2>
+<H2>関連 URI</H2>
 <ul>
    <li> <a href="http://www.sainet.or.jp/~yamasaki/">Linux Kernel Hack Japan</a>
    <li> <a href="http://www.libpng.org/pub/png/libpng.html">libpng</a>
 </ul>
 
-<h2>����</h2>
+<h2>履歴</h2>
 <ul>
- <li>2002/07/12 ��ȯ����
- <li>2002/07/15 ����
+ <li>2002/07/12 開発開始
+ <li>2002/07/15 公開
  <li>2002/09/10 Version 0.2<br>
-     8bpp PSEUDOCOLOR �б�<br>
+     8bpp PSEUDOCOLOR 対応<br>
  <li>2003/02/10 Version 0.3<br>
-     libpng ��ľ�����Ѥ���褦�ˤ�����<br>
+     libpng を直接利用するようにした。<br>
 </ul>
 
-<h2>Ϣ����</h2>
+<h2>連絡先</h2>
   ZXB01226 at nifty.com
 <hr>
-<a href="./">���</a>
+<a href="./">戻る</a>
 </div>
 </body>
 </html>

@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <title>JSGraph</title>
-<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <link rel="stylesheet" title="black" href="../black.css" type="text/css">
@@ -17,7 +17,7 @@
 <script type="text/javascript" src="jsgraph_ui.js"></script>
 <noscript>
 <p><img src="jsgraph.png" alt="graph" width="640" height="450"></p>
-<p>JavaScript �����ѤǤ���Ķ��ǤϾ�Τ褦�ʥ���դ�ɽ������Ƥ���Ϥ��Ǥ���</p>
+<p>JavaScript が使用できる環境では上のようなグラフが表示されているはずです。</p>
 </noscript>
 <div>
 <ul>
@@ -45,76 +45,76 @@
 </p>
 </form>
 <hr>
-<h2>������</h2>
+<h2>ソース</h2>
 <p><a href="jsgraph_old.js">jsgraph_old.js</a>
 </p>
-<h2>��ħ</h2>
+<h2>特徴</h2>
 <ul>
- <li> JavaScript �Ƕ����˥���դ����衣
- <li> IE, Mozilla ��ư���ǧ��
- <li> ���Ū��ñ�ʼ��ǥ���դκ�������ǽ(�ʤĤ��)��
- <li> ����ץ����ϥޥ����ǥɥ�å����뤳�Ȥˤ����֤��ѹ�����ǽ��
- <li> ����դ�ɥ�å����뤳�Ȥǡ���������Τΰ��֤��ѹ���ǽ��
- <li> ����դζ���ɥ�å����뤳�Ȥǥ���ե��������ѹ�����ǽ��
- <li> JavaScript �����Ѥ��ƥ��󥿥饯�ƥ��֤˥���դ�ɽ�����ѹ���ǽ��
- <li> ���ʥ�Х����ʬ�ϸ������ޤ꼫��������ޤ���
- <li> ư��٤������̤Υǡ�������������褦�ʤ��ȤϹͤ��ʤ������ɤ��Ǥ��礦��
+ <li> JavaScript で強引にグラフを描画。
+ <li> IE, Mozilla で動作確認。
+ <li> 比較的簡単な手順でグラフの作成が可能(なつもり)。
+ <li> キャプションはマウスでドラッグすることにより位置の変更が可能。
+ <li> グラフをドラッグすることで、グラフ全体の位置を変更可能。
+ <li> グラフの隅をドラッグすることでグラフサイズの変更が可能。
+ <li> JavaScript を利用してインタラクティブにグラフの表示を変更可能。
+ <li> 軸ナンバリング部分は現状あまり自信がありません。
+ <li> 動作が遅い。大量のデータを描かせるようなことは考えない方が良いでしょう。
 </ul>
 
-<h2>�Ȥ���</h2>
+<h2>使い方</h2>
 <ol>
  <li> &lt;script src="jsgraph.js" type="text/javascript"&gt;&lt;/script&gt;<br>
-      �� jsgraph.js ���ɤ߹��ࡣ
+      で jsgraph.js を読み込む。
  <li> &lt;div id="mygraph" style="width: 800px; height: 500px;"&gt;&lt;/div&gt; <br>
-      ���Ȥ��ơ�������Ѥ��ΰ����ݤ��롣
+      等として、グラフ用の領域を確保する。
  <li> graph = new JSGraph('mygraph'); <br>
-      �� JSGraph ���֥������Ȥ�������
+      で JSGraph オブジェクトを生成。
  <li> data = new Data();<br>
-      �� Data ���֥������Ȥ�������
+      で Data オブジェクトを生成。
  <li> data.str2data(s, RS, FS);<br>
-      ���ͤ����ϡ�s ��쥳���ɥ��ѥ졼�� RS���ե�����ɥ��ѥ졼�� FS ��������Ѵ�����
-      �����ܤΥե�����ɤ� x �ǡ����������ܤΥե�����ɤ� y �ǡ����Ȥ��� Data
-      ���֥������Ȥ���¸���ޤ���
+      で値を入力。s をレコードセパレータ RS、フィールドセパレータ FS で配列に変換し、
+      一番目のフィールドを x データ、二番目のフィールドを y データとして Data
+      オブジェクトに保存します。
  <li> data.add_data(x, y);<br>
-      �Ȥ����᥽�åɤ���ѤǤ��ޤ���
+      というメソッドも使用できます。
  <li> data.set_color('#0000ff');<br>
       data.set_text('Data2');<br>
-      �ǥǡ��������迧������ץ�������ꡣ
+      でデータの描画色、キャプションを指定。
  <li> graph.add_data(data);<br>
-      �� JSGraph ���֥������Ȥ˥ǡ����ɲá�
+      で JSGraph オブジェクトにデータ追加。
  <li> graph.autoscale();<br>
-      �Ǽ����������ư���ꤷ�ޤ���
- <li> ����դΥ����ȥ롢x, y ���Υ���ץ����Ϥ��줾��<br>
+      で軸スケールを自動設定します。
+ <li> グラフのタイトル、x, y 軸のキャプションはそれぞれ<br>
       graph.title.set_text("Title");<br>
       graph.caption_x.set_text("x");<br>
       graph.caption_y.set_text("y");<br>
-      ���ѹ��Ǥ��ޤ���
+      で変更できます。
  <li> graph.draw();<br>
-      �ǥ���դ����衣
+      でグラフを描画。
 </ol>
 
-<h2>����ʸ��</h2>
+<h2>参考文献</h2>
 <ul>
- <li> ������������WWW��2000ǯ ASCII
- <li> ������������JavaScript��2001ǯ ASCII
+ <li> 久野靖「入門WWW」2000年 ASCII
+ <li> 久野靖「入門JavaScript」2001年 ASCII
 </ul>
 
-<h2>����</h2>
+<h2>履歴</h2>
 <ul>
  <li>2005/04/01<br>
-      �� ��ư���ꥵ�����ι�®����<br>
-      �� ư���㹹����
+      ・ 移動、リサイズの高速化。<br>
+      ・ 動作例更新。
  <li>2005/03/29<br>
-      �� �п����б���<br>
-      �� ư���㹹����
+      ・ 対数軸対応。<br>
+      ・ 動作例更新。
  <li>2003/06/20 Version 0.3<br>
-      �� autoscale ���Υ��顼�����å����ɲá�<br>
-      �� ����ץ����ʤɰ���������᥽�åɤ����졣
+      ・ autoscale 時のエラーチェックを追加。<br>
+      ・ キャプションなど一部の設定メソッドの統一。
  <li>2003/06/19 Version 0.2<br>
-      �� �ꥵ�������κ�ɸ�׻��ΥХ�������<br>
-      �� ���ơ������饤��˥ޥ����ݥ��󥿤Υ���վ�κ�ɸ��ɽ������褦��
-      ������
- <li>2003/06/18 ���Ǹ���
+      ・ リサイズ時の座標計算のバグ修正。<br>
+      ・ ステータスラインにマウスポインタのグラフ上の座標を表示するように
+      した。
+ <li>2003/06/18 初版公開
 </ul>
 <hr>
 <a href="./">Return</a>

@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!DOCTYPE html>
 <html>
 <head>
 <title>quit</title>
-<meta http-equiv="content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta http-equiv="content-script-type" content="text/javascript">
 <script src="display.js">
 </script>
@@ -14,24 +14,24 @@ Wait = 350;
 
 WAITSTR = new Array();
 
-WAITSTR[0]  = "¡ù¥Á¥ó¡¡¡¡¡¡¡¡¡¡¥Þ¥Á¥¯¥¿¥Ò¡«¥ì¥¿¡Á";
-WAITSTR[1]  = "¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡";
-WAITSTR[2]  = "¡¡¡¡¡¡¡¡¡¡¡ù¥Á¥ó¡·¡¡¡¡¦«¡²¡²¦«¡¡¡¡¡¿¡±¡±¡±¡±¡±¡±¡±¡±¡±";
-WAITSTR[3]  = "¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡²¡²¡À¡Ê¡À¡¦¢Ï¡¦¡Ë¡ã¡¡¤Þ¤À¤¡¡Á¡©";
-WAITSTR[4]  = "¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡À¡²¡¿¢¾¡¡¢¾¡²¡Ë¡¡¡¡¡À¡²¡²¡²¡²¡²¡²¡²¡²¡²";
-WAITSTR[5]  = "¡¡¡¡¡¡¡¡¡¡¡¡¡¿¡±¡±¡±¡±¡±¡±¡¿|";
-WAITSTR[6]  = "¡¡¡¡¡¡¡¡¡¡¡¡|¡±¡±¡±¡±¡±¡Ã¡¡|";
-WAITSTR[7]  = "¡¡¡¡¡¡¡¡¡¡¡¡|°¦É²¤ß¤«¤ó¡Ã¡¿";
+WAITSTR[0]  = "â˜†ãƒãƒ³ã€€ã€€ã€€ã€€ã€€ãƒžãƒã‚¯ã‚¿ãƒ’ã‚›ãƒ¬ã‚¿ã€œ";
+WAITSTR[1]  = "ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€";
+WAITSTR[2]  = "ã€€ã€€ã€€ã€€ã€€â˜†ãƒãƒ³ã€ƒã€€ã€€Î›ï¼¿ï¼¿Î›ã€€ã€€ï¼â€¾â€¾â€¾â€¾â€¾â€¾â€¾â€¾â€¾";
+WAITSTR[3]  = "ã€€ã€€ã€€ã€€ã€€ã€€ã€€ï¼¿ï¼¿ï¼¼ï¼ˆï¼¼ãƒ»âˆ€ãƒ»ï¼‰ï¼œã€€ã¾ã ãã€œï¼Ÿ";
+WAITSTR[4]  = "ã€€ã€€ã€€ã€€ã€€ã€€ã€€ï¼¼ï¼¿ï¼âŠ‚ã€€âŠ‚ï¼¿ï¼‰ã€€ã€€ï¼¼ï¼¿ï¼¿ï¼¿ï¼¿ï¼¿ï¼¿ï¼¿ï¼¿ï¼¿";
+WAITSTR[5]  = "ã€€ã€€ã€€ã€€ã€€ã€€ï¼â€¾â€¾â€¾â€¾â€¾â€¾ï¼|";
+WAITSTR[6]  = "ã€€ã€€ã€€ã€€ã€€ã€€|â€¾â€¾â€¾â€¾â€¾ï½œã€€|";
+WAITSTR[7]  = "ã€€ã€€ã€€ã€€ã€€ã€€|æ„›åª›ã¿ã‹ã‚“ï½œï¼";
 
-WAITSTR[8]  = "¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡";
-WAITSTR[9]  = "¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¥Þ¥Á¥¯¥¿¥Ò¡«¥ì¥¿¡Á";
-WAITSTR[10] = "¡¡¡¡¡¡¡ù¥Á¥ó¡¡¡¡¡¡¡¡¡¡¦«¡²¡²¦«¡¡¡¡¡¿¡±¡±¡±¡±¡±¡±¡±¡±¡±";
-WAITSTR[11] = "¡¡¡¡¡¡¡¡¡¡¡¡¡³¡²¡²¡²¡Ã¡À¡¦¢Ï¡¦¡Ë¡ã¡¡¤Þ¤À¤¡¡Á¡©";
+WAITSTR[8]  = "ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€";
+WAITSTR[9]  = "ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ãƒžãƒã‚¯ã‚¿ãƒ’ã‚›ãƒ¬ã‚¿ã€œ";
+WAITSTR[10] = "ã€€ã€€ã€€â˜†ãƒãƒ³ã€€ã€€ã€€ã€€ã€€Î›ï¼¿ï¼¿Î›ã€€ã€€ï¼â€¾â€¾â€¾â€¾â€¾â€¾â€¾â€¾â€¾";
+WAITSTR[11] = "ã€€ã€€ã€€ã€€ã€€ã€€ãƒ½ï¼¿ï¼¿ï¼¿ï½œï¼¼ãƒ»âˆ€ãƒ»ï¼‰ï¼œã€€ã¾ã ãã€œï¼Ÿ";
 
-WAITSTR[12] = "¡ù¥Á¥ó¡¡¡¡¡¡¡¡¡¡¥Þ¥Á¥¯¥¿¥Ò¡«¥ì¥¿¡Á";
-WAITSTR[13] = "¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¥Þ¥Á¥¯¥¿¥Ò¡«¥ì¥¿¡Á";
-WAITSTR[14] = "¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¦«¡²¡²¦«¡¡¡¡¡¿¡±¡±¡±¡±¡±¡±¡±¡±¡±";
-WAITSTR[15] = "¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡²¡²¡À¡Ê¡¡¡Ã¢Ï¡¦¡Ë¡ã¡¡¡¡¡¡¡¡¡¡¡¡";
+WAITSTR[12] = "â˜†ãƒãƒ³ã€€ã€€ã€€ã€€ã€€ãƒžãƒã‚¯ã‚¿ãƒ’ã‚›ãƒ¬ã‚¿ã€œ";
+WAITSTR[13] = "ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ãƒžãƒã‚¯ã‚¿ãƒ’ã‚›ãƒ¬ã‚¿ã€œ";
+WAITSTR[14] = "ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€Î›ï¼¿ï¼¿Î›ã€€ã€€ï¼â€¾â€¾â€¾â€¾â€¾â€¾â€¾â€¾â€¾";
+WAITSTR[15] = "ã€€ã€€ã€€ã€€ã€€ã€€ã€€ï¼¿ï¼¿ï¼¼ï¼ˆã€€ï½œâˆ€ãƒ»ï¼‰ï¼œã€€ã€€ã€€ã€€ã€€ã€€";
 
 dispWait = function(i){
   if(i < 1){

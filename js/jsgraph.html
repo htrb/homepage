@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <title>JSGraph</title>
-<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <link rel="stylesheet" title="black" href="../black.css" type="text/css">
@@ -16,7 +16,7 @@
 <script type="text/javascript" src="jsgraph_ui.js"></script>
 <noscript>
 <p><img src="jsgraph.png" alt="graph" width="640" height="450"></p>
-<p>JavaScript �����ѤǤ���Ķ��ǤϾ�Τ褦�ʥ���դ�ɽ������Ƥ���Ϥ��Ǥ���</p>
+<p>JavaScript が使用できる環境では上のようなグラフが表示されているはずです。</p>
 </noscript>
 <div>
 <ul>
@@ -59,12 +59,12 @@
 <label><input id="resize_mode" type="checkbox" onclick='resize_mode();'>resize mode</label>
 </p>
 <p>
-�������롧
-<label><input type="radio" name="style" onclick="set_style('c');graph.draw();">��</label>
-<label><input type="radio" name="style" onclick="set_style('r');graph.draw();">��</label>
-<label><input type="radio" name="style" onclick="set_style('l');graph.draw();" checked>��</label>
-<label><input type="radio" name="style" onclick="set_style('lc');graph.draw();">��+��</label>
-<label><input type="radio" name="style" onclick="set_style('lr');graph.draw();">��+��</label>
+スタイル：
+<label><input type="radio" name="style" onclick="set_style('c');graph.draw();">●</label>
+<label><input type="radio" name="style" onclick="set_style('r');graph.draw();">■</label>
+<label><input type="radio" name="style" onclick="set_style('l');graph.draw();" checked>−</label>
+<label><input type="radio" name="style" onclick="set_style('lc');graph.draw();">−+●</label>
+<label><input type="radio" name="style" onclick="set_style('lr');graph.draw();">−+■</label>
 </p>
 <p>
 <label>Line width:
@@ -88,195 +88,195 @@
 </p>
 </form>
 <hr>
-<h2>������</h2>
+<h2>ソース</h2>
 <p><a href="https://github.com/htrb/jsgraph">jsgraph (GitHub)</a>
 </p>
-<h2>��ħ</h2>
+<h2>特徴</h2>
 <ul>
- <li> HTML5 �� canvas �ޤ��� VML �����Ѥ� JavaScript �ǥ���դ����衣
- <li> Firefox 1.5, IE6 ��ư���ǧ��Safari �Ǥ�ư��뤫�⤷��ޤ���
- <li> ���Ū��ñ�ʼ��ǥ���դκ�������ǽ(�ʤĤ��)��
- <li> scale_mode (�ǥե����) �Ǥϥ���դ򥯥�å�����ɽ���Υ��󥿥�󥰡�
-      �ɥ�å��ˤ���ϰϻ���ǥ���դγ��礬��ǽ (IE �Ǥ��ϰϻ�����ˤ�
-      �����ʵ�ư�򤹤뤳�Ȥ�����ޤ�) ��
- <li> resize_mode �Ǥϥ���դ�ɥ�å����뤳�Ȥǡ���������Τΰ��֤��ѹ�
-      ��ǽ���ޤ�������դζ���ɥ�å����뤳�Ȥǥ���ե��������ѹ�����ǽ��
- <li> �ǡ��������襹������ϡ��������������ޤ��Ϣ��������������ǽ��
- <li> ����ץ����ϥޥ����ǥɥ�å����뤳�Ȥˤ����֤��ѹ�����ǽ��
- <li> JavaScript �����Ѥ��ƥ��󥿥饯�ƥ����˥���դ�ɽ�����ѹ���ǽ��
- <li> x ���ϥǡ������ͤ� unix time �� MJD �Ȥ��Ʋ�ᤷ���������������ɽ
-      �������뤳�Ȥ��Ǥ��ޤ���
- <li> ���ʥ�Х����ʬ�ϸ������ޤ꼫��������ޤ���
- <li> ư��٤������̤Υǡ�������������褦�ʤ��ȤϹͤ��ʤ������ɤ��Ǥ��礦��
+ <li> HTML5 の canvas または VML を利用し JavaScript でグラフを描画。
+ <li> Firefox 1.5, IE6 で動作確認、Safari でも動作するかもしれません。
+ <li> 比較的簡単な手順でグラフの作成が可能(なつもり)。
+ <li> scale_mode (デフォルト) ではグラフをクリックして表示のセンタリング、
+      ドラッグによる範囲指定でグラフの拡大が可能 (IE では範囲指定時にお
+      かしな挙動をすることがあります) 。
+ <li> resize_mode ではグラフをドラッグすることで、グラフ全体の位置を変更
+      可能。また、グラフの隅をドラッグすることでグラフサイズの変更が可能。
+ <li> データの描画スタイルは●、■、線、●または■と線から選択可能。
+ <li> キャプションはマウスでドラッグすることにより位置の変更が可能。
+ <li> JavaScript を利用してインタラクティヴにグラフの表示を変更可能。
+ <li> x 軸はデータの値を unix time や MJD として解釈し、軸目盛を西暦で表
+      示させることができます。
+ <li> 軸ナンバリング部分は現状あまり自信がありません。
+ <li> 動作が遅い。大量のデータを描かせるようなことは考えない方が良いでしょう。
 </ul>
 
-<h2>�Ȥ���</h2>
-<h3>��ñ�ʻȤ���</h3>
+<h2>使い方</h2>
+<h3>簡単な使い方</h3>
 <ol>
  <li> &lt;script src="jsgraph.js" type="text/javascript"&gt;&lt;/script&gt;<br>
-      �� jsgraph.js ���ɤ߹��ࡣ
+      で jsgraph.js を読み込む。
  <li> &lt;div id="mygraph" style="width: 800px; height: 500px;"&gt;&lt;/div&gt; <br>
-      ���Ȥ��ơ�������Ѥ��ΰ����ݤ��롣
+      等として、グラフ用の領域を確保する。
  <li> graph = new JSGraph('mygraph'); <br>
-      �� JSGraph ���֥������Ȥ�������
+      で JSGraph オブジェクトを生成。
  <li> graph.load(file1, file2, ....)<br>
-      �ǥ����Фˤ���ǡ����ե����� file1, file2, ... ���ɤ߹���ǥ����
-      ��ɽ�����ޤ���&lt;body onload="graph.load(file1, file2)"&gt;���ͤ� html
-      �ե�������ɤ߹��ߤ���λ���Ƥ���¹Ԥ���褦�ˤ��Ƥ���������
- <li> <a href="jsgraph_simple.html">����ץ�</a>
+      でサーバにあるデータファイル file1, file2, ... を読み込んでグラフ
+      を表示します。&lt;body onload="graph.load(file1, file2)"&gt;の様に html
+      ファイルの読み込みが完了してから実行するようにしてください。
+ <li> <a href="jsgraph_simple.html">サンプル</a>
 </ol>
-<h3>�ܺ٤ʻȤ���</h3>
+<h3>詳細な使い方</h3>
 <ol>
  <li> &lt;script src="jsgraph.js" type="text/javascript"&gt;&lt;/script&gt;<br>
-      �� jsgraph.js ���ɤ߹��ࡣ
+      で jsgraph.js を読み込む。
  <li> &lt;div id="mygraph" style="width: 800px; height: 500px;"&gt;&lt;/div&gt; <br>
-      ���Ȥ��ơ�������Ѥ��ΰ����ݤ��롣
+      等として、グラフ用の領域を確保する。
  <li> graph = new JSGraph('mygraph'); <br>
-      �� JSGraph ���֥������Ȥ�������
+      で JSGraph オブジェクトを生成。
  <li> data = new Data();<br>
-      �� Data ���֥������Ȥ�������
+      で Data オブジェクトを生成。
       <ol>
-       <li> data.read_data(s, [nx, ny, [FS,] [RS]]);<br> ���ͤ����ϡ�s ��쥳���ɥ��ѥ졼
-	    �� RS���ե�����ɥ��ѥ졼�� FS ��������Ѵ�����nx ���ܤΥե���
-	    ��ɤ� x �ǡ�����ny ���ܤΥե�����ɤ� y �ǡ����Ȥ��� Data ��
-	    �֥������Ȥ���¸���ޤ��������ܰʹߤΰ�������ꤷ�ʤ�����
-	    ��nx=1, ny=2, FS=new RegExp("[ ,\t]+"), RS="\n"�פȤʤ�ޤ���
+       <li> data.read_data(s, [nx, ny, [FS,] [RS]]);<br> で値を入力。s をレコードセパレー
+	    タ RS、フィールドセパレータ FS で配列に変換し、nx 番目のフィー
+	    ルドを x データ、ny 番目のフィールドを y データとして Data オ
+	    ブジェクトに保存します。２番目以降の引数を指定しない場合は
+	    「nx=1, ny=2, FS=new RegExp("[ ,\t]+"), RS="\n"」となります。
        <li> data.add_data(x, y);<br>
-	    �Ȥ����᥽�åɤ���ѤǤ��ޤ���
+	    というメソッドも使用できます。
        <li> data.load(path, [nx, ny, [FS,] [RS]]);<br>
-	    �� XMLHttpRequest �ˤ��ǡ������������ޤ���
-	    data.load(path) �ǥǡ���������������<br>
+	    で XMLHttpRequest によるデータ取得も出来ます。
+	    data.load(path) でデータ取得した場合は<br>
 	    data.wait(function(){graph.autoscale(); graph.draw()});<br>
-	    ���ͤ� data.wait(func) �ǥǡ����μ������ԤäƤ��饰��դ���
-	    �褷�Ƥ���������
+	    の様に data.wait(func) でデータの取得を待ってからグラフを描
+	    画してください。
       </ol>
  <li> data.set_color('#0000ff');<br>
       data.set_text('Data2');<br>
-      �ǥǡ��������迧������ץ�������ꡣ
+      でデータの描画色、キャプションを指定。
  <li> data.set_text(style);<br>
-      �ǥǡ�����ɽ��������������ꡣ<br>
-      style �� "r" �Ϣ���"c" �ϡ���"l" ������ɽ�����ޤ� "lr", "lc" �ǳơ�
-      ����������������ɽ�����ޤ����ǥե���Ȥ� "c"��
+      でデータの表示スタイルを設定。<br>
+      style は "r" は■、"c" は●、"l" は線で表示。また "lr", "lc" で各々
+      ■と線、●と線で表示します。デフォルトは "c"。
  <li> graph.add_data(data);<br>
-      �� JSGraph ���֥������Ȥ˥ǡ����ɲá�
- <li> scale_x_type(type), scale_y_type(type) �Ǽ��Υ����פ�����x ���� 
-      "linear", "log", "unix", "mjd" ���顢y ���� "linear", "log" ���鼴
-      �μ�������٤ޤ���x ���� "unix", "mjd" �� x ���ͤ򤽤줾��1970/1/1 
-      ������̻��ÿ���MJD (������ꥦ����) �Ȳ�ᤷ������Ǽ���������ɽ
-      �����ޤ������ޤΤȤ�������������ϰϤ�ɽ����������ϻȤ���Τˤ�
-      ��ޤ���
+      で JSGraph オブジェクトにデータ追加。
+ <li> scale_x_type(type), scale_y_type(type) で軸のタイプを選択。x 軸は 
+      "linear", "log", "unix", "mjd" から、y 軸は "linear", "log" から軸
+      の種類を選べます。x 軸の "unix", "mjd" は x の値をそれぞれ1970/1/1 
+      からの通算秒数、MJD (修正ユリウス日) と解釈して西暦で軸の目盛を表
+      示します。いまのところ一時間満の範囲を表示させる場合は使いものにな
+      りません。
  <li> graph.autoscale();<br>
-      �Ǽ����������ư���ꤷ�ޤ���
- <li> ����դΥ����ȥ롢x, y ���Υ���ץ����Ϥ��줾��<br>
+      で軸スケールを自動設定します。
+ <li> グラフのタイトル、x, y 軸のキャプションはそれぞれ<br>
       graph.title.set_text("Title");<br>
       graph.caption_x.set_text("x");<br>
       graph.caption_y.set_text("y");<br>
-      ���ѹ��Ǥ��ޤ���
+      で変更できます。
  <li> graph.draw();<br>
-      �ǥ���դ����衣
+      でグラフを描画。
 </ol>
 
-<h2>�����ͽ��</h2>
+<h2>今後の予定</h2>
 <ul>
- <li> �Ƽﵡǽ����
+ <li> 各種機能強化
 </ul>
 
-<h2>����ʸ��</h2>
+<h2>参考文献</h2>
 <ul>
- <li> ������������WWW��2000ǯ ASCII
- <li> ������������JavaScript��2001ǯ ASCII
+ <li> 久野靖「入門WWW」2000年 ASCII
+ <li> 久野靖「入門JavaScript」2001年 ASCII
 </ul>
 
-<h2>����</h2>
+<h2>履歴</h2>
 <ul>
  <li>2009/05/23
       <ul>
-       <li> IE �ǤΥ���ե��󥿥�󥰡��ȥ�ߥ󥰤�ư��������
+       <li> IE でのグラフセンタリング、トリミングの動作を改善。
       </ul>
  <li>2009/05/19
       <ul>
-       <li> IE8 �б�
+       <li> IE8 対応
       </ul>
  <li>2009/03/06
       <ul>
-       <li> ���Υ���ץ���󡢥���ե����ȥ�ΰ��֤���ưĴ�������褦��
-	    ������
+       <li> 軸のキャプション、グラフタイトルの位置が自動調整されるように
+	    した。
       </ul>
  <li>2006/11/22
       <ul>
-       <li> ���ʥ�Х�󥰤β���
+       <li> 軸ナンバリングの改善
       </ul>
  <li>2006/11/21
       <ul>
-       <li> ��ư�������θ����αƶ��� 'linear' ���λؿ�ɽ�����۾�ˤʤ��
-	    ��Τ��ä��Զ��ν�����
+       <li> 浮動小数点の誤差の影響で 'linear' 軸の指数表示が異常になる場
+	    合のあった不具合の修正。
       </ul>
  <li>2006/11/07
       <ul>
-       <li> ���ռ��б�������Ĺ������ (10ǯ�ʾ�) �⤽��ʤ��ɽ���ˤʤ�
-	    �褦�ˤ�����
+       <li> 日付軸対応で非常に長い期間 (10年以上) もそれなりの表示になる
+	    ようにした。
       </ul>
  <li>2006/11/06
       <ul>
-       <li> ���ռ��б��ǰ���ְʾ���ϰϤǤϻ����ɽ���Ǥ���褦�ˤ�����
+       <li> 日付軸対応で一時間以上の範囲では時刻も表示できるようにした。
       </ul>
  <li>2006/11/05
       <ul>
-       <li> ���ռ��б�
+       <li> 日付軸対応
       </ul>
  <li>2006/02/12
       <ul>
-       <li> �ʰץ��󥿡��ե������ɲ�
+       <li> 簡易インターフェイス追加
       </ul>
  <li>2006/02/03
       <ul>
-       <li> XMLHttpRequest ���Ѥ���ưŪ�ǡ���������ǽ���ɲá�
-       <li> Data ���֥������Ȥ� set_line_width(), set_mark_size() ���ɲá�
+       <li> XMLHttpRequest を用いた動的データ取得機能の追加。
+       <li> Data オブジェクトに set_line_width(), set_mark_size() を追加。
       </ul>
  <li>2006/01/31
       <ul>
-       <li> IE �Ǥ��ϰϻ�����ε�ư�򾯤�������
-       <li> Zoom_in, zoom_out, ���󥿥�󥰡��ϰϻ������Ƶ�ǽ���п���
-	    �б���
+       <li> IE での範囲指定時の挙動を少し改善。
+       <li> Zoom_in, zoom_out, センタリング、範囲指定拡大各機能の対数軸
+	    対応。
       </ul>
  <li>2006/01/30
       <ul>
-       <li> VML �����Ѥ� IE �ˡʰ�����б���
-       <li> resize_mode ���Զ�罤����
+       <li> VML を利用し IE に（一応）対応。
+       <li> resize_mode の不具合修正。
       </ul>
  <li>2006/01/28
       <ul>
-       <li> zoom_in(), zoom_out(), resize_mode(), scale_mode() �ɲá�
-       <li> �ޥ�������å��ˤ�륻�󥿥�󥰵�ǽ���ϰϻ���ˤ�륺���ൡ
-	    ǽ�ɲá�
+       <li> zoom_in(), zoom_out(), resize_mode(), scale_mode() 追加。
+       <li> マウスクリックによるセンタリング機能、範囲指定によるズーム機
+	    能追加。
       </ul>
  <li>2006/01/24
       <ul>
-       <li> canvas �����ǡ�
-       <li> Data ���֥������Ȥ� setstyle() ���ɲá�
+       <li> canvas 利用版。
+       <li> Data オブジェクトに setstyle() を追加。
       </ul>
  <li>2005/04/01
       <ul>
-       <li> ��ư���ꥵ�����ι�®����
-       <li> ư���㹹����
+       <li> 移動、リサイズの高速化。
+       <li> 動作例更新。
       </ul>
  <li>2005/03/29
       <ul>
-       <li> �п����б���
-       <li> ư���㹹����
+       <li> 対数軸対応。
+       <li> 動作例更新。
       </ul>
  <li>2003/06/20 Version 0.3
       <ul>
-       <li> autoscale ���Υ��顼�����å����ɲá�
-       <li> ����ץ����ʤɰ���������᥽�åɤ����졣
+       <li> autoscale 時のエラーチェックを追加。
+       <li> キャプションなど一部の設定メソッドの統一。
       </ul>
  <li>2003/06/19 Version 0.2
       <ul>
-       <li> �ꥵ�������κ�ɸ�׻��ΥХ�������
-       <li> ���ơ������饤��˥ޥ����ݥ��󥿤Υ���վ�κ�ɸ��ɽ�������
-	    ���ˤ�����
+       <li> リサイズ時の座標計算のバグ修正。
+       <li> ステータスラインにマウスポインタのグラフ上の座標を表示するよ
+	    うにした。
       </ul>
- <li>2003/06/18 ���Ǹ���
+ <li>2003/06/18 初版公開
 </ul>
 <hr>
 <a href="./">Return</a>

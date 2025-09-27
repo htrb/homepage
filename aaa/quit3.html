@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!DOCTYPE html>
 <html>
 <head>
 <title>quit</title>
-<meta http-equiv="content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta http-equiv="content-script-type" content="text/javascript">
 <style>
 p#str {position: absolute; width: auto; height: auto; overflow: hidden; font-family: sans-serif}
@@ -16,18 +16,18 @@ Wait = 200;
 
 STRARRAY = new Array();
 STRARRAY[0] = new Array();
-STRARRAY[0][0]   = "ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЁ®Ё¬ЁЇЎЎ";
-STRARRAY[0][1]   = "ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЁ­¤в Ё­ЎЎ";
-STRARRAY[0][2]   = "ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЁ­¤¦ Ё­ЎЎ";
-STRARRAY[0][3]   = "ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЁ­НиЁ­ЎЎ";
-STRARRAY[0][4]   = "ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЁ­¤НЁ­ЎЎ";
-STRARRAY[0][5]   = "ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЁ­ ¤§Ё­";
-STRARRAY[0][6]   = "ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЁ­¤и Ё­";
-STRARRAY[0][7]   = "ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЁ­ !! Ё­";
-STRARRAY[0][8]   = "ЎЎЎЎҐЧҐуЎЎЎЎ ЁІЁ¬Ё°ЎЎЎЎЎЎЎЎҐРҐ«ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎ";
-STRARRAY[0][9]   = "ЎК§Ґ'ЎЎЎЛЎЎЎЎЎЎ Ўі(`§Ґ')ҐОЎЎ Ўі(`§Ґ')ҐОЎЎ Ўі(`§Ґ')ҐОЎЎ";
-STRARRAY[0][10]  = "ЈХЁЈЎїЎЎЎЛўў-|Ў±Ў±Ў±|ЎЅ|Ў±Ў±Ў±|ЎЅ|Ў±Ў±Ў±|ЎЎ";
-STRARRAY[0][11]  = "ЎэЁ±ЎгЁ¬ЎэЎЎЎ±ЎэЎ±ЎЎЎЎЎ±ЎэЎ±ЎЎ ЎЎЎ±ЎэЎ±ЎЎЎБЎБЎЎ";
+STRARRAY[0][0]   = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”Џв”Ѓв”“гЂЂ";
+STRARRAY[0][1]   = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”ѓг‚‚ в”ѓгЂЂ";
+STRARRAY[0][2]   = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”ѓгЃ† в”ѓгЂЂ";
+STRARRAY[0][3]   = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”ѓжќҐв”ѓгЂЂ";
+STRARRAY[0][4]   = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”ѓгЃ­в”ѓгЂЂ";
+STRARRAY[0][5]   = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”ѓ гЃ‡в”ѓ";
+STRARRAY[0][6]   = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”ѓг‚€ в”ѓ";
+STRARRAY[0][7]   = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”ѓ !! в”ѓ";
+STRARRAY[0][8]   = "гЂЂгЂЂгѓ—гѓігЂЂгЂЂ в”Јв”Ѓв”›гЂЂгЂЂгЂЂгЂЂгѓђг‚«гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂ";
+STRARRAY[0][9]   = "пј€Р”'гЂЂпј‰гЂЂгЂЂгЂЂ гѓЅ(`Р”')гѓЋгЂЂ гѓЅ(`Р”')гѓЋгЂЂ гѓЅ(`Р”')гѓЋгЂЂ";
+STRARRAY[0][10]  = "пјµв”ЊпјЏгЂЂпј‰в–Ў-|вЂѕвЂѕвЂѕ|вЂ”|вЂѕвЂѕвЂѕ|вЂ”|вЂѕвЂѕвЂѕ|гЂЂ";
+STRARRAY[0][11]  = "в—Ћв”—пјњв”Ѓв—ЋгЂЂвЂѕв—ЋвЂѕгЂЂгЂЂвЂѕв—ЋвЂѕгЂЂ гЂЂвЂѕв—ЋвЂѕгЂЂгЂњгЂњгЂЂ";
 
 STRARRAY[1] = new Array();
 STRARRAY[1][0]   = STRARRAY[0][0];
@@ -38,7 +38,7 @@ STRARRAY[1][4]   = STRARRAY[0][4];
 STRARRAY[1][5]   = STRARRAY[0][5];
 STRARRAY[1][6]   = STRARRAY[0][6];
 STRARRAY[1][7]   = STRARRAY[0][7];
-STRARRAY[1][8]   = "ҐЧҐуЎЎЎЎЎЎЎЎ ЁІЁ¬Ё°ЎЎЎЎЎЎЎЎҐРҐ«ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎ";
+STRARRAY[1][8]   = "гѓ—гѓігЂЂгЂЂгЂЂгЂЂ в”Јв”Ѓв”›гЂЂгЂЂгЂЂгЂЂгѓђг‚«гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂ";
 STRARRAY[1][9]   = STRARRAY[0][9];
 STRARRAY[1][10]  = STRARRAY[0][10];
 STRARRAY[1][11]  = STRARRAY[0][11];
@@ -52,10 +52,10 @@ STRARRAY[2][4]   = STRARRAY[0][4];
 STRARRAY[2][5]   = STRARRAY[0][5];
 STRARRAY[2][6]   = STRARRAY[0][6];
 STRARRAY[2][7]   = STRARRAY[0][7];
-STRARRAY[2][8]  = "ЎЎЎЎҐЧҐуЎЎЎЎ ЁІЁ¬Ё°ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎҐґҐлҐЎЎЎ"
+STRARRAY[2][8]  = "гЂЂгЂЂгѓ—гѓігЂЂгЂЂ в”Јв”Ѓв”›гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂг‚ґгѓ«г‚ЎгЂЂ"
 STRARRAY[2][9]  = STRARRAY[0][9];
 STRARRAY[2][10]  = STRARRAY[0][10];
-STRARRAY[2][11]  = "ЎэЁ±ЎїЁ¬ЎэЎЎЎ±ЎэЎ±ЎЎЎЎЎ±ЎэЎ±ЎЎ ЎЎЎ±ЎэЎ±ЎЎЎБЎБЎЎ";
+STRARRAY[2][11]  = "в—Ћв”—пјЏв”Ѓв—ЋгЂЂвЂѕв—ЋвЂѕгЂЂгЂЂвЂѕв—ЋвЂѕгЂЂ гЂЂвЂѕв—ЋвЂѕгЂЂгЂњгЂњгЂЂ";
 
 STRARRAY[3] = new Array();
 STRARRAY[3][0]  = STRARRAY[0][0];
@@ -66,7 +66,7 @@ STRARRAY[3][4]   = STRARRAY[0][4];
 STRARRAY[3][5]   = STRARRAY[0][5];
 STRARRAY[3][6]   = STRARRAY[0][6];
 STRARRAY[3][7]   = STRARRAY[0][7];
-STRARRAY[3][8]  = "ҐЧҐуЎЎЎЎЎЎЎЎ ЁІЁ¬Ё°ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎҐґҐлҐЎЎЎ"
+STRARRAY[3][8]  = "гѓ—гѓігЂЂгЂЂгЂЂгЂЂ в”Јв”Ѓв”›гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂг‚ґгѓ«г‚ЎгЂЂ"
 STRARRAY[3][9]  = STRARRAY[0][9];
 STRARRAY[3][10]  = STRARRAY[0][10];
 STRARRAY[3][11]  = STRARRAY[2][11];

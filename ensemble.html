@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
 <head>
-<title>³ÚÉè¸¡º÷</title>
-<meta http-equiv="content-type" content="text/html; charset=iso-2022-jp">
+<title>æ¥½è­œæ¤œç´¢</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta http-equiv="content-script-type" content="text/javascript">
 <style>
 span {color: red}
@@ -10,17 +10,17 @@ span {color: red}
 <script language="JavaScript">
 
 /**************************************************************
- ¥Ç¡¼¥¿¸¡º÷ÍÑ JavaScript version 0.2  Copyright (C) H.Ito 2002
+ ãƒ‡ãƒ¼ã‚¿æ¤œç´¢ç”¨ JavaScript version 0.2  Copyright (C) H.Ito 2002
 
- Æ°ºî³ÎÇ§ : galeon 1.1.3
+ å‹•ä½œç¢ºèª : galeon 1.1.3
             Mozilla 0.9.8
 
-CD() ¤È¥Ç¡¼¥¿ÄêµÁ¤ò½ñ¤­´¹¤¨¤ì¤Ğ¡¢¤½¤³¤½¤³ÈÆÍÑÅª¤Ë»ÈÍÑ²ÄÇ½¤$È
-»×¤¤¤Ş¤¹¡£¥é¥¤¥»¥ó¥¹¤Ï GPL ¤Ë½à¤º¤ë¤â¤Î¤È¤·¤Ş¤¹¡£
+CD() ã¨ãƒ‡ãƒ¼ã‚¿å®šç¾©ã‚’æ›¸ãæ›ãˆã‚Œã°ã€ãã“ãã“æ±ç”¨çš„ã«ä½¿ç”¨å¯èƒ½ã ã¨
+æ€ã„ã¾ã™ã€‚ãƒ©ã‚¤ã‚»ãƒ³ã‚¹ã¯ GPL ã«å¾“ã†ã‚‚ã®ã¨ã—ã¾ã™ã€‚
 ***************************************************************/
 
 /***************************************************************
-  ¸¡º÷¹àÌÜ¤Ë±ş¤¸¤ÆÊÑ¹¹
+  æ¤œç´¢é …ç›®ã«å¿œã˜ã¦å¤‰æ›´
 ****************************************************************/
 function CD(title, composer, hensei, publisher, owner){
   this.items = new Object();
@@ -32,12 +32,12 @@ function CD(title, composer, hensei, publisher, owner){
 }
 
 CD.prototype.item_name = new Object();
-CD.prototype.item_name['title']     = "¥¿¥¤¥È¥ë";
-CD.prototype.item_name['composer']  = "ºî¶Ê¼Ô";
-CD.prototype.item_name['hensei']    = "ÊÔ.";
-CD.prototype.item_name['publisher'] = "½ĞÈÇ¼Ò";
-CD.prototype.item_name['owner']     = "´ÉÍı";
-CD.prototype.item_name['all']       = "tÉô";
+CD.prototype.item_name['title']     = "ã‚¿ã‚¤ãƒˆãƒ«";
+CD.prototype.item_name['composer']  = "ä½œæ›²è€…";
+CD.prototype.item_name['hensei']    = "ç·¨.";
+CD.prototype.item_name['publisher'] = "å‡ºç‰ˆç¤¾";
+CD.prototype.item_name['owner']     = "ç®¡ç†";
+CD.prototype.item_name['all']       = "téƒ¨";
 
 /***************************************************************/
 
@@ -169,7 +169,7 @@ CD.prototype.dispInfo = function (word, item, key, num){
 }
 
 /******************************************************************
-  ¸¡º÷¥Õ¥©¡¼¥àºîÀ®´Ø¿ô
+  æ¤œç´¢ãƒ•ã‚©ãƒ¼ãƒ ä½œæˆé–¢æ•°
 *******************************************************************/
 CD.prototype.writeSearchForm = function (){
   var items = this.items;
@@ -178,25 +178,25 @@ CD.prototype.writeSearchForm = function (){
   document.writeln('<br id="br">')
 
   document.writeln('<form  onsubmit="writeResultsFromForm(); return false"><table>');
-  document.writeln('<tr><td>¸¡º÷¹àÌÜ:<\/td><td><select name="item">');
+  document.writeln('<tr><td>æ¤œç´¢é …ç›®:<\/td><td><select name="item">');
   for(i in items){
     document.writeln('<option value="' + i +'"> ' + iname[i] +'<\/option>');
   }
   document.writeln('<option name="item" value="all" selected>' + iname['all'] + '<\/option>')
   document.writeln('<\/select> ');
-  document.writeln('(¸¡º÷·ë²Ì¤ò<select name="sort">');
+  document.writeln('(æ¤œç´¢çµæœã‚’<select name="sort">');
   for(i in items){
     document.writeln('<option value="' + i +'"> ' + iname[i] +'<\/option>');
   }
-  document.writeln('<\/select>¤Ç0Îó¡£)<\/td><\/tr>');
-  document.writeln('<tr><td>¸¡º÷¸ì¶ç:<\/td><td><input type="text"  name="word" size="20" maxlength="30">');
+  document.writeln('<\/select>ã§0åˆ—ã€‚)<\/td><\/tr>');
+  document.writeln('<tr><td>æ¤œç´¢èªå¥:<\/td><td><input type="text"  name="word" size="20" maxlength="30">');
   document.writeln('<input type="button" value="search" onclick="writeResultsFromForm()"><\/td><\/tr>');
   document.writeln('<tr><td><\/td><td>');
-  document.writeln('<input type="button" value="t¤Æ¤Î¥Ç¡¼¥¿¤òÉ½¼¨" onclick="writeAllFromForm()">');
+  document.writeln('<input type="button" value="tã¦ã®ãƒ‡ãƒ¼ã‚¿ã‚’è¡¨ç¤º" onclick="writeAllFromForm()">');
   document.writeln('<\/td><\/tr><\/table><\/form>');
 
   document.writeln('<table name="results" id="t2" border="1" cellspacing="0">');
-  document.writeln('<tr><th>¸¡º÷¸ì<\/th><th>¸¡º÷¹àÌÜ<\/th><th>0Îó¹àÌÜ<\/th><th>·ï¿ô<\/th><\/tr>');
+  document.writeln('<tr><th>æ¤œç´¢èª<\/th><th>æ¤œç´¢é …ç›®<\/th><th>0åˆ—é …ç›®<\/th><th>ä»¶æ•°<\/th><\/tr>');
   document.writeln('<tr><td>----<\/td><td>----<\/td><td>----<\/td><td>----<\/td><\/tr>');
   document.writeln('<\/table><br>');
 
@@ -213,7 +213,7 @@ CD.prototype.writeSearchForm = function (){
 }
 
 /******************************************************************
-  ¸¡º÷·ë²ÌÉ½¼¨´Ø¿ô
+  æ¤œç´¢çµæœè¡¨ç¤ºé–¢æ•°
 *******************************************************************/
 CD.prototype.writeResults = function (doc, cd, item, key, word){
   var r = new RegExp(word, "igm");
@@ -233,7 +233,7 @@ CD.prototype.writeResults = function (doc, cd, item, key, word){
 }
 
 /******************************************************************
-  t¥Ç¡¼¥¿É½¼¨´Ø¿ô
+  tãƒ‡ãƒ¼ã‚¿è¡¨ç¤ºé–¢æ•°
 *******************************************************************/
 CD.prototype.writeAll = function (doc, cd, key){
   var items = this.items;
@@ -265,7 +265,7 @@ cdObj = new CD("", "", "", "");
 cdArray = new Array();
 
 /******************************************************************
-  °Ê²¼¥Ç¡¼¥¿ÄêµÁÉô
+  ä»¥ä¸‹ãƒ‡ãƒ¼ã‚¿å®šç¾©éƒ¨
 *******************************************************************/
 i=0
 
@@ -274,110 +274,110 @@ cdArray[i++] = new CD(
 'Jhon Cheetham',
 '07(T6B)',
 'International Trombone Association Manuscript Press',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Concertino for Bass Trombone and Trombone Chor',
 'Eric Ewazen',
 '08+1(T6B2+B)',
 'International Trombone Association Manuscript Press',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Mini Overture',
 'James Kazik',
 '10(AT7B2)',
 'Kagarice Brass Editions',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Sanctuary for solo trombone',
 'James Kazik',
 '08+1(T6B2+T)',
 'Kagarice Brass Editions',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'The Chief',
 'John Stevens',
 '06+1(T5B+B)',
 'WILLIAMS MUSIC PUBLISHING COMPANY',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Transformation',
 'Irvin L. Wagner',
 '10(T8B2)',
 'Accura Music',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Three Miniatures for Trombone Choir',
 'Jack End',
 '16(T14B2)',
 'Accura Music',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Procession of the Nobles',
 'Nicolai Rimsky-Korsakov',
 '10(A3T5B2)',
 'Kagarice Brass Editions',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Prelude in C# Minor Op.3, No.2',
 'Serge Rachmaninoff',
 '12(T9B3)',
 'WEHR\'S MUSIC HOUSE',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Celebration 2001',
 'Walter Hartley',
 '12(T8B4)',
 'Ensemble Publications',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Scherzo Funebre',
 'Derek Bourgeois',
 '08(AT4B2)',
 'Warwick Music',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Eight Aphorisms',
 'Wilfred Josephs',
 '08(A2T4B2)',
 'Warwick Music',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Provence',
 'Jeremy Dibb',
 '08(T6B2)',
 'Warwick Music',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'A Breach of the Peace',
 'Simon Wills',
 '08(T6B2)',
 'Warwick Music',
-'°ËÅì'
+'ä¼Šæ±'
 );
 cdArray[i++] = new CD(
 'Weiner Fanfare',
 'R.Strauss',
 '10(T8B2)',
 'original',
-'°ËÅì'
+'ä¼Šæ±'
 );
 
 
 /******************************************************************
-  ¥Ç¡¼¥¿ÄêµÁÉô½ª¤ï¤ê
+  ãƒ‡ãƒ¼ã‚¿å®šç¾©éƒ¨çµ‚ã‚ã‚Š
 *******************************************************************/
 </script>
 </head>

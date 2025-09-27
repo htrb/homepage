@@ -1,53 +1,53 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
 <head>
 <title>w3m-256</title>
-<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <link rel="stylesheet" title="black" href="../black.css" type="text/css">
 <link rel="stylesheet" title="white" href="../white.css" type="text/css">
 </head>
 <body>
 <h1>w3m-256</h1>
-<h2>����</h2>
+<h2>概要</h2>
 <p>
-�Ƕ�� xterm ��256��ɽ����ǽ�ʤΤǡ�w3m ��256��ɽ�����б������Ƥߤޤ�����
-(2007/10/09 ����)
+最近の xterm は256色表示可能なので、w3m を256色表示に対応させてみました。
+(2007/10/09 更新)
 </p>
 
-<h2>�ɲõ�ǽ</h2>
+<h2>追加機能</h2>
 <ol>
- <li> body ������ text, bgcolor, link, alink, vlink �γ�°�����б���
- <li> font ������ color °�����б���
- <li> table, tr, th, td �γƥ����� bgcolor°�����б���
- <li> ����饤��������طʿ��򤽤ξ����طʿ��ˤ��롣
+ <li> body タグの text, bgcolor, link, alink, vlink の各属性に対応。
+ <li> font タグの color 属性に対応。
+ <li> table, tr, th, td の各タグの bgcolor属性に対応。
+ <li> インライン画像の背景色をその場所の背景色にする。
 </ol>
 
-<h2>���¤�������</h2>
+<h2>制限と問題点</h2>
 <ol>
- <li> <del>frame �ˤ�̤�б���</del><br>
-      ��w3m-0.4.2-cvs-1.896_256-002.patch.gz ���б���
- <li> <del>���λ���˻Ȥ���Τ� "#RRGGBB" �η����Τߡ�</del><br>
+ <li> <del>frame には未対応。</del><br>
+      →w3m-0.4.2-cvs-1.896_256-002.patch.gz で対応。
+ <li> <del>色の指定に使えるのは "#RRGGBB" の形式のみ。</del><br>
 
-      ��w3m-0.4.2-cvs-1.896_256-002.patch.gz �� HTML ��ɸ�࿧̾ (Black,
+      →w3m-0.4.2-cvs-1.896_256-002.patch.gz で HTML の標準色名 (Black,
       Silver, Gray, White, Maroon, Red, Purple, Fuchsia, Green, Lime,
-      Olive, Yellow, Navy, Blue, Teal, Aqua) ���б���<br>
+      Olive, Yellow, Navy, Blue, Teal, Aqua) に対応。<br>
 
-      ��w3m-0.5.1-cvs-1.946_256-008.patch.gz �� X11 Color Names ���б���
+      →w3m-0.5.1-cvs-1.946_256-008.patch.gz で X11 Color Names に対応。
 
- <li> 256���Υѥ�åȤ� xterm ɸ�������˸��ꡣ
- <li> font �����Υͥ��Ȥ�32�Ĥޤǡ�
- <li> font ������ a ������Ʊ���˻��ꤵ�줿��� a �����λ��꿧�����ͥ��
-      ����Ƥ��ޤ���<br>
+ <li> 256色のパレットは xterm 標準の設定に固定。
+ <li> font タグのネストは32個まで。
+ <li> font タグと a タグが同時に指定された場合 a タグの指定色が常に優先
+      されてしまう。<br>
 
-      ��w3m-0.4.2-cvs-1.896_256-002.patch.gz �ǰ���б���body �����ǻ���
-      ����Ƥ��� link, alink, vlink �γƿ���Ʊ������ font �����ǻ��ꤷ��
-      ������������ư��ޤ��󡣤ޤ���a ���������Ƥ����Ԥ��������
-      ���ɽ���Ǥ��ʤ����Ȥ�����ޤ�(<a href="linkcolor.html">ɽ���Υƥ�
-      ��</a>) ��
- <li> ư���ǧ���Խ�ʬ��
+      →w3m-0.4.2-cvs-1.896_256-002.patch.gz で一応対応。body タグで指定
+      されている link, alink, vlink の各色と同じ色を font タグで指定して
+      ある場合は正常に動作しません。また、a タグの内容が改行される場合正
+      常に表示できないことがあります(<a href="linkcolor.html">表示のテス
+      ト</a>) 。
+ <li> 動作確認が不十分。
 </ol>
 
-<h2>ư����</h2>
+<h2>動作例</h2>
 <p>
 <table>
  <tr>
@@ -63,21 +63,21 @@
    <a href="colortest.html">colortest.html</a>
   </td>
   <td>
-   <a href="http://itpro.nikkeibp.co.jp/linux/index.shtml">����Linux</a>
+   <a href="http://itpro.nikkeibp.co.jp/linux/index.shtml">日経Linux</a>
   </td>
  </tr>
 </table>
 </p>
 
-<h2>�����������</h2>
+<h2>ダウンロード</h2>
 <ul>
- <li> w3m-cvs-1.1001 ��<br>
+ <li> w3m-cvs-1.1001 用<br>
       <a href="w3m-0.5.2-cvs-1.1001_256-008.patch.gz">w3m-0.5.2-cvs-1.1001_256-008.patch.gz</a>
- <li> w3m-cvs-1.001-async-4 ��<br>
+ <li> w3m-cvs-1.001-async-4 用<br>
       <a href="w3m-cvs-1.1001-async-4_256-008.patch.gz">w3m-cvs-1.1001-async-4_256-008.patch.gz</a>
 </ul>
 
-<h2>����ѥ���</h2>
+<h2>コンパイル</h2>
 <ul>
  <li> w3m-cvs-1.1001<br>
       <ol>
@@ -96,16 +96,16 @@
       </ol>
 </ul>
 
-<h2>�Ȥ���</h2>
+<h2>使い方</h2>
 <ol>
- <li> ��Option Setting Panel�פ� "Use the colors specified by the web
-      page" �� "YES" �ˤ���� 256 ���б��γƼ��ĥ��ͭ���ˤʤ�ޤ���
- <li> ~/.w3m/keymap �ˡ�keymap  "x c" COMMAND "SET_OPTION
-      use_color256=toggle"�פ����ꤷ�Ƥ����� 256 ��ɽ�����̾��ɽ�����
-      ñ���ڤ��ؤ��뤳�Ȥ�����ޤ���
+ <li> 「Option Setting Panel」で "Use the colors specified by the web
+      page" を "YES" にすると 256 色対応の各種拡張が有効になります。
+ <li> ~/.w3m/keymap に「keymap  "x c" COMMAND "SET_OPTION
+      use_color256=toggle"」と設定しておけば 256 色表示と通常の表示を簡
+      単に切り替えることが出来ます。
 </ol>
 
-<h2>��Ϣ���</h2>
+<h2>関連リンク</h2>
 <ul>
  <li> <a href="http://w3m.sourceforge.net/">w3m</a>
  <li> <a href="http://dickey.his.com/xterm/">xterm</a>
@@ -114,60 +114,60 @@
  <li> <a href="http://www.page.sannet.ne.jp/knabe/w3m/w3m-cvs-1.1001-async-4.diff.gz">w3m-cvs-1.1001-async-4.diff.gz</a>
 </ul>
 
-<h2>����¾</h2>
+<h2>その他</h2>
 <ul>
- <li> ���Υѥå��ϴ�����̵�ݾڤǤ���
+ <li> このパッチは完全に無保証です。
 </ul>
 
-<h2>����</h2>
+<h2>履歴</h2>
 <ul>
- <li> 2007/10/09 w3m-0.5.2-cvs-1.1001, w3m-cvs-1.1001-async-4 �б�
+ <li> 2007/10/09 w3m-0.5.2-cvs-1.1001, w3m-cvs-1.1001-async-4 対応
  <li> 2005/04/18 w3m-0.5.1-cvs-1.946_256-008.patch.gz, w3m-cvs-1.946-async-1_256-008.patch.gz
       <ul>
-       <li> X11 Color Names �б���
+       <li> X11 Color Names 対応。
       </ul>
  <li> 2004/07/02 w3m-0.5.1_256-007.patch.gz, w3m-0.5.1-async-1_256-007.patch.gz
       <ul>
-       <li> font ���������ΥХ�������
+       <li> font タグ処理のバグ修正。
       </ul>
  <li> 2004/07/01 w3m-0.5.1_256-006.patch.gz, w3m-0.5.1-async-1_256-006.patch.gz
       <ul>
-       <li> active �ʥ��󥫡��˥�������饤��ɽ�������褦�ˤ�����
+       <li> active なアンカーにアンダーラインが表示されるようにした。
        <li> <a href="http://ehe.s57.xrea.com/index.php?w3m">w3m - ehe
-	    Wiki</a>�ǻ�Ŧ����Ƥ����̾�Υ����ߥʥ��������������Ǥ��ʤ�����
-	    �������Զ��ν��� (ư��̤��ǧ) ��
-       <li> async patch �б��ǡ�
+	    Wiki</a>で指摘されていた通常のターミナルで正しく色指定できないこと
+	    がある不具合の修正 (動作未確認) 。
+       <li> async patch 対応版。
       </ul>
  <li> 2004/05/05 w3m-0.5.1_256-005.patch.gz
       <ul>
-       <li> �ͥ��Ȥ��� font ����������˽�������ʤ����Τ��ä��Զ�������
+       <li> ネストした font タグが正常に処理されない場合のあった不具合を修正。
       </ul>
  <li> 2004/01/25 w3m-0.4.2-cvs-1.896_256-004.patch.gz
       <ul>
-       <li> font ���������ΥХ�������
+       <li> font タグ処理のバグ修正。
        <li> MARK_URL, MARK_WORD, MARK_MID
-	    �ǥ�󥯤ο����Ѥ�äƤ��ʤ��ä���
+	    でリンクの色が変わっていなかった。
       </ul>
  <li> 2004/01/15 w3m-0.4.2-cvs-1.896_256-003.patch.gz
       <ul>
-       <li> HTML ��ɸ�࿧̾�б��ΥХ�������
-       <li> ����16�ʿ����������Ƭ�� '#' ��̵�������б���
+       <li> HTML の標準色名対応のバグ修正。
+       <li> 色の16進数指定時で先頭の '#' が無い場合に対応。
       </ul>
  <li> 2004/01/13 w3m-0.4.2-cvs-1.896_256-002.patch.gz
       <ul>
-       <li> frame �б���HTML ��ɸ�࿧̾�б��ʤɡ�
+       <li> frame 対応、HTML の標準色名対応など。
       </ul>
  <li> 2004/01/05 w3m-0.4.2-cvs-1.895_256-001.patch.gz
       <ul>
-       <li>�Ȥꤢ����������
+       <li>とりあえず作成。
       </ul>
 </ul>
 
-<h2>Ϣ����</h2>
+<h2>連絡先</h2>
 <p>ZXB01226 at nifty.com</p>
 
 <hr>
-<p><a href="../soft.html">���</a></p>
+<p><a href="../soft.html">戻る</a></p>
 
 </body>
 </html>

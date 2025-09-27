@@ -1,22 +1,22 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <title>Ngraph: date axis</title>
-<meta http-equiv="Content-Type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" title="black" href="black.css" type="text/css">
 <link rel="stylesheet" title="white" href="white.css" type="text/css">
 </head>
 <body>
 <div>
-<h1>Ngraph �����դ򼴤�ñ�̤˻��Ѥ�����ˡ</h1>
+<h1>Ngraph で日付を軸の単位に使用する方法</h1>
 <p>
-�����աפ����ֳ֤Ǥʤ����ᡢ<a href="http://www2e.biglobe.ne.jp/~isizaka/index.htm">Ngraph</a>
-�����դ򼴤�ñ�̤˻��Ѥ��뤿��ˤϾ����ƥ��˥å���ɬ�פˤʤ�ޤ���
-<a href="http://www2e.biglobe.ne.jp/~isizaka/bbs/light.cgi">Ngraph BBS</a>�ǵ������줿���Ƥʤɤ��Ȥˡ�
-���ռ���Ȥ��������ˡ��ޤȤ�Ƥߤޤ�����
+「日付」は等間隔でないため、<a href="http://www2e.biglobe.ne.jp/~isizaka/index.htm">Ngraph</a>
+で日付を軸の単位に使用するためには少々テクニックが必要になります。
+<a href="http://www2e.biglobe.ne.jp/~isizaka/bbs/light.cgi">Ngraph BBS</a>で議論された内容などをもとに、
+日付軸を使うための方法をまとめてみました。
 </p>
 <p>
-�ʲ��ǰ����ǡ����ե�����ˤϼ��Τ褦�ʥե����ޥåȤ����եǡ�������Ǽ����Ƥ���Ȥ��ޤ���
+以下で扱うデータファイルには次のようなフォーマットで日付データが格納されているとします。
 </p>
 
 <pre>
@@ -29,60 +29,60 @@ $cat test.dat
 .
 </pre>
 
-<h2>Ngraph �ο����Ѵ������Ѥ�����ˡ</h2>
+<h2>Ngraph の数式変換を利用する方法</h2>
 <p>
-Ngraph �ο����Ѵ��ǻ��ѤǤ���ؿ��� MJD() ������ޤ��Τǡ���������Ѥ����
-�������������̻���������뤳�Ȥ�����ޤ���
+Ngraph の数式変換で使用できる関数に MJD() がありますので、これを利用すれば
+ある時点からの通算日数を求めることが出来ます。
 </p>
 
-<h3>��ǯ�ʾ�����ŪĹ��Ū�ʥǡ����򰷤����</h3>
+<h3>１年以上の比較的長期的なデータを扱う場合</h3>
 <p>
-X ���ο����Ѵ���ʲ��Τ褦�����ꤹ�뤳�Ȥǡ�������ñ�̤�ǯ�ˤ��뤳�Ȥ�����ޤ���
-����ˡ�X ���Ρ�ʬ����פ�12�ˤ���о��������뤬�ַ�פˤʤ�ޤ�
+X 軸の数式変換を以下のように設定することで、横軸の単位を年にすることが出来ます。
+さらに、X 軸の「分割数」を12にすれば小スケールが「月」になります
 </p>
 <pre>
 (MJD(%01,%02,%03)-MJD(1900,1,1))/365.25+1900
 </pre>
 
-<h3>�������������Ūû��Ū�ʥǡ����򰷤����</h3>
+<h3>１ヶ月以内の比較的短期的なデータを扱う場合</h3>
 <p>
-�����ǡ������������ϰϤ˼��ޤäƤ�����ϡ�X �����դˤ�������ǰ����ޤ��͡�
-ɬ�פ˱����� X ���Ρ���������...�ס���Ƭ�פ� "1/" �������ꤹ��м���ɽ����
-1/2 1/5 ... ���ͤˤʤ�ޤ���
+扱うデータがある月の範囲に収まっている場合は、X を日付にするだけで扱えますね。
+必要に応じて X 軸の「目盛数字...」「先頭」を "1/" 等と設定すれば軸の表示が
+1/2 1/5 ... の様になります。
 </p>
 
-<h2>Ngraph �Υޥ��������Ѥ�����ˡ</h2>
+<h2>Ngraph のマクロを利用する方法</h2>
 <p>
-Ngraph script ���Ѥ���������������������쥸����ɤǽ񤫤��뤳�ȤǸ�������
-��ͳ�˼���ɽ�����Ѥ��뤳�Ȥ�����ޤ����ʲ��Υޥ����� X ���ο����Ѵ��򼡤�
-�褦�����ꤷ�ƻ��Ѥ��ޤ����ޤ����ʲ��Υޥ����μ¹Ԥˤ� 
-<a href="mjd2date.nsc">mjd2date.nsc</a> ��ɬ�פǤ���
+Ngraph script を用いて目盛数字や目盛線をレジェンドで書かせることで見かけ上
+自由に軸の表示を変えることが出来ます。以下のマクロは X 軸の数式変換を次の
+ように設定して使用します。また、以下のマクロの実行には 
+<a href="mjd2date.nsc">mjd2date.nsc</a> も必要です。
 </p>
 
 <pre>
 MJD(%01,%02,%03)
 </pre>
 
-<h3><a href="date_axis.nsc">�������ֳ֤μ�</a></h3>
+<h3><a href="date_axis.nsc">日数等間隔の軸</a></h3>
 <p>
-������������� Ngraph �ˤޤ����ơ����������Τߥޥ������������ޤ�����������
-��������ʸ�����Oct/18/2001 May/6/2002 Nov/22/2002 ���ͤˤʤ�ޤ���ʸ����
-��ɽ���ϥޥ������ get_date() �ؿ���񤭴����뤳�Ȥ��ѹ��Ǥ��ޤ������Υ�����
-����ѹ������Ȥ��ϥޥ�������ټ¹Ԥ��Ƥ���������
+目盛線の描画は Ngraph にまかせて、目盛数字のみマクロで生成します。生成され
+る目盛の文字列はOct/18/2001 May/6/2002 Nov/22/2002 の様になります。文字列
+の表記はマクロ中の get_date() 関数を書き換えることで変更できます。軸のスケー
+ルを変更したときはマクロを再度実行してください。
 </p>
 
-<h3><a href="date_axis2.nsc">�������ֳ֤μ�</a></h3>
+<h3><a href="date_axis2.nsc">日付等間隔の軸</a></h3>
 <p>
-���Τˤ��������ֳ֤ǤϤ���ޤ��󤬡�������������������ξ����ޥ�����������
-�ޤ������������������ʸ����� X �����ϰϤˤ�ä��Ѳ����ޤ������㤨�� 
-��1 10 20�פ��ͤˤʤ�ޤ������Υ���������ѹ������Ȥ��ϥޥ�������ټ¹Ԥ�
-�Ƥ���������
+正確には日付等間隔ではありませんが、目盛線と目盛数字の両方をマクロで生成し
+ます。生成される目盛の文字列は X 軸の範囲によって変化しますが、例えば 
+「1 10 20」の様になります。軸のスケールを変更したときはマクロを再度実行し
+てください。
 </p>
 
-<h2>Ngraph �˥ѥå������Ƥ���ˡ</h2>
+<h2>Ngraph にパッチを当てる方法</h2>
 <p>
-������ˡ���������� NGP �ե�����ϥ��ꥸ�ʥ�� Ngraph �ȸߴ������ʤ��ʤ�ޤ���
-��ʬ���դ��ƻ��Ѥ��Ƥ���������
+この方法で生成した NGP ファイルはオリジナルの Ngraph と互換性がなくなります。
+十分注意して使用してください。
 </p>
 </div>
 </body>
