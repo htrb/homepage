@@ -1,0 +1,60 @@
+diff -rcN gtk-0.25/src/rbgdk.c gtk-0.25.patch/src/rbgdk.c
+*** gtk-0.25/src/rbgdk.c	Tue May 22 06:22:53 2001
+--- gtk-0.25.patch/src/rbgdk.c	Wed Jun 13 17:14:23 2001
+***************
+*** 914,919 ****
+--- 914,941 ----
+      return self;
+  }
+  
++ static VALUE
++ gdkgc_set_arc_mode(self, arc_mode)
++     VALUE self, arc_mode;
++ {
++   GdkGCPrivate * gcprivate=(GdkGCPrivate *) get_gdkgc(self);
++ 
++   XSetArcMode(gcprivate->xdisplay, gcprivate->xgc, NUM2INT(arc_mode));
++ 
++   return self;
++ }
++ 
++ static VALUE
++ gdkgc_set_fill_rule(self, fill_rule)
++     VALUE self, fill_rule;
++ {
++   GdkGCPrivate * gcprivate=(GdkGCPrivate *) get_gdkgc(self);
++ 
++   XSetFillRule(gcprivate->xdisplay, gcprivate->xgc, NUM2INT(fill_rule));
++ 
++   return self;
++ }
++ 
+  /* Init */
+  extern void Init_gtk_gdk_color();
+  extern void Init_gtk_gdk_visual();
+***************
+*** 1004,1009 ****
+--- 1026,1033 ----
+      rb_define_method(gdkGC, "set_subwindow", gdkgc_set_subwindow, 1);
+      rb_define_method(gdkGC, "set_tile", gdkgc_set_tile, 1);
+      rb_define_method(gdkGC, "set_ts_origin", gdkgc_set_ts_origin, 2);
++     rb_define_method(gdkGC, "set_arc_mode", gdkgc_set_arc_mode, 1);
++     rb_define_method(gdkGC, "set_fill_rule", gdkgc_set_fill_rule, 1);
+  
+      /*
+       * Gdk::GCValues
+diff -rcN gtk-0.25/src/rbgdkconst.c gtk-0.25.patch/src/rbgdkconst.c
+*** gtk-0.25/src/rbgdkconst.c	Tue May 22 06:22:53 2001
+--- gtk-0.25.patch/src/rbgdkconst.c	Wed Jun 13 17:14:23 2001
+***************
+*** 341,345 ****
+--- 341,349 ----
+      rb_define_const(mGdk, "OVERLAP_RACTANGLE_IN", INT2FIX(GDK_OVERLAP_RECTANGLE_IN));
+      rb_define_const(mGdk, "OVERLAP_RACTANGLE_OUT", INT2FIX(GDK_OVERLAP_RECTANGLE_OUT));
+      rb_define_const(mGdk, "OVERLAP_RACTANGLE_PART", INT2FIX(GDK_OVERLAP_RECTANGLE_PART));
++ 
++     rb_define_const(mGdk, "ARC_CHORD", INT2FIX(ArcChord));
++     rb_define_const(mGdk, "ARC_PIESLICE", INT2FIX(ArcPieSlice));
++ 
+  }
+  

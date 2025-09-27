@@ -1,0 +1,1906 @@
+#!/usr/bin/env ruby
+
+=begin
+
+ graview version 0.11
+
+ written by Hiroyuki Ito
+
+=end
+
+$KCODE = "e"
+
+require 'gtk'
+require 'jcode'
+require 'kconv'
+require 'getopts'
+require 'thread'
+
+begin
+  require 'gettext'
+  include GetText
+  bindtextdomain("graview")
+rescue LoadError
+  def _(s)
+    s
+  end
+end
+
+RESOLUTION = 45.0
+NGRAPH_INI = "/Ngraph.ini"
+NGRAPH_PATH = [ENV["NGRAPHHOME"], ENV["HOME"], "/usr/local/lib/Ngraph"]
+PROGRAM_NAME = "GRAView"
+PROGRAM_VERSION = "0.11"
+COPYRIGHT = "Copyright (C) H.Ito, 2001-2002"
+
+CLOSE_XPM = [
+'24 24 2 1',
+' 	c None',
+'.	c #000000',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'        .    ..         ',
+'        ..  ....        ',
+'         .. ...         ',
+'         .....          ',
+'          ...           ',
+'          ....          ',
+'         ......         ',
+'         .. ....        ',
+'        ..   ....       ',
+'        .     ..        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ']
+
+EXIT_XPM = [
+'24 24 13 1',
+' 	c None',
+'.	c #000000',
+'+	c #E4E4DC',
+'@	c #BE7579',
+'#	c #C67D81',
+'$	c #2D2D2D',
+'%	c #8A4D4F',
+'&	c #9E575B',
+'*	c #A75E5F',
+'=	c #AF6668',
+'-	c #B66D71',
+';	c #CD8689',
+'>	c #080808',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'          .........     ',
+'          .++++++..     ',
+'          .++++++..     ',
+'        ...++++++..     ',
+'        .@.++++++..     ',
+'   ......@#.++$.+..     ',
+'   .%&*=-@#;.+.$+..     ',
+'   .%&*=-@#;.++++..     ',
+'   ......@#.+++++..     ',
+'        .@.++++++..     ',
+'        ...++++++..     ',
+'          .++++....     ',
+'          .++......     ',
+'          ...>>>>>>     ',
+'                        ',
+'                        ',
+'                        ',
+'                        ']
+
+FIRST_XPM = [
+'24 24 15 1',
+' 	c None',
+'.	c #1E1E1E',
+'+	c #1C1C1C',
+'@	c #222222',
+'#	c #2A2A2A',
+'$	c #1A1A1A',
+'%	c #2C2C2C',
+'&	c #353535',
+'*	c #3E3E3E',
+'=	c #3C3C3C',
+'-	c #4C4C4C',
+';	c #4E4E4E',
+'>	c #575757',
+',	c #5E5E5E',
+'"	c #111111',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'           .       .    ',
+'          .+      .+    ',
+'         @#$     @#$    ',
+'        @%&$    @%&$    ',
+'       @%*=$   @%*=$    ',
+'      @%*-=$  @%*-=$    ',
+'     @%*;>=$ @%*;>=$    ',
+'    .#=-,,=$.#=-,,=$    ',
+'    .#=-,,=$.#=-,,=$    ',
+'     .#=->=$ .#=->=$    ',
+'      .#=-=$  .#=-=$    ',
+'       .#==$   .#==$    ',
+'        .#&$    .#&$    ',
+'         .#$     .#$    ',
+'          .$      .$    ',
+'           "       "    ',
+'                        ',
+'                        ',
+'                        ',
+'                        ']
+
+LAST_XPM  = [
+'24 24 15 1',
+' 	c None',
+'.	c #111111',
+'+	c #1A1A1A',
+'@	c #1E1E1E',
+'#	c #2A2A2A',
+'$	c #353535',
+'%	c #3C3C3C',
+'&	c #4C4C4C',
+'*	c #575757',
+'=	c #5E5E5E',
+'-	c #4E4E4E',
+';	c #3E3E3E',
+'>	c #2C2C2C',
+',	c #222222',
+'"	c #1C1C1C',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'    .       .           ',
+'    +@      +@          ',
+'    +#@     +#@         ',
+'    +$#@    +$#@        ',
+'    +%%#@   +%%#@       ',
+'    +%&%#@  +%&%#@      ',
+'    +%*&%#@ +%*&%#@     ',
+'    +%==&%#@+%==&%#@    ',
+'    +%==&%#@+%==&%#@    ',
+'    +%*-;>, +%*-;>,     ',
+'    +%&;>,  +%&;>,      ',
+'    +%;>,   +%;>,       ',
+'    +$>,    +$>,        ',
+'    +#,     +#,         ',
+'    "@      "@          ',
+'    @       @           ',
+'                        ',
+'                        ',
+'                        ',
+'                        ']
+
+LEFT_XPM = [
+'24 24 18 1',
+' 	c None',
+'.	c #1A1A1A',
+'+	c #2C2C2C',
+'@	c #1D1D1D',
+'#	c #202020',
+'$	c #282828',
+'%	c #2F2F2F',
+'&	c #3A3A3A',
+'*	c #373737',
+'=	c #494949',
+'-	c #3D3D3D',
+';	c #464646',
+'>	c #4C4C4C',
+',	c #585858',
+'"	c #545454',
+')	c #676767',
+'!	c #3E3E3E',
+'~	c #5B5B5B',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                   .    ',
+'                 .+@    ',
+'               .#$+@    ',
+'             .#$%&+@    ',
+'           .#$%*=&+@    ',
+'         .#$%*-;=&+@    ',
+'       .#$%*-;>,=&+@    ',
+'     .#$%*-;>"),=&+@    ',
+'     .#$%*!;>"~,=&+@    ',
+'       .#$%*!;>"=&+@    ',
+'         .#$%*!;=&+@    ',
+'           .#$%*!&+@    ',
+'             .#$%*+@    ',
+'               .#$+@    ',
+'                 .#@    ',
+'                   .    ',
+'                        ',
+'                        ',
+'                        ',
+'                        ']
+
+NGRAPH_XPM = [
+'24 24 17 1',
+'       c None',
+'.      c #0D0B1B',
+'+      c #027EFA',
+'@      c #6E6C66',
+'#      c #A6AA02',
+'$      c #BABE3E',
+'%      c #7EFEFA',
+'&      c #FA3E3E',
+'*      c #02FEFA',
+'=      c #8A8E8A',
+'-      c #FAFE02',
+';      c #FABEBA',
+'>      c #5E7EFA',
+',      c #433E36',
+'"      c #CFD1BD',
+')      c #AFB2BC',
+'!      c #FAFEFA',
+'           ,)=          ',
+'         ,)!!!=         ',
+'       ,)!!!!!!=        ',
+'     ,)!!!>!!;;!=       ',
+'   ,)!!!!>*>;&!!!=      ',
+' ,)!!!!!!!>;&))!!!=     ',
+'@"!!)+))+);&!++!!!!=    ',
+',="!"+)"+=&!!")!!!!!=   ',
+'@)=,)"!!;&!!!!!!)!!@!=  ',
+',))@,)!;&>>!!!!!!,=!!!= ',
+',)=!!,,&!+>!!))@=!)!!!!=',
+'@=!!!=.))!)!!=,)""""""!!',
+'.!!!;&;,)!!,@!))=))))=!!',
+'.@!;&!!!,=@!)!)@#######!',
+' .@!!!!@=,)!!!)@-------$',
+'  .@!!@!!!,@!!)@-* ** *-',
+'   .@!!!!!),)!)@--------',
+'**  .@%%!!!!!!)@-$$$$$$-',
+'***  .**!!!!!!@,-.$.$.$-',
+'****  **!!!!=,.,-$$$$$$-',
+'***** **@!),. ..-.$.$.$-',
+'** *****...   .,-$)$$$$-',
+'**  ****       ,-.$.$.$-',
+'**   ***        ------- ']
+
+OPEN_XPM = [
+'24 24 5 1',
+' 	c None',
+'.	c #000000',
+'+	c #99907B',
+'@	c #FFFEF7',
+'#	c #FFFFFF',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'              ..        ',
+'           ...++.       ',
+'    ..  ...++++@@#...   ',
+'   .++..++++@@@@..++.   ',
+'   .+++++@@@@@..++++.   ',
+'    .++@@@@@..++++++.   ',
+'    .++@@@..++++++++.   ',
+'     .+@@.++++++++++.   ',
+'     .++@.++++++++++.   ',
+'      .+@.++++++++++.   ',
+'      .++.++++++++..    ',
+'       .+.++++++..      ',
+'       .+.+++++.        ',
+'        ..+++..         ',
+'        ..+..           ',
+'         ..             ',
+'                        ',
+'                        ',
+'                        ']
+
+PRINT_XPM = [
+'24 24 17 1',
+'       c None',
+'.      c #020202',
+'+      c #AEADAD',
+'@      c #6C6C6C',
+'#      c #060606',
+'$      c #B9B9B9',
+'%      c #C9C9C7',
+'&      c #5A5959',
+'*      c #7C7C7B',
+'=      c #D8D8D6',
+'-      c #2B2B2B',
+';      c #E8E7E5',
+'>      c #868282',
+',      c #393939',
+'"      c #F3F2F1',
+')      c #464645',
+'!      c #9D9D9D',
+'                        ',
+'                        ',
+'                        ',
+'            ..          ',
+'           ."%&..       ',
+'          ."""""%)...   ',
+'         .%""";;;;;!.   ',
+'         -""""";;=%.    ',
+'       .#+"";;;;;=&     ',
+'     ..%$!>;;;;==$..    ',
+'   ..%;";=$&&>$==,&@..  ',
+'  .>$""""""""!&&&)@)-.  ',
+'  .+++$;"""";;;;=)-,,.  ',
+'  .++++++%;"";"=),,,).  ',
+'  .@!$+++!!!==%)-,,,,.  ',
+'  .@)@!+++!!!*--,,),,.  ',
+'  .&&)))&>+!!>,,,-,,..  ',
+'   ..)&&&))&&*,,-,,.    ',
+'     ...)&&&@@)-,..     ',
+'        ..#)@*,).       ',
+'           #....        ',
+'                        ',
+'                        ',
+'                        ']
+
+REDRAW_XPM = [
+'24 24 17 1',
+'       c None',
+'.      c #000B05',
+'+      c #001906',
+'@      c #00723E',
+'#      c #00942B',
+'$      c #00AA32',
+'%      c #002B09',
+'&      c #004635',
+'*      c #00D2B0',
+'=      c #00DF95',
+'-      c #00CB45',
+';      c #005809',
+'>      c #004208',
+',      c #00690F',
+'/      c #007E0B',
+')      c #007309',
+'!      c #002C21',
+'                        ',
+'                        ',
+'            ..+...      ',
+'        ...+@#$$#%.     ',
+'       +%++.&*===-;.    ',
+'      +>>>+..&==--$,.   ',
+'      %>;>.   &*--$$;.  ',
+'     .>,;>...  &=$#$#>. ',
+'  ...+;//;>..  .#$$##)+.',
+'  .&$#//),>.    >$##/#>.',
+'   .>))))>.     %#////).',
+'    .>;);+      +#/#///+',
+'     %+>%+      +/#////.',
+'       .!       &,$////+',
+'                !@#)/)/+',
+'                !;//)/)%',
+'                !;//);+.',
+'                !;/)%.. ',
+'                !;;+.   ',
+'                +%++    ',
+'                ..!     ',
+'                        ',
+'                        ',
+'                        ']
+
+RIGHT_XPM = [
+'24 24 17 1',
+' 	c None',
+'.	c #111111',
+'+	c #222222',
+'@	c #1E1E1E',
+'#	c #2F2F2F',
+'$	c #262626',
+'%	c #333333',
+'&	c #373737',
+'*	c #444444',
+'=	c #404040',
+'-	c #515151',
+';	c #484848',
+'>	c #555555',
+',	c #595959',
+'"	c #676767',
+')	c #626262',
+'!	c #636363',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'    .                   ',
+'    .+@                 ',
+'    .+#$@               ',
+'    .+%&#$@             ',
+'    .+%*=&#$@           ',
+'    .+%*-;=&#$@         ',
+'    .+%*>,-;=&#$@       ',
+'    .+%*>"),-;=&#$@     ',
+'    .+%*>"!,-;=&#$@     ',
+'    .+%*>,>;*&%$+       ',
+'    .+%*-;*&%$+         ',
+'    .+%**&%$+           ',
+'    .+%&%$+             ',
+'    .+#$+               ',
+'    .$@                 ',
+'    @                   ',
+'                        ',
+'                        ',
+'                        ',
+'                        ']
+
+SAVE_XPM = [
+'24 24 17 1',
+'       c None',
+'.      c #020202',
+'+      c #3E474A',
+'@      c #789DA8',
+'#      c #8EAEB6',
+'$      c #AFC3C7',
+'%      c #C8D5D7',
+'&      c #E0E2E2',
+'*      c #577178',
+'=      c #E4EAEA',
+'-      c #E8EEF0',
+';      c #3E4E52',
+'>      c #EFF2F3',
+',      c #ABB1B3',
+'"      c #FDFDFD',
+')      c #7A8A8E',
+'!      c #4C5E62',
+'                        ',
+'                        ',
+'                        ',
+'              ..        ',
+'            ..@!.       ',
+'          ..%$=@.       ',
+'        ..%$$">@!.      ',
+'      ..$$%""""=@.      ',
+'    ..#$%"""""""#+.     ',
+'   .#$%"""""""""-@.     ',
+'   .)#>"""""""""-@!.    ',
+'    .$=""""""">=@@@.    ',
+'    .*#-"""">=@@**@!.   ',
+'     .$="">-@@!!*@*@.   ',
+'     .*#--@@!#=&!@*@!.  ',
+'      .#@@*%>>=&,!@!+.  ',
+'      .)#@$>*%=&%@@+..  ',
+'       .#@*>+@%&,*..    ',
+'       .*@@%-,%)+.      ',
+'        .!@*%,..        ',
+'         .....          ',
+'                        ',
+'                        ',
+'                        ']
+
+ZOOMIN_XPM = [
+'24 24 3 1',
+' 	c None',
+'.	c #000000',
+'+	c #FFFFFF',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'           ......       ',
+'         ..........     ',
+'        ...++++++...    ',
+'        ..++++++++..    ',
+'       ..++++..++++..   ',
+'       ..++++..++++..   ',
+'       ..++......++..   ',
+'       ..++......++..   ',
+'       ..++++..++++..   ',
+'       ..++++..++++..   ',
+'       ...++++++++..    ',
+'      .....+++++....    ',
+'     ..............     ',
+'    ....+........       ',
+'    ...+..              ',
+'    ..+..               ',
+'     ...                ',
+'                        ',
+'                        ',
+'                        ']
+
+ZOOMOUT_XPM = [
+'24 24 3 1',
+' 	c None',
+'.	c #000000',
+'+	c #FFFFFF',
+'                        ',
+'                        ',
+'                        ',
+'                        ',
+'           ......       ',
+'         ..........     ',
+'        ...++++++...    ',
+'        ..++++++++..    ',
+'       ..++++++++++..   ',
+'       ..++++++++++..   ',
+'       ..++......++..   ',
+'       ..++......++..   ',
+'       ..++++++++++..   ',
+'       ..++++++++++..   ',
+'       ...++++++++..    ',
+'      .....+++++....    ',
+'     ..............     ',
+'    ....+........       ',
+'    ...+..              ',
+'    ..+..               ',
+'     ...                ',
+'                        ',
+'                        ',
+'                        ']
+
+class GraFile
+  GRA_PREFIX = "%Ngraph GRAF"
+  SEPARATOR  = Regexp::new(/[,\t ]/)
+  REG_HEX    = Regexp::new(/\\x[0-9a-fA-F][0-9a-fA-F]/)
+  NGP_FILE   = Regexp::new(/.*\.ngp$/)
+  NGP_WIDTH  = Regexp::new(/gra::paper_width=[0-9]+/)
+  NGP_HEIGHT = Regexp::new(/gra::paper_height=[0-9]+/)
+
+  def GraFile.foreach(f, ignore_path = "", chdir="", auto_scale = "")
+    f =  "|ngraph -i ngp2 - #{ignore_path} #{chdir} #{auto_scale} - #{f}" if(f =~ NGP_FILE)
+    file = open(f, "r")
+    if(file.gets.chomp != GRA_PREFIX) then return nil
+    end
+
+    size = nil
+    file.each do |l|
+      l.chomp!
+      cmd = l[0]
+      case cmd
+      when ?I, ?E, ?V, ?A, ?G, ?M, ?N, ?L, ?T, ?C, ?B, ?P, ?R, ?D, ?H
+	item = l.split(SEPARATOR).collect!{|i| i.to_i}
+	if(item.size != item[1] + 2) then return nil end
+	item.delete_at(1)
+	item[0] = cmd
+	if(cmd == ?I)
+	  size = [item[3], item[4]]
+	end
+
+      when ?%, ?F, ?K
+	item = [cmd, l[1..-1]]
+
+      when ?S
+	s = " "
+	l.gsub!(/\\\\/, '\\')
+	l.gsub!(REG_HEX){s[0]=$&[2,2].hex; s}
+	item = [cmd, l[1..-1]]
+      else
+	return nil
+      end
+      yield(item)
+    end
+    file.close
+    size
+  end
+
+  def GraFile.size(f)
+    size = nil
+    file = File::new(f, "r")
+    if(f =~ NGP_FILE)
+      width = nil
+      height = nil
+      file.each{|l|
+	if(l =~ NGP_WIDTH)
+	  width = l.split("=")[1].to_f
+	elsif(l =~ NGP_HEIGHT)
+	  height = l.split("=")[1].to_f
+	end
+      }
+      size = if(width && height) then [width, height] else [21000, 29700] end
+    else
+      if(file.gets.chomp! == GRA_PREFIX)
+	file.each{|l|
+	  l.chomp!
+	  if(l[0] == ?I)
+	    item = l.split(SEPARATOR).collect!{|i| i.to_i}
+	    size = [item[4], item[5]]
+	    break
+	  end
+	}
+      end
+    end
+    file.close
+    size
+  end
+end
+
+class GraPixmap
+  ANGLE_UNIT = 64
+  COLOR_UNIT = 256
+  CAP_STYLE  = [Gdk::CAP_BUTT,Gdk::CAP_ROUND, Gdk::CAP_PROJECTING]
+  JOIN_STYLE = [Gdk::JOIN_MITER, Gdk::JOIN_ROUND, Gdk::JOIN_BEVEL]
+  FILL_RULE  = [Gdk::EVEN_ODD_RULE, Gdk::WINDING_RULE]
+  WHITE      = [0xff, 0xff, 0xff]
+  BLACK      = [0, 0, 0]
+
+  @@fontmap = nil
+
+  def initialize(w, r)
+    @window = w
+    @pixmap = nil
+    @size = [0, 0]
+    @margin = [0, 0]
+    @reso = r/2540.0
+    @gc = Gdk::GC::new(@window)
+
+    @font = []
+    @color = nil
+    @org_ptr = [0, 0]
+    @cur_ptr = [0, 0]
+    @line_array = []
+  end
+
+  def draw(i)
+
+    if(i[0] != ?T && !@line_array.empty?)
+      @pixmap.draw_lines(@gc, @line_array)
+      @line_array.clear
+    end
+
+    case i[0]
+    when ?I
+      @margin[0..1] = [i[1]*@reso, i[2]*@reso]
+      @size[0..1] = [i[3]*@reso, i[4]*@reso]
+      @pixmap = Gdk::Pixmap::new(@window, @size[0], @size[1], -1)
+      clear(@pixmap, WHITE, @gc)
+      @org_ptr[0..1] = @margin
+      @line_array.clear
+
+    when ?V
+      @org_ptr[0..1] = [i[1]*@reso, i[2]*@reso]
+      if(i[5] == 1)
+	@gc.set_clip_rectangle(Gdk::Rectangle::new(@org_ptr[0], @org_ptr[1], (i[3] - i[1])*@reso, (i[4] - i[2])*@reso))
+      end
+
+    when ?A
+      line_width = [1, i[2]*@reso].max
+      if i[1] == 0
+	line_style = Gdk::LINE_SOLID
+      else
+	dash = i[6..-1].collect{|j| [1, j*@reso].max.to_i}
+	@gc.set_dashes(0, dash)
+	line_style = Gdk::LINE_ON_OFF_DASH
+      end
+      @gc.set_line_attributes(line_width, line_style, CAP_STYLE[i[3]], JOIN_STYLE[i[4]])
+
+    when ?G
+      set_color(i[1, 3], @gc)
+
+    when ?M
+      @cur_ptr[0..1] = [i[1]*@reso, i[2]*@reso]
+
+    when ?N
+      @cur_ptr[0..1] = [@cur_ptr[0]+i[1]*@reso, @cur_ptr[1]+i[2]*@reso]
+
+    when ?L
+      @pixmap.draw_line(@gc, @org_ptr[0]+i[1]*@reso, @org_ptr[1]+i[2]*@reso,
+			     @org_ptr[0]+i[3]*@reso, @org_ptr[1]+i[4]*@reso)
+
+    when ?T
+      if(@line_array.empty?)
+	@line_array.push([@cur_ptr[0]+@org_ptr[0], @cur_ptr[1]+@org_ptr[1]])
+      end
+      @line_array.push([@org_ptr[0]+i[1]*@reso, @org_ptr[1]+i[2]*@reso])
+      @cur_ptr[0..1] = @line_array[-1]
+
+    when ?C
+      x = @org_ptr[0] + (i[1] - i[3])*@reso
+      y = @org_ptr[1] + (i[2] - i[4])*@reso
+      @gc.set_arc_mode([Gdk::ARC_PIESLICE, Gdk::ARC_CHORD][i[7]-1]) if(i[7]!=0 && Gdk::GC::method_defined?('set_arc_mode'))
+      @pixmap.draw_arc(@gc, i[7] != 0, x, y, i[3]*2*@reso+1, i[4]*2*@reso+1, (i[5]*ANGLE_UNIT)/100, (i[6]*ANGLE_UNIT)/100)
+
+    when ?B
+      w = ((i[3] - i[1])*@reso).to_i + 1
+      h = ((i[4] - i[2])*@reso).to_i + 1
+      @pixmap.draw_rectangle(@gc, i[5] != 0, @org_ptr[0]+i[1]*@reso, @org_ptr[1]+i[2]*@reso, w, h)
+
+    when ?P
+      @pixmap.draw_point(@gc, @org_ptr[0]+i[1]*@reso, @org_ptr[1]+i[2]*@reso)
+
+    when ?R
+      @pixmap.draw_lines(@gc, to_parray(i[2..-1], @org_ptr, @reso))
+
+    when ?D
+      @gc.set_fill_rule(FILL_RULE[i[2] - 1]) if(i[2]!=0 && Gdk::GC::method_defined?('set_fill_rule'))
+      @pixmap.draw_polygon(@gc, i[2] != 0, to_parray(i[3..-1], @org_ptr, @reso))
+
+    when ?H
+      @font[1..4] = [[1,i[1]*@reso*0.3528].max, i[2]*@reso*0.3528, Math::cos(i[3]*Math::PI/18000), Math::sin(i[3]*Math::PI/18000)]
+      #             [size,              space,             cos(angle),                     sin(angle)]
+
+    when ?F
+      @font[0] = @@fontmap[i[1]]
+
+    when ?S
+      font  = Gdk::Font::font_load(set_font_size(@font[0], @font[1], @font[3], @font[4]))
+      font2 = Gdk::Font::font_load(set_font_size(@font[0], @font[1]))
+      draw_str(font, font2, i[1])
+
+    when ?K
+      font  = Gdk::Font::fontset_load(set_font_size(@font[0], @font[1], @font[3], @font[4]))
+      font2 = Gdk::Font::fontset_load(set_font_size(@font[0], @font[1]))
+      draw_jstr(font, font2, i[1].toeuc)
+
+    end
+
+    @pixmap
+  end
+
+  def pixmap
+    @pixmap
+  end
+
+  #== Private Methods ==================================================
+  private
+
+  def set_font_size(font, size, c = 1, s = 0)
+    fcos = size * c
+    fsin = size * s
+    fontmatrix = sprintf("[%.3e %.3e %.3e %.3e]", fcos, fsin, -fsin, fcos).tr('-', '~')
+    f = font.split('-', -1)
+    f[7] = fontmatrix
+    f.join('-')
+  end
+
+  def draw_str(font, font2, s)
+    s.each_byte do |j|
+      c = sprintf("%c", j)
+      @pixmap.draw_string(font, @gc, @org_ptr[0]+@cur_ptr[0], @org_ptr[1]+@cur_ptr[1], c)
+      fontwidth = font2.string_width(c) + @font[2]
+      @cur_ptr[0..1] = [@cur_ptr[0] + fontwidth * @font[3], @cur_ptr[1] - fontwidth * @font[4]]
+    end
+  end
+
+  def draw_jstr(font, font2, s)
+    s.split(//).each do |j|
+      @pixmap.draw_string(font, @gc, @org_ptr[0]+@cur_ptr[0], @org_ptr[1]+@cur_ptr[1], j)
+      fontwidth = font2.string_width(j) + @font[2]
+      @cur_ptr[0..1] = [@cur_ptr[0] + fontwidth * @font[3], @cur_ptr[1] - fontwidth * @font[4]]
+    end
+  end
+
+  def set_color(c, gc = @gc)
+    color = Gdk::Color::new(c[0]*COLOR_UNIT, c[1]*COLOR_UNIT, c[2]*COLOR_UNIT)
+    Gdk::Colormap::get_system.alloc_color(color, false, true)
+    gc.set_foreground(color)
+  end
+
+  def clear(b, c, gc = @gc)
+    return if b.nil?
+
+    set_color(c, gc)
+    g = b.get_geometry
+    gc.set_clip_rectangle(Gdk::Rectangle::new(0, 0, g[2], g[3]))
+    if (g[2] > 0 && g[3] > 0)
+      b.draw_rectangle(gc, true, 0,0, g[2], g[3])
+    end
+  end
+
+  def to_parray(a, o, r)
+    parray = Array::new(a.size/2)
+    (0...a.size/2).each do |i|
+      parray[i] = [o[0]+a[i*2]*r, o[1]+a[i*2+1]*r]
+    end
+    return parray
+  end
+
+  #== Class Methods ==================================================
+  def GraPixmap.read_fontmap(file)
+    fmap = {}
+    section = nil
+    IO::foreach(file) do |l|
+      l.chomp!
+      if(l =~ /^\[.+\]$/)
+	section = l;
+	next
+      end
+
+      if(section == '[gra2x11]')
+	m = l.split('=')
+	if(m[0] == 'font_map')
+	  f = m[1].split(',')
+	  fmap[f[0]] = f[3]
+	end
+      end
+    end
+    @@fontmap = fmap
+  end
+end
+
+class Canvas < Gtk::DrawingArea
+  def initialize
+    super
+    signal_connect('expose_event'){|w,e| expose_event(w,e)}
+    signal_connect('configure_event'){|w, e| configure_event(w,e)}
+
+    @buffer = nil
+    @bgc = nil
+    @gra = nil
+  end
+
+  def clear(b = @buffer)
+    return if b.nil?
+
+    g = b.get_geometry
+    @bgc = self.style.bg_gc(self.state) if @bgc.nil?
+    if (g[2] > 0 && g[3] > 0)
+      b.draw_rectangle(@bgc, true, 0,0, g[2], g[3])
+    end
+  end
+
+  def expose_event(w,e)
+    return false if @buffer.nil?
+
+    @bgc = self.style.bg_gc(self.state) if @bgc.nil?
+    rec = e.area
+    w.window.draw_pixmap(@bgc, @buffer, rec.x, rec.y, rec.x, rec.y, rec.width, rec.height)
+    false
+  end
+
+  def configure_event(w,e)
+    if(@buffer.nil?)
+      g = w.window.get_geometry
+      if (g[2] > 0 && g[3] > 0)
+	b = Gdk::Pixmap::new(w.window, g[2], g[3], -1)
+	clear(b)
+	@buffer = b
+      end
+    end
+
+    @bgc = self.style.bg_gc(self.state) if @bgc.nil?
+    g = w.window.get_geometry
+    w.window.draw_pixmap(@bgc, @buffer, 0, 0, g[0], g[1], g[2], g[3])
+    true
+  end
+
+  def pixmap(b = @buffer)
+    @buffer = b
+  end
+end
+
+class GraCanvas < Canvas
+  ZOOM_RATIO = 1.41
+  ZOOM_MIN = 40
+  ZOOM_MAX = 200
+
+  def initialize(w, r, rs)
+    super()
+
+    @gra_array = []
+    @cur_gra = 0
+    @window = w
+    @root_size = rs
+    @reso = [ZOOM_MIN, r].max
+    @gc = Gdk::GC::new(w.window)
+    @f_pixmap = nil
+    @mutex_dr = Mutex::new
+    @auto_scale = "-a"
+    @ignore_path = ""
+    @chdir = "-c"
+    @auto_window_size = true
+
+    set_events(Gdk::BUTTON_PRESS_MASK)
+#    signal_connect('button_press_event'){ |w,e| bpressed(w, e)}
+  end
+
+  def bpressed(w, e)
+    case e.button
+    when 1
+      w.draw_next
+    when 2
+      exit
+    when 3
+      w.draw_prev
+    end
+    true
+  end
+
+  def add_gra(f)
+    @gra_array.push([f, nil])
+  end
+
+  def draw_next
+    @cur_gra = @cur_gra + 1 if(@cur_gra < @gra_array.size - 1)
+    draw
+  end
+
+  def redraw
+    @gra_array[@cur_gra][1] = nil
+    draw
+  end
+
+  def zoom_out
+    if(@reso / ZOOM_RATIO > ZOOM_MIN)
+      @reso = @reso / ZOOM_RATIO
+      if(@gra_array.size > 0)
+	@gra_array.each{|i| i[1] = nil}
+	draw
+      end
+    end
+  end
+
+  def zoom_in
+    if(@reso * ZOOM_RATIO < ZOOM_MAX)
+      @reso = @reso * ZOOM_RATIO
+      if(@gra_array.size > 0)
+	@gra_array.each{|i| i[1] = nil}
+	draw
+      end
+    end
+  end
+
+  def draw_prev
+    if(@gra_array.size > 0)
+      @cur_gra = @cur_gra - 1 if(@cur_gra > 0)
+      draw
+    end
+  end
+
+  def draw_first
+    if(@gra_array.size > 0)
+      @cur_gra = 0
+      draw
+    end
+  end
+
+  def draw_last
+    if(@gra_array.size > 0)
+      @cur_gra = @gra_array.size - 1
+      draw
+    end
+  end
+
+  def delete
+    @gra_array.delete_at(@cur_gra)
+    @cur_gra -= 1 if(@cur_gra > 0)
+    draw
+  end
+
+  def draw
+    if(@gra_array.empty?)
+      clear
+      g = pixmap.get_geometry
+      size(g[2], g[3])
+      @window.index(0, 0, false, false)
+      return false
+    end
+
+    Thread::start{
+      @mutex_dr.synchronize{
+	gra = @gra_array[@cur_gra]
+
+	if(gra[1].nil?)
+	  @window.status_push(_("Drawing...") + "(#{gra[0]})")
+	  creat_pixmap(gra)
+	  @window.status_pop
+	end
+
+	if(gra[1].nil?)
+	  printf $stderr, _("GRA file error [%s].\n"), gra[0]
+	  delete
+	  return
+	end
+
+	pixmap = gra[1]
+	g = pixmap.get_geometry
+
+	@window.set_client_size(g[2], g[3]) if(@auto_window_size)
+	@window.set_title(PROGRAM_NAME + ': ' + gra[0])
+	size(g[2], g[3])
+	@buffer = pixmap
+	@window.index(@cur_gra+1, @gra_array.size, @reso*ZOOM_RATIO < ZOOM_MAX, @reso/ZOOM_RATIO > ZOOM_MIN)
+      }
+    }
+    true
+  end
+
+  def exec_ngraph
+    fork{
+      file = @gra_array[@cur_gra][0]
+      Dir::chdir(File::dirname(file)) if(chdir)
+      exec("ngraph #{file}")
+    }
+  end
+
+  def creat_pixmap(gra)
+    name = gra[0]
+    size = GraFile::size(name)
+    new_gra = GraPixmap::new(@window.window, @reso)
+    GraFile::foreach(name, @ignore_path, @chdir, @auto_scale){|i| new_gra.draw(i) }
+    gra[0..1] = [name, new_gra.pixmap]
+  end
+
+  def open_file
+    fs = Gtk::FileSelection.new('')
+    fs.ok_button.signal_connect('clicked') {
+      if(test(?f, fs.get_filename))
+	add_gra(fs.get_filename)
+	draw_last
+      end
+      fs.destroy
+    }
+    fs.cancel_button.signal_connect('clicked'){fs.destroy}
+    fs.set_modal(true)
+    fs.show
+  end
+
+  def save_file
+    SaveDialog.new(@gra_array[@cur_gra][0], @ignore_path , @chdir, @auto_scale)
+  end
+
+  def print
+    PrintDialog.new(@gra_array[@cur_gra][0], @ignore_path, @chdir, @auto_scale)
+  end
+
+  def ignore_path(f = !@ignore_path.empty?)
+    if(f)
+      @ignore_path = "-I"
+    else
+      @ignore_path = ""
+    end
+    ! @ignore_path.empty?
+  end
+
+  def chdir(f = !@chdir.empty?)
+    if(f)
+      @chdir = "-c"
+    else
+      @chdir = ""
+    end
+    ! @chdir.empty?
+  end
+
+  def auto_scale(f = 0)
+    case f
+    when 1
+      @auto_scale = "-a"
+    when 2
+      @auto_scale = "-A"
+    else
+      @auto_scale = ""
+    end
+    f
+  end
+
+  def auto_window_size(f = @auto_window_size)
+    @auto_window_size = f
+    return f
+  end
+end
+
+class PrintDialog < Gtk::Dialog
+  @@drivers = nil
+  NGP_FILE   = Regexp::new(/.*\.ngp$/)
+
+  def initialize(filename, ignore_path = "", chdir = "", auto_scale = "")
+    return if(@@drivers.nil?)
+    super()
+    set_title(_("Print"))
+    border_width(5)
+
+    table = Gtk::Table.new(5, 2)
+    table.set_row_spacings(5)
+    vbox.pack_start(table)
+
+    cmd_ent = new_entry(table, 1, _("Command: "))
+    cmd_ent.set_text(@@drivers[0][1])
+
+    opt_ent = new_entry(table, 2, _("Option: "))
+    opt_ent.set_text(@@drivers[0][3])
+
+    spl_ent = new_entry(table, 3, _("Print: "))
+    spl_ent.set_text(@@drivers[0][2])
+
+    driver_menu(table, cmd_ent, opt_ent, spl_ent)
+
+    button = new_button(_("OK"))
+    button.signal_connect("pressed"){
+      if(filename =~ NGP_FILE)
+	cmd = "ngraph -i ngp2 #{ignore_path} #{chdir} #{auto_scale} - #{filename}|#{cmd_ent.get_text} #{opt_ent.get_text} - #{spl_ent.get_text}"
+      else
+	cmd = "#{cmd_ent.get_text} #{opt_ent.get_text} #{filename} #{spl_ent.get_text}"
+      end
+      fork{exec(cmd)}
+      destroy
+    }
+
+    button = new_button(_("Cancel"))
+    button.signal_connect("pressed"){destroy}
+
+    set_modal(true)
+    show_all
+  end
+
+
+  def driver_menu(table, c, o, s)
+    label = Gtk::Label.new(_("Driver: "))
+    menu = Gtk::Menu::new()
+    @@drivers.each{|i|
+      menuitem = Gtk::MenuItem::new(i[0])
+      menuitem.signal_connect('activate'){
+	c.set_text(i[1])
+	o.set_text(i[3])
+	s.set_text(i[2])
+      }
+      menu.append(menuitem)
+    }
+    menu = Gtk::OptionMenu::new.set_menu(menu)
+    table.attach(label, 0, 1, 0, 1)
+    table.attach(menu,  1, 2, 0, 1)
+  end
+
+  def new_button(title)
+    button = Gtk::Button.new(title)
+    action_area.pack_start(button)
+    button
+  end
+
+  def new_entry(table, y, title)
+    label = Gtk::Label.new(title)
+    entry = Gtk::Entry::new()
+    table.attach(label, 0, 1, y, y+1)
+    table.attach(entry, 1, 2, y, y+1)
+    entry
+  end
+
+  def PrintDialog.read_ini(file)
+    drivers = []
+    section = nil
+    IO::foreach(file) do |l|
+      l.chomp!
+      if(l =~ /^\[.+\]$/)
+	section = l;
+	next
+      end
+
+      if(section == "[x11menu]")
+	m = l.split("=")
+	if(m[0] == "prn_driver")
+	  drivers.push(f = m[1].split(",", 4))
+	end
+      end
+    end
+    @@drivers = drivers
+  end
+end
+
+class SaveDialog < Gtk::Dialog
+  NGP_FILE   = Regexp::new(/.*\.ngp$/)
+  PaperSize = ["a3", "a4", "b4", "a5", "b5", "letter", "legal"]
+
+  def initialize(filename, ignore_path = "", chdir = "", auto_scale = "")
+    super()
+    @paper = PaperSize[0]
+
+    set_title(_("Save"))
+    border_width(5)
+
+    table = Gtk::Table.new(7, 3)
+    table.set_row_spacings(5)
+    table.set_col_spacings(5)
+    vbox.pack_start(table)
+
+    fname_ent = new_entry(table, 5, _("File: "))
+    fname_ent.set_text(get_psname(filename, true))
+    @fname = fname_ent
+
+    p_label, menu = paper_menu(table, 4, 1)
+    lnd_btn = new_checkbutton(table, 3, _("Landscape"))
+    rte_btn = new_checkbutton(table, 2, _("Rotate 90 degree"))
+    col_btn = new_checkbutton(table, 1, _("Color output"))
+    col_btn.set_active(true)
+    eps_btn = new_checkbutton(table, 0, _("Encapsulated PostScript"))
+    eps_btn.set_active(true)
+    eps_btn.signal_connect('toggled'){
+      fname_ent.set_text(get_psname(filename, eps_btn.active?))
+      p_label.set_sensitive(!eps_btn.active?)
+      menu.set_sensitive(!eps_btn.active?)
+      lnd_btn.set_sensitive(!eps_btn.active?)
+    }
+
+    p_label.set_sensitive(!eps_btn.active?)
+    menu.set_sensitive(!eps_btn.active?)
+    lnd_btn.set_sensitive(!eps_btn.active?)
+
+    button = new_button(_("OK"))
+    button.signal_connect("pressed"){
+      option = ""
+      option += "-p #{@paper} " if(menu.sensitive?)
+      option += "-e " if(eps_btn.active? && eps_btn.sensitive?)
+      option += "-l " if(lnd_btn.active? && lnd_btn.sensitive?)
+      option += "-c " if(col_btn.active? && col_btn.sensitive?)
+      option += "-r " if(rte_btn.active? && rte_btn.sensitive?)
+
+      if(filename =~ NGP_FILE)
+	cmd = "ngraph -i ngp2 #{ignore_path} #{chdir} #{auto_scale} - #{filename}|gra2ps #{option} - > #{fname_ent.get_text}"
+      else
+	cmd = "gra2ps #{option} #{filename} > #{fname_ent.get_text}"
+      end
+      fork{exec(cmd)}
+      destroy
+    }
+
+    button = new_button(_("Cancel"))
+    button.signal_connect("pressed"){destroy}
+
+    set_modal(true)
+    show_all
+  end
+
+  def paper_menu(table, y, selected = 0)
+    label = Gtk::Label.new(_("Paper: "))
+
+    menu = Gtk::Menu::new()
+    PaperSize.each{|i|
+      menuitem = Gtk::MenuItem::new(i.capitalize)
+      menuitem.signal_connect('activate'){
+	@paper = i
+      }
+      menu.append(menuitem)
+    }
+    menu = Gtk::OptionMenu::new.set_menu(menu)
+    menu.set_history(selected)
+    table.attach(label, 0, 1, y, y+1)
+    table.attach(menu,  1, 2, y, y+1)
+    [label, menu]
+  end
+
+  def new_button(title)
+    button = Gtk::Button.new(title)
+    action_area.pack_start(button)
+    button
+  end
+
+  def new_checkbutton(table, y, title)
+    button = Gtk::CheckButton.new(title)
+    table.attach(button, 0, 2, y, y+1)
+    button
+  end
+
+  def new_entry(table, y, title)
+    l = Gtk::Label.new(title)
+    e = Gtk::Entry::new()
+    b = Gtk::Button::new(_('Browse'))
+    b.signal_connect('clicked'){get_save_filename}
+    table.attach(l, 0, 1, y, y+1)
+    table.attach(e, 1, 2, y, y+1)
+    table.attach(b, 2, 3, y, y+1)
+    e
+  end
+
+  def get_psname(file, eps)
+    ext = if(eps) then "eps" else "ps" end
+    basename = if(file =~ NGP_FILE)
+		 File::basename(file, "ngp")
+	       else 
+		 File::basename(file, "gra")
+	       end
+    dirname = File::dirname(file)
+    dirname + "/" + basename + ext
+  end
+
+  def get_save_filename
+    fs = Gtk::FileSelection.new('')
+    fs.ok_button.signal_connect('clicked') {
+      @fname.set_text(fs.get_filename)
+      fs.destroy
+    }
+    fs.cancel_button.signal_connect('clicked'){fs.destroy}
+    fs.set_modal(true)
+    fs.show
+  end
+end
+
+class GraWindow < Gtk::Window
+  def initialize(rs)
+    @root_size = rs
+    super(Gtk::WINDOW_TOPLEVEL)
+
+    vbox = Gtk::VBox.new(false, 0)
+    @swindow = Gtk::ScrolledWindow::new
+    @canvas = nil
+    @index = nil
+    @ign_item = nil
+    @ascale_item = nil
+    @asize_item = nil
+
+    realize
+    set_title(PROGRAM_NAME)
+    set_uposition(0, 0)
+    set_events(get_events | Gdk::KEY_PRESS_MASK)
+    signal_connect('delete_event'){exit}
+    signal_connect('destroy_event'){exit}
+    signal_connect('key_press_event'){|w,e| kpressed(w,e)}
+
+    @statusbar = Gtk::Statusbar::new
+    status_push('(0/0)')
+    @statusbar.show
+
+    @toolbar = Toolbar.new(self.window)
+    @accelgrp = Gtk::AccelGroup.new
+    @accelgrp.attach(self)
+    @menu = menu
+    vbox.pack_start(@menu, false, false, 0)
+    vbox.pack_start(@toolbar, false, false, 0)
+    vbox.pack_start(@swindow, true, true, 0)
+    vbox.pack_start(@statusbar, false, false, 0)
+
+    add(vbox)
+    vbox.show
+  end
+
+  def menu
+    handle_box = Gtk::HandleBox.new
+    mbar = Gtk::MenuBar.new
+
+
+###################################################################
+#  File Menu
+    menu = menu_bar_add(mbar, _('File'))
+
+    add_tear_off_menuitem(menu)
+    add_menu_item(menu, _('Open...'), '<ctrl>O').signal_connect('activate'){@canvas.open_file}
+    @file_menu_save = add_menu_item(menu, _('Save As...'), '<ctrl>S')
+    @file_menu_save.signal_connect('activate'){@canvas.save_file}
+    @file_menu_print = add_menu_item(menu, _('Print...'))
+    @file_menu_print.signal_connect('activate'){@canvas.print}
+    add_separator_menuitem(menu)
+    @file_menu_ngraph = add_menu_item(menu, _('Ngraph'))
+    @file_menu_ngraph.signal_connect('activate'){@canvas.exec_ngraph}
+    add_separator_menuitem(menu)
+    @file_menu_close = add_menu_item(menu, _('Close'), '<ctrl>W')
+    @file_menu_close.signal_connect('activate'){@canvas.delete}
+    add_menu_item(menu, _('Exit'), '<ctrl>Q').signal_connect('activate'){exit}
+
+###################################################################
+#  Draw Menu
+
+    menu = menu_bar_add(mbar, _('Draw'))
+
+    add_tear_off_menuitem(menu)
+    @draw_menu_redraw = add_menu_item(menu, _('Redraw'), '<ctrl>R')
+    @draw_menu_redraw.signal_connect('activate'){@canvas.redraw}
+    add_separator_menuitem(menu)
+    @draw_menu_first = add_menu_item(menu, _('First File'), '<ctrl>P')
+    @draw_menu_first.signal_connect('activate'){@canvas.draw_first}
+    @draw_menu_prev =  add_menu_item(menu, _('Previous File'), '<>P')
+    @draw_menu_prev.signal_connect('activate'){@canvas.draw_prev}
+    @draw_menu_next = add_menu_item(menu, _('Next File'), '<>N')
+    @draw_menu_next.signal_connect('activate'){@canvas.draw_next}
+    @draw_menu_last = add_menu_item(menu, _('Last File'), '<ctrl>N')
+    @draw_menu_last.signal_connect('activate'){@canvas.draw_last}
+
+###################################################################
+#  View Menu
+    vmenu = menu_bar_add(mbar, _('View'))
+
+    add_tear_off_menuitem(vmenu)
+
+#  View/Zoom ###############
+
+    menu = Gtk::Menu.new
+    add_menu_item(vmenu, _('Zoom')).set_submenu(menu)
+
+    add_tear_off_menuitem(menu)
+
+    @zoom_menu_in = add_menu_item(menu, _('Zoom In'))
+    @zoom_menu_in.signal_connect('activate'){@canvas.zoom_in}
+    @zoom_menu_out = add_menu_item(menu, _('Zoom Out'))
+    @zoom_menu_out.signal_connect('activate'){@canvas.zoom_out}
+
+    add_separator_menuitem(vmenu)
+
+#  View/Toolbar ###############
+
+    menu = Gtk::Menu.new
+    add_menu_item(vmenu, _('Toolbar')).set_submenu(menu)
+
+    add_tear_off_menuitem(menu)
+
+    group = nil
+    mitem = Gtk::RadioMenuItem.new(group, _('Icon'))
+    mitem.signal_connect('activate'){@toolbar.set_style(Toolbar::STYLE_ICON)}
+    mitem.set_active(true)
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+    group = mitem.group
+    mitem = Gtk::RadioMenuItem.new(group, _('Text'))
+    mitem.signal_connect('activate'){@toolbar.set_style(Toolbar::STYLE_TEXT)}
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+    group = mitem.group
+    mitem = Gtk::RadioMenuItem.new(group, _('Icon and Text'))
+    mitem.signal_connect('activate'){@toolbar.set_style(Toolbar::STYLE_BOTH)}
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+    group = mitem.group
+    mitem = Gtk::RadioMenuItem.new(group, _('None'))
+    mitem.signal_connect('activate'){@toolbar.set_style(Toolbar::STYLE_NONE)}
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+    add_separator_menuitem(menu)
+
+    mitem = Gtk::CheckMenuItem.new(_('Border'))
+    mitem.signal_connect('toggled'){|i|
+      if(i.active?)
+	@toolbar.set_relief(Gtk::RELIEF_NORMAL)
+      else
+	@toolbar.set_relief(Gtk::RELIEF_NONE)
+      end
+    }
+    mitem.set_active(false)
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+#  View/Scrollbar ###############
+
+    menu = Gtk::Menu.new
+    add_menu_item(vmenu, _('Scrollbar')).set_submenu(menu)
+
+    add_tear_off_menuitem(menu)
+
+    group = nil
+    mitem = Gtk::RadioMenuItem.new(group, _('Always'))
+    mitem.signal_connect('activate'){@swindow.set_policy(Gtk::POLICY_ALWAYS, Gtk::POLICY_ALWAYS)}
+    mitem.set_active(true)
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+    group = mitem.group
+    mitem = Gtk::RadioMenuItem.new(group, _('Automatic'))
+    mitem.signal_connect('activate'){@swindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC)}
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+    group = mitem.group
+    mitem = Gtk::RadioMenuItem.new(group, _('None'))
+    mitem.signal_connect('activate'){@swindow.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_NEVER)}
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+#  View/Menu ###############
+    mitem = Gtk::CheckMenuItem.new(_('Menu'))
+    mitem.signal_connect('toggled'){|i|
+      if(i.active?)
+	handle_box.show
+      else
+	handle_box.hide
+      end
+    }
+    mitem.set_active(true)
+    mitem.set_show_toggle(true)
+    add_accel(mitem, '<ctrl>M')
+    vmenu.add(mitem)
+
+#  View/Statusbar ###############
+    mitem = Gtk::CheckMenuItem.new(_('Statusbar'))
+    mitem.signal_connect('toggled'){|i|
+      if(i.active?)
+	@statusbar.show
+      else
+	@statusbar.hide
+      end
+    }
+    mitem.set_active(true)
+    mitem.set_show_toggle(true)
+    vmenu.add(mitem)
+
+#
+    add_separator_menuitem(vmenu)
+
+    @asize_item = mitem = Gtk::CheckMenuItem.new(_('Auto Window Size'))
+    mitem.signal_connect('toggled'){|i|
+      @canvas.auto_window_size(i.active?)
+    }
+    mitem.set_show_toggle(true)
+    vmenu.add(mitem)
+
+###################################################################
+#  Option Menu
+    omenu = menu_bar_add(mbar, _('Option'))
+
+    add_tear_off_menuitem(omenu)
+
+    @ign_item = mitem = Gtk::CheckMenuItem.new(_('Ignore Path'))
+    mitem.signal_connect('toggled'){|i|
+      @canvas.ignore_path(i.active?)
+    }
+    mitem.set_show_toggle(true)
+    omenu.add(mitem)
+
+    mitem = Gtk::CheckMenuItem.new(_('Change current directory'))
+    mitem.set_active(true)
+    mitem.set_show_toggle(true)
+    mitem.signal_connect('toggled'){|i|
+      @canvas.chdir(i.active?)
+    }
+    omenu.add(mitem)
+
+#  Option/Auto Scale ###############
+
+    menu = Gtk::Menu.new
+    add_menu_item(omenu, _('Auto Scale')).set_submenu(menu)
+
+    add_tear_off_menuitem(menu)
+
+    group = nil
+    mitem = Gtk::RadioMenuItem.new(group, _('Auto Scale'))
+    mitem.signal_connect('activate'){@canvas.auto_scale(1)}
+    mitem.set_active(true)
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+    group = mitem.group
+    mitem = Gtk::RadioMenuItem.new(group, _('Auto Scale Force'))
+    mitem.signal_connect('activate'){@canvas.auto_scale(2)}
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+    group = mitem.group
+    mitem = Gtk::RadioMenuItem.new(group, _('None'))
+    mitem.signal_connect('activate'){@canvas.auto_scale(0)}
+    mitem.set_show_toggle(true)
+    menu.add(mitem)
+
+###################################################################
+#  Help Menu
+    hmenu = menu_bar_add(mbar, _('Help'), true)
+
+    add_tear_off_menuitem(hmenu)
+
+    about_menu = add_menu_item(hmenu, _('About...'))
+    about_menu.signal_connect('activate'){AboutDialog.new}
+
+
+###################################################################
+    mbar.show_all
+    handle_box.add(mbar)
+    handle_box.show
+    handle_box
+  end
+
+  def kpressed(w, e)
+    case e.keyval
+    when Gdk::GDK_space, Gdk::GDK_Page_Down
+      @canvas.draw_next
+    when Gdk::GDK_BackSpace, Gdk::GDK_Page_Up
+      @canvas.draw_prev
+    when Gdk::GDK_Left
+      adj = @swindow.get_hadjustment
+      @swindow.hadjustment.set_value(adj.value -  adj.step_increment)
+    when Gdk::GDK_Right
+      adj = @swindow.get_hadjustment
+      @swindow.hadjustment.set_value(adj.value +  adj.step_increment)
+    when Gdk::GDK_Up
+      adj = @swindow.get_vadjustment
+      @swindow.vadjustment.set_value(adj.value -  adj.step_increment)
+    when Gdk::GDK_Down
+      adj = @swindow.get_vadjustment
+      @swindow.vadjustment.set_value(adj.value +  adj.step_increment)
+    end
+    true
+  end
+
+  def add_sv(i)
+    @swindow.add_with_viewport(i)
+    @canvas = i
+    @toolbar.canvas(i)
+    @ign_item.set_active(@canvas.ignore_path)
+    @asize_item.set_active(@canvas.auto_window_size)
+  end
+
+  def show
+    super()
+    @swindow.show
+  end
+
+  def add_menu_item(menu, title, key = nil)
+    mitem = Gtk::MenuItem.new(title)
+    menu.add(mitem)
+
+    add_accel(mitem, key)
+
+    mitem
+  end
+
+  def add_accel(mitem, key)
+    if(key)
+      /(<\w*>)(\w)/ =~ key
+      case $1
+      when "<ctrl>"
+        mask = Gdk::CONTROL_MASK
+      when "<alt>"
+        mask = Gdk::MOD1_MASK
+      else
+	mask = 0
+      end
+      keycode = $2[0]
+      @accelgrp.add(keycode, mask, Gtk::AccelGroup::ACCEL_VISIBLE, mitem, "activate")
+    end
+  end
+
+  def add_tear_off_menuitem(menu)
+    mitem = Gtk::TearoffMenuItem::new()
+    menu.append(mitem)
+  end
+
+  def add_separator_menuitem(menu)
+    mitem = Gtk::MenuItem.new()
+    mitem.set_sensitive(false)
+    menu.append(mitem)
+  end
+
+  def menu_bar_add(mbar, t, right_justify = false)
+    mitem = Gtk::MenuItem.new(t)
+    mitem.right_justify if(right_justify)
+    menu = Gtk::Menu.new
+    mitem.set_submenu(menu)
+    mbar.append(mitem)
+    menu
+  end
+
+  def index(i, s, zi, zo)
+    status_pop
+    status_push(sprintf '(%d/%d)', i, s)
+    @toolbar.draw_sensitive(i, s, zi, zo)
+    @draw_menu_redraw.set_sensitive(s != 0)
+    @draw_menu_first.set_sensitive(i != 1 && s != 0)
+    @draw_menu_prev.set_sensitive(i != 1 && s != 0)
+    @draw_menu_next.set_sensitive(i != s)
+    @draw_menu_last.set_sensitive(i != s)
+
+    @file_menu_save.set_sensitive(s != 0)
+    @file_menu_print.set_sensitive(s != 0)
+    @file_menu_ngraph.set_sensitive(s != 0)
+    @file_menu_close.set_sensitive(s != 0)
+
+    @zoom_menu_in.set_sensitive(zi)
+    @zoom_menu_out.set_sensitive(zo)
+  end
+
+  def status_push(text)
+    @statusbar.push(1, text)
+  end
+
+  def status_pop
+    @statusbar.pop(1)
+  end
+
+  MARGIN = 30
+  def set_client_size(w, h)
+    pad = @menu.size_request.height
+    pad += @statusbar.size_request.height if(@statusbar.visible?)
+    pad += @toolbar.size_request.height if(@toolbar.visible?)
+    set_default_size([w+MARGIN, @root_size[0]-MARGIN].min, [h+pad+MARGIN, @root_size[1]-MARGIN].min)
+  end
+end
+
+class AboutDialog < Gtk::Dialog
+  def initialize
+    super()
+    set_title(PROGRAM_NAME)
+    @destroyed = false
+    signal_connect("destroy") do destroy end
+
+    @titlebox = Gtk::VBox.new(false, 0)
+    vbox.pack_start(@titlebox)
+    @titlebox.border_width(10)
+
+    new_label("             " + PROGRAM_NAME + "             ")
+    new_label(_("Version ") + PROGRAM_VERSION)
+    new_label(COPYRIGHT, 10)
+    new_button(_("OK")).signal_connect("pressed"){destroy}
+
+    set_modal(true)
+    show_all
+  end
+
+  def new_label(title, pad = 0)
+    text = Gtk::Label.new(title)
+    @titlebox.pack_start(text, false, false, pad)
+    text
+  end
+
+  def new_button(title)
+    button = Gtk::Button.new(title)
+    action_area.pack_start(button)
+    button
+  end
+end
+
+class Toolbar < Gtk::HandleBox
+  STYLE_NONE = -1
+  STYLE_TEXT = Gtk::TOOLBAR_TEXT
+  STYLE_ICON = Gtk::TOOLBAR_ICONS
+  STYLE_BOTH = Gtk::TOOLBAR_BOTH
+
+  def initialize(window)
+    @canvas = nil
+    @button_array = nil
+    super()
+
+    @toolbar = Gtk::Toolbar.new(Gtk::ORIENTATION_HORIZONTAL, Gtk::TOOLBAR_ICONS)
+    @toolbar.extend Enumerable
+    @toolbar.set_button_relief(Gtk::RELIEF_NONE)
+    @toolbar.set_space_style(Gtk::Toolbar::SPACE_LINE)
+    @toolbar.set_space_size(10)
+
+    pix,  mask  = Gdk::Pixmap::create_from_xpm_d(window, nil, OPEN_XPM)
+    @toolbar.append_item(_('Open'), _('Open'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.open_file
+    }
+
+    pix,  mask  = Gdk::Pixmap::create_from_xpm_d(window, nil, SAVE_XPM)
+    @toolbar.append_item(_('Save'), _('Save'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.save_file
+    }
+
+    pix,  mask  = Gdk::Pixmap::create_from_xpm_d(window, nil, CLOSE_XPM)
+    @toolbar.append_item(_('Close'), _('Close'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.delete
+    }
+
+    pix,  mask  = Gdk::Pixmap::create_from_xpm_d(window, nil, PRINT_XPM)
+    @toolbar.append_item(_('Print'), _('Print'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.print
+    }
+
+    pix,  mask  = Gdk::Pixmap::create_from_xpm_d(window, nil, REDRAW_XPM)
+    @toolbar.append_item(_('Redraw'), _('Redraw'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.redraw
+    }
+
+    @toolbar.append_space
+
+    pix, mask = Gdk::Pixmap::create_from_xpm_d(window, nil, FIRST_XPM)
+    @toolbar.append_item(_('First'), _('First File'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.draw_first
+    }
+    pix, mask  = Gdk::Pixmap::create_from_xpm_d(window, nil, LEFT_XPM)
+    @toolbar.append_item(_('Prev'), _('Previous File'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.draw_prev
+    }
+
+    pix, mask = Gdk::Pixmap::create_from_xpm_d(window, nil, RIGHT_XPM)
+    @toolbar.append_item(_('Next'), _('Next File'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.draw_next
+    }
+
+    pix, mask  = Gdk::Pixmap::create_from_xpm_d(window, nil, LAST_XPM)
+    @toolbar.append_item(_('Last'), _('Last File'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.draw_last
+    }
+
+    @toolbar.append_space
+
+    pix, mask   = Gdk::Pixmap::create_from_xpm_d(window, nil, ZOOMIN_XPM)
+    @toolbar.append_item(_('Zoom In'), _('Zoom In'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.zoom_in
+    }
+
+    pix, mask   = Gdk::Pixmap::create_from_xpm_d(window, nil, ZOOMOUT_XPM)
+    @toolbar.append_item(_('Zoom Out'), _('Zoom Out'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.zoom_out
+    }
+
+    @toolbar.append_space
+
+    pix, mask  = Gdk::Pixmap::create_from_xpm_d(window, nil, NGRAPH_XPM)
+    @toolbar.append_item('Ngraph', _('Ngraph'), nil, Gtk::Pixmap::new(pix, mask), nil){
+      @canvas.exec_ngraph
+    }
+
+    @toolbar.append_space
+
+    pix, mask  = Gdk::Pixmap::create_from_xpm_d(window, nil, EXIT_XPM)
+    @toolbar.append_item(_('Exit'), _('Exit'), nil, Gtk::Pixmap::new(pix, mask), nil){exit}
+
+    hbox = Gtk::HBox.new(false, 0)
+
+    hbox.pack_start(@toolbar,true, true, 0)
+    hbox.border_width(2)
+    hbox.show
+    @toolbar.show
+
+    add(hbox)
+    show
+  end
+
+  def draw_sensitive(i, s, zi, zo)
+    @button_array = @toolbar.to_a if(@button_array.nil?)
+    @button_array[1].set_sensitive(s != 0)
+    @button_array[2].set_sensitive(s != 0)
+    @button_array[3].set_sensitive(s != 0)
+    @button_array[4].set_sensitive(s != 0)
+    @button_array[5].set_sensitive(i != 1 && s != 0)
+    @button_array[6].set_sensitive(i != 1 && s != 0)
+    @button_array[7].set_sensitive(i != s)
+    @button_array[8].set_sensitive(i != s)
+    @button_array[9].set_sensitive(zi)
+    @button_array[10].set_sensitive(zo)
+    @button_array[11].set_sensitive(s != 0)
+  end    
+
+  def set_style(s)
+    if(s == -1)
+      hide
+    else
+      @toolbar.set_style(s)
+      show
+    end
+  end
+
+  def set_relief(r)
+    @toolbar.set_button_relief(r)
+  end
+
+  def canvas(c)
+    @canvas = c
+  end
+end
+
+getopts("hI", "r:#{RESOLUTION}")
+if ($OPT_h)
+print <<EOF
+usage: #{File.basename($0)} [OPTION ...] FILE ...
+
+Options:
+  -h      Display this help.
+  -r n    Resolution.
+  -I      Ignore file path.
+
+EOF
+exit
+end
+
+reso = if($OPT_r) then $OPT_r.to_f else RESOLUTION end
+root_size = Gdk::Window::foreign_new(Gdk::Window::root_window()).get_size
+
+window = GraWindow::new(root_size)
+canvas = GraCanvas::new(window, reso, root_size)
+canvas.ignore_path($OPT_I)
+window.add_sv(canvas)
+
+if NGRAPH_PATH.each { |path|
+  if(path != nil && test(?r, path + NGRAPH_INI))
+    GraPixmap::read_fontmap(path + NGRAPH_INI)
+    PrintDialog::read_ini(path + NGRAPH_INI)
+    break
+  end
+} then
+  printf $stderr, _("Can't find %s\n\n"), NGRAPH_INI
+  exit
+end
+
+ARGV::each do |f|
+  if(!test(?f, f))
+    printf $stderr, _("%s: No such file.\n\n"), f
+    exit
+  end
+  canvas.add_gra(f)
+end
+
+canvas.show
+window.show
+canvas.draw
+
+Gtk::main

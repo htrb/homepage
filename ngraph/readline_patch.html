@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>Ngraph readline patch</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+<h1>Ngraph readline patch</h1>
+<div>
+<p>
+Ngraph for X11 の Ngraph shell に GNU readline ライブラリを組み込んでみま
+した。まだ動作に問題が残っていますが、興味ある方はお試しください。
+</p>
+<h2>パッチ</h2>
+<p>
+<a href="ngraph-6.3.19_readline-0.5.patch">ngraph-6.3.19_readline-0.5.patch</a>
+を Ngraph-6.3.19-src.tar.gz を展開したディレクトリにコピーして「patch
+-p1 &lt; ngraph-6.3.19_readline-0.5.patch」を実行した後 make してください。
+</p>
+
+<h2>追加機能</h2>
+<div>
+<ul>
+ <li> Ngraph shell で bash のような編集機能、ヒストリー、ファイル名補完機能等を利用できます。
+ <li> 上記に関連して、Ngraph.ini の [Ngraph] セクションに「history_size」という項目を追加しました。
+ <li> 「$NGRAPHHOME/.ngarph_history」にヒストリーを保存します。
+ <li> オブジェクト名、オブジェクトメンバ等の補完もできる様にしてみました。
+</ul>
+</div>
+
+<h2>問題点</h2>
+<div>
+<ul>
+ <li> ターミナルエミュレータをウィンドウマネージャの「ウィンドウを閉じる」
+      ボタンで閉じると Ngraph も終了してしまいます。Ngraph shel を抜けると
+      きは「exit」コマンドを使用してください。
+ <li> 補完関係のコードがいい加減。
+</ul>
+</div>
+
+<h2>その他</h2>
+<div>
+<ul>
+ <li> UNIX 上のプログラム経験がほとんどないので、変なことをしているかもし
+      れません。ご自身の責任において使用してください。
+ <li> 作成に当たって bash 1.14.7 のソースコードを参考にしました。
+</ul>
+</div>
+
+<h2>作成環境</h2>
+<div>
+<ul>
+ <li> Vine Linux 2.6
+ <li> readline 4.1
+ <li> gcc 2.95.3
+ <li> glibc 2.2.4
+ <li> kernel 2.4.19
+ <li> Ngraph 6.03.18
+</ul>
+</div>
+
+<h2>更新履歴</h2>
+<div>
+<ul>
+ <li> 2001/08/23 ngraph-6.3.14_readline-0.1.patch<BR>
+      とりあえず作る。
+ <li> 2001/09/05 ngraph-6.3.14_readline-0.2.patch<BR>
+      細かな修正。<br>
+ <li> 2001/09/18 ngraph-6.3.14_readline-0.3.patch<BR>
+      細かな修正。<br>
+ <li> 2001/10/05 ngraph-6.3.14_readline-0.4.patch<BR>
+      ヒストリー中に入力した文字列と同じ文字列がある場合、以前のエン
+      トリーを削除するようにしました。<br>
+ <li> 2001/10/09 ngraph-6.3.14_readline-0.5.patch<BR>
+      ngraph-6.3.14_readline-0.4.patch で追加したコードのバグフィク
+      ス。<br>
+ <li> 2002/11/12 ngraph-6.3.16_readline-0.5.patch<BR>
+      Ngraph version 6.03.16 用
+ <li> 2003/02/20 ngraph-6.3.18_readline-0.5.patch<BR>
+      Ngraph version 6.03.18 用
+ <li> 2003/02/21 ngraph-6.3.19_readline-0.5.patch<BR>
+      Ngraph version 6.03.19 用
+</ul>
+</div>
+<a href="./">戻る</a>
+</div>
+</body>
+</html>

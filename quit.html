@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="ja">
+<head>
+<title>quit</title>
+<meta http-equiv="content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="content-script-type" content="text/javascript">
+<script src="display.js">
+</script>
+</head>
+<body>
+<script language="JavaScript">
+
+Width = 40;
+Height = 12;
+Wait = 350;
+
+QUITSTR = new Array();
+
+QUITSTR[0]  = "　　　　　　┏━┓　";
+QUITSTR[1]  = "　　　　　　┃も┃　";
+QUITSTR[2]  = "　　　　　　┃う┃　";
+QUITSTR[3]  = "　　　　　　┃来┃　";
+QUITSTR[4]  = "　　　　　　┃ね┃　";
+QUITSTR[5]  = "　　　　　　┃ぇ┃　";
+QUITSTR[6]  = "　　　　　　┃よ┃　";
+QUITSTR[7]  = "　　　　　　┃！┃　";
+QUITSTR[8]  = "　　プン　　┣━┛　　　　　　バカ　　　　　　　　 ";
+QUITSTR[9]  = "（Д´　）　ヽ（｀Д´）ノヽ（｀Д´）ノヽ（｀Д´）ノ　";
+QUITSTR[10] = "Ｕ┌／　）□―┤￣￣￣├――┤￣￣￣├――┤￣￣￣｜　";
+QUITSTR[11] = "◎┗＜━◎　　　￣◎￣　　　　￣◎￣　　　　￣◎￣　〜〜　";
+
+QUITSTR[12] = "プン　　　　┣━┛　　　　　　バカ　　　　　　　　　";
+QUITSTR[13] = "　　プン　　┣━┛　　　　　　　　　　　　　ゴルァ　"
+QUITSTR[14] = "プン　　　　┣━┛　　　　　　　　　　　　　ゴルァ　"
+
+dispQuit = function(i, w){
+  if(i < -w) return;
+  var str;
+  var k = Math.abs(i % 4);
+  for(var y = 0; y < N; y++){
+    if(y == 8 && k < 3){
+      str = QUITSTR[N + k];
+    }else{
+      str = QUITSTR[y];
+    }
+    for(x = 0; x < str.length; x++){
+      display.mvAddChar(x + i, y, str.charAt(x));
+    }
+  }
+  i--;
+  setTimeout("dispQuit(" + i + "," + w + ")", Wait);
+}
+setWait = function(){
+  Wait = document.prm.wait.value
+}
+
+display = new Display(Width, Height, 1);
+display.createDisplay();
+N = QUITSTR.length - 3;
+W = QUITSTR[11].length + display.width;
+dispQuit(display.width - 1, W);
+</script>
+<form name="prm">
+Wait: <input type="text" value="350" name="wait"> 
+<input type="button" value="Run" onClick="setWait();dispQuit(display.width - 1, W);">
+</form>
+
+もとネタは<a href="http://matsu-www.is.titech.ac.jp/~fukuchi/rooms/shortshort/index.html#quit">こちら</a>
+</body>
+</html>
+

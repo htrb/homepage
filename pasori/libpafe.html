@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>libpafe</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+
+<h1>libpafe</h1>
+<h2>概要</h2>
+<ul>
+ <li> Linux から SONY の PaSoRi (MODEL RC-S310, RC-S320, RC-S330) を使っ
+      て FeliCaにアクセスするためのライブラリです。
+ <li> このライブラリは <a href="http://libpasori.sourceforge.jp">libpasori</a> を再構成し、
+      若干の機能追加などを行なったものです。
+ <li> 動作確認はすべて Debian Gnu/Linux (squeeze) で行っています。
+ <li> このライブラリは完全に無保証です。
+</ul>
+
+</ul>
+
+<h2>ダウンロード Update (2009/10/31)</h2>
+<ul>
+ <li><a href="https://github.com/htrb/libpafe">Git リポジトリ
+ <li> ソース<br>
+      <p><a href="libpafe-0.0.8.tar.gz">libpafe-0.0.8.tar.gz</a>
+ <li> debian パッケージ
+      <ul>
+       <li> <a href="libpafe_0.0.8-1_amd64.deb">libpafe_0.0.8-1_amd64</a>
+       <li> <a href="libpafe-dev_0.0.8-1_all.deb">libpafe-dev_0.0.8-1_all</a>
+      </ul>
+</ul>
+
+<h2>コンパイルとインストール</h2>
+<pre>
+$ ./configure
+$ make
+# make install
+</pre>
+
+<h2>debian パッケージの作成</h2>
+<p>ソースを展開したディレクトリに移動して、下記コマンドを実行すれば
+debian 用のパッケージが作成されます。</p>
+<pre>
+$ dpkg-buildpackage -rfakeroot
+</pre>
+
+<h2>udev の設定</h2>
+
+<p>
+Debian GNU/Linux lenny での設定例です。ディストリビューションやバージョン
+により設定が異なる可能性がありますので適宜読み替えて設定を行なってくださ
+い (debian パッケージをインストールした場合は自動的に設定されます) 。
+</p>
+
+<ol>
+ <li> 下記の内容を /lib/udev/rules.d/60-libpafe.rules として保存する。
+      <pre>
+ACTION!="add", GOTO="pasori_rules_end"
+SUBSYSTEM=="usb_device", GOTO="pasori_rules_start"
+SUBSYSTEM!="usb", GOTO="pasori_rules_end"
+LABEL="pasori_rules_start"
+
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="006c", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="01bb", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="02e1", MODE="0664", GROUP="plugdev"
+
+LABEL="pasori_rules_end"
+      </pre>
+ <li> udevadm control --reload-rules を実行。
+
+</ol>
+
+<p>以上で plugdev グループに属しているユーザは pasori を利用できるように
+なるはずです。</p>
+
+<h2>謝辞</h2>
+
+<ul>
+ <li> プログラムの作成にあたり<a
+      href="http://wiki.osdev.info/?PaSoRi%2FRC-S320">PaSoRi/RC-S320 -
+      osdev-j (MMA)</a>で得られる情報を参考にさせていただきました。
+ <li> <a href="http://libpasori.sourceforge.jp">libpasori</a> に含まれる
+      多くのコードをそのまま使用しています。
+ <li> RC-S330 対応は <a
+      href="http://core.dumped.cc/devel/nfc/index.ja.html">NFC
+      Reader/Writer Linux Driver</a>,
+      <a href="http://www.libnfc.org/">Public platform independent Near
+      Field Communication (NFC) library</a> を参考にさせていたきました。
+ <li> RC-S310 対応は <a
+      href="http://felicabalviewer.sourceforge.jp/linux.html">FeliCa
+      Balance Viewer</a>のパッチを使用させていただきました。
+</ul>
+
+<h2>Link</h2>
+<ul>
+ <li> <a href="http://libpasori.sourceforge.jp">libpasori</a>
+ <li> <a href="http://wiki.osdev.info/?PaSoRi%2FRC-S320">PaSoRi/RC-S320
+      - osdev-j (MMA)</a>
+ <li> <a href="http://www.jisc.go.jp/app/pager?id=31259&#37;23jps.JPSH0090D:JPSO0023:/JPS/JPSO0090.jsp=&#65;KKNB_vJISJISNO=X6319-4">
+      JIS:X6319-4</a>
+ <li> <a href="gsuica.html">gsuica</a>
+ <li> <a href="suica_plugin.html">suica_plugin</a>
+ <li> <a href="gedyviewer.html">gEdyViewer</a>
+ <li> <a href="edy_plugin.html">edy_plugin</a>
+ <li> <a href="http://core.dumped.cc/devel/nfc/index.ja.html">NFC Reader/Writer Linux Driver</a>
+ <li> <a href="http://www.libnfc.org/">Public platform independent Near
+      Field Communication (NFC) library</a>
+ <li> <a href="http://felicabalviewer.sourceforge.jp/linux.html">FeliCa Balance Viewer</a>
+
+</ul>
+</h2>
+
+</ul>
+
+<h2>履歴</h2>
+
+<p>詳細は ChangeLog を参照してください。</p>
+
+<ul>
+ <li> 2012/05/06 version 0.0.8
+      <ul>
+       <li> libusb 1.0 対応
+      </ul>
+ <li> 2009/10/31 version 0.0.7
+      <ul>
+       <li> RC-S310 対応 (<a
+	    href="http://felicabalviewer.sourceforge.jp/linux.html">FeliCa
+	    Balance Viewer</a> のパッチを利用) 。
+       <li> libpafe を使用するプログラムをコンパイルする際に libpafe.hを
+	    インクルードする前に "#define HAVE_LIBUSB 1" とする必要があっ
+	    た不具合の修正。
+      </ul>
+ <li> 2009/07/27 version 0.0.6
+      <ul>
+       <li> ライセンスを GPL v2 に変更 (GPL のソースコードを参照、利用し
+	    たため) 。
+       <li> コンパイル時に libusb もリンクされるようにした。
+       <li> RC-S330 対応。
+      </ul>
+ <li> 2008/03/20 version 0.0.5
+      <ul>
+       <li> 定数 FELICA_SERVICE_IRUCA_HISTORY 追加
+      </ul>
+ <li> 2008/02/17 version 0.0.4
+      <ul>
+       <li> checksum の計算に失敗することがあった不具合の修正。
+      </ul>
+ <li> 2008/02/03 version 0.0.3
+      <ul>
+       <li> BSD ライセンスに変更 (ベースになっている libpasori が BSD ラ
+	    イセンスであるため)
+      </ul>
+ <li> 2008/01/15 version 0.0.2
+ <li> 2008/01/14 version 0.0.1
+</ul>
+<hr>
+<p><a href="./">戻る</a></p>
+</body>
+</html>

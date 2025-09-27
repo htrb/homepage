@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>pstoedit</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+<h1>pstoedit の GRA 用ドライバ</h1>
+<hr>
+</div>
+<p>
+<A href="http://www.pstoedit.net/pstoedit/">pstoedit</A> の GRA 用ドライバを作っ
+てみました。PostScript から GRA への変換が出来ます。
+</p>
+
+<p>
+tanaka さんの <a
+href="http://homepage3.nifty.com/ttk/comp/ngraph/">pstoedit3.32用Ngraph
+gra形式ドライバー</a>の方がお薦めです。
+
+</p>
+
+<h2>使用法</h2>
+<p>
+<ol>
+ <li> <a href="http://www.pstoedit.net/pstoedit/">pstoedit</a> 3.31 の
+      <a href="http://home.t-online.de/home/helga.glunz/wglunz/pstoedit/pstoedit_3_31.zip">
+      ソース(pstoedit_3_31.zip)</a>を入手して、適当なディレクトリに展開します。
+ <li> <a href="pstoedit_3.31_drvgra_0.01.patch.gz">pstoedit_3.31_drvgra_0.01.patch.gz</a>
+      を先ほど pstoedit を展開したディレクトリにコピーして
+      <pre>
+zcat pstoedit_3.31_drvgra_0.01.patch.gz | patch -p0
+      </pre>
+      を実行します。
+ <li> あとは、readme.txt にしたがって
+      <pre>
+cd config
+sh configure
+cd ../src; make clean; make; make install; 
+      </pre>
+      
+      でコンパイル、インストールできます(必要に応じて su してください)。
+ <li> 「pstoedit -f gra hoge.ps hoge.gra」で GRA ファイルを生成できます。
+      詳細は pstoedit のマニュアルを参照してください。
+</ol>
+</p>
+
+<h2>問題点等</h2>
+<p>
+<ol>
+ <li> 日本語文字列等は閉多角形などで描画されますが、
+      例えば「田」は塗りつぶされて「■」の様になってしまいます
+      (おそらく "eofill" の解釈の問題だと思います)。
+ <li> 動作確認が不完全。
+</ol>
+</p>
+
+<h2>作成環境</h2>
+<p>
+<ul>
+ <li> Vine Linux 2.1.5
+ <li> egcs 2.91.66
+ <li> Ngraph 6.03.14
+</ul>
+</p>
+
+<h2>更新履歴</h2>
+<p>
+<ul>
+ <li> 2002/03/04 Version 0.00<BR>
+      <ul>
+       <li> とりあえず動くものを作る。
+      </ul>
+ <li> 2002/03/06 Version 0.01<BR>
+      <ul>
+       <li> 文字スペーシング・ポイント量が正しい値になるように改善。
+       <li> 文字列の扱いに関するバグ修正。
+      </ul>
+</ul>
+</p>
+<a href="./">戻る</a>
+</div>
+</body>
+</html>

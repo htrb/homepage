@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>gsuica</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+
+<h1>gsuica</h1>
+<h2>概要</h2>
+<ul>
+ <li> PaSoRi (MODEL RC-S320) を使って Suica の履歴を表示、保存するためのプログラムです (2012/05/01 更新)。
+ <li> PASMO や ICOCA の履歴も (多分) 表示できます。
+ <li> 動作には <a href="http://ruby-gnome2.sourceforge.jp/ja/">Ruby-GNOME2</a>,
+      <A href="http://www.ruby-lang.org/ja/">Ruby</a>, <a href="libpafe.html">libpafe</a> (version 0.0.7 以上),
+      <a href="libpafe-ruby.html">libpafe-ruby</a> (version 0.0.7 以上) が必要です。
+</ul>
+
+<h2>動作環境</h2>
+<ul>
+ <li> Ruby-GNOME2 (version 1.1.3 で動作確認)
+ <li> GNOME (version 3.2 で動作確認)
+ <li> Ruby (version 1.9.3p0 で動作確認)
+ <li> PaSoRi MODEL RC-S320
+</ul>
+
+<h2>ダウンロード</h2>
+<a href="gsuica">gsuica</a>
+
+<h2>スクリーンショット</h2>
+<p><a href="gsuica.png"><img src="gsuica_s.png" width="502" height="393"></a></p>
+
+<h2>使い方</h2>
+
+<ul>
+ <li> 起動して「読込」ボタンを押すと履歴が読み込まれ、表示されます。
+ <li> 後述の駅名データを保存してあれば駅名なども表示されます。
+ <li> 未登録のデータは「編集(E)」-「編集(E)...」で登録できます。
+ <li> 「保存」ボタンを押すと、表示されている履歴を CSV 形式で保存できま
+      す。
+</ul>
+
+<h2>駅名データベース</h2>
+<p>
+<a href="http://www014.upp.so-net.ne.jp/SFCardFan/">IC SFCard Fan</a>で配
+布されている「店舗・駅コード情報データベース」を利用することで、駅名など
+の表示ができます。下記手順にしたがってデータベースを保存してください。
+</p>
+
+<ol>
+ <li> <a href="http://www014.upp.so-net.ne.jp/SFCardFan/">IC SFCard
+      Fan</a>の「サイバネ駅コード調査データベース」から「Excel 形式で保存
+      (汎用)」でExcel ファイルを入手します。
+ <li> 上記ファイルを StationCode0.csv, StationCode1.csv,
+      StationCode2.csv, StationCode3.csv として文字コードを UTF-8 にして
+      CSV形式で保存します。<br>
+      <a href="http://chicago.sourceforge.net/xlhtml/">xlhtml</a>
+      を使うと下記のコマンドで CSV 形式に変換できます。
+      <pre>
+       xlhtml -csv -xp:0 -m ~/StationCode.xls > StationCode0.csv
+       xlhtml -csv -xp:1 -m ~/StationCode.xls > StationCode1.csv
+       xlhtml -csv -xp:2 -m ~/StationCode.xls > StationCode2.csv
+       xlhtml -csv -xp:3 -m ~/StationCode.xls > StationCode3.csv
+      </pre>
+ <li> データを ~/.gsuica/station_code/ に保存します。
+ <li> CSV への変換、文字コードの変換、所定のディレクトリへのデータの保存
+      を行うスクリプトを作りました。<br>
+      <a href="station_code_conv.sh">station_code_conv.sh</a>
+      <pre>
+      sh station_code_conv.sh StationCode.xls
+      </pre>
+      と実行します。
+</ol>
+
+<h2>注意</h2>
+<ul>
+ <li> 駅名などが正常に表示されない場合、プログラム側に問題がある可能性が
+      大きいと思われます。このプログラムを使用した結果についての問い合わ
+      せは IC SFCard Fan ではなく下記連絡先にお願いします。
+ <li> このプログラムは完全に無保証です。
+</ul>
+
+<h2>謝辞</h2>
+<ul>
+ <li> プログラムの作成にあたり、<a
+      href="http://www014.upp.so-net.ne.jp/SFCardFan/">IC SFCard Fan</a>
+      および<a href="http://wiki.osdev.info/?PaSoRi%2FRC-S320">PaSoRi/RC-S320 - osdev-j (MMA)</a> で得られる情報を参考にさせていただきました。
+ <li> <a href="http://www014.upp.so-net.ne.jp/SFCardFan/">IC SFCard Fan</a> のデータベースを利用することで、駅名などの表示が可能になりました。
+</ul>
+
+
+<h2>Link</h2>
+<ul>
+ <li> <a href="http://wiki.osdev.info/?PaSoRi%2FRC-S320">PaSoRi/RC-S320 - osdev-j (MMA)</a>
+ <li> <a href="http://www014.upp.so-net.ne.jp/SFCardFan/">IC SFCard Fan</a>
+ <li> <a href="http://chicago.sourceforge.net/xlhtml/">xlhtml</a>
+ <li> <a href="http://ruby-gnome2.sourceforge.jp/ja/">Ruby-GNOME2</a>
+ <li> <a href="http://www.gnome.org">GNOME</a>
+ <li> <A href="http://www.ruby-lang.org/ja/">Ruby</a>
+</ul>
+
+<h2>履歴</h2>
+
+<ul>
+ <li> 2012/05/01 version 0.9.1
+      <ul>
+       <li> 設定ダイアログを開くときに異常終了していた不具合の修正。
+      </ul>
+ <li> 2012/05/01 version 0.9.0
+      <ul>
+       <li> 最新の Ruby-GNOME2 で動作するように修正した。
+       <li> Ruby 1.9 で動作するようにした (1.8 では動作しない) 。
+      </ul>
+ <li> 2011/09/10 version 0.05
+      <ul>
+       <li> 駅名の検索が正常にできないことがあった不具合の修正。
+      </ul>
+ <li> 2008/12/27 version 0.04
+      <ul>
+       <li> 駅名データベースの仕様変更に対応。データベースは新しいものと差
+	    し替えてください。
+      </ul>
+ <li> 2008/03/20 version 0.03
+      <ul>
+       <li> <a href="http://sourceforge.jp/projects/felicalib">FeliCa
+	    Library</a> のドキュメントを参考に端末種、処理の種類を追加。
+       <li> Suica データの読み込み、駅名データベース参照部分を大幅に書き直し。
+       <li> 駅名データベースの CSV ファイル名を変更 (StationCode1.csv ->
+	    StationCode0.csv など) 。
+       <li> xlhtml で変換した CSV データだと正常に読み込めなかった不具合の
+	    修正。
+       <li> 駅名データベースを Marshal で保存し、２回め以降の起動が高速にな
+	    るようにした。
+      </ul>
+ <li> 2008/02/17 version 0.02
+      <ul>
+       <li> Felica#foreach を利用するように変更 (libpafe-ruby version
+	    0.0.4 以上を利用してください)。
+      </ul>
+ <li> 2008/02/03 version 0.01
+</ul>
+
+<h2>連絡先</h2>
+
+<p>ZXB01226 at nifty.com</p>
+
+<hr>
+<p><a href="./">戻る</a></p>
+</body>
+</html>

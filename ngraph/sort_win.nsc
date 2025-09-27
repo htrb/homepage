@@ -1,0 +1,99 @@
+# sort_win.nsc Version 1.06 written by H.I. 1999
+
+#概  要：設定されているファイルをファイル名でソートします。
+
+#使用法：実行するだけです。途中 "Y:NAME N:DATE.", "Y:UP N:DOWN."と聞いてき
+#        ますが、それぞれ 'Y'でファイル名、'N'でファイルの日付（と時間）を
+#        'Y'で昇順、'N'で逆順にソートします。
+#        file オブジェクトの name フィールドを勝手に変更します。
+#============================================================================
+
+NUM=`object file -instance`
+
+if [ $NUM = 0 ]
+then
+	new dialog
+	dialog::message:"No data file."
+	del dialog
+	exit
+fi
+
+set +e
+new dialog
+#============================================================================
+SORTEDBY=0
+# 下の２行をコメントにすると何でソートするかの確認を行わない。
+# デフォルトは上の行で設定（0:NAME 1:DATE）。
+dialog::yesno:"Y:NAME N:DATE"
+SORTEDBY=$?
+#============================================================================
+dialog::yesno:"Y:UP N:DOWN"
+ORDER=$?
+del dialog
+set -e
+
+if [ $ORDER = 0 ]
+then
+#============================================================================
+# デフォルトの sort コマンドオプション。
+#	for Windows sort.exe
+	OPTION=""
+#============================================================================
+else
+#============================================================================
+# 逆順にソートするための sort コマンドのオプション。
+#	for Windows sort.exe
+	OPTION="/R"
+#============================================================================
+fi
+
+TMPFILE=${system:0:temp_file}
+
+while [ $NUM != 0 ]
+do
+	NUM=`iexpr $NUM-1`
+	eval file:$NUM:name="ID$NUM"
+	eval FILEID='${'file:$NUM:id'}'
+	if [ $SORTEDBY = 0 ]
+	then
+		eval FILESPEC='${'file:$NUM:file'}'
+	else
+		eval FILEDATE='${'file:$NUM:date:3'}'
+		eval FILETIME='${'file:$NUM:time:0'}'
+		FILESPEC="$FILEDATE-$FILETIME"
+	fi
+	echo "$FILESPEC,$FILEID" >> "$TMPFILE"
+done
+
+TMPFILE2=${system:0:temp_file}
+
+sort  "$OPTION" "$TMPFILE" > "$TMPFILE2"
+
+if [ -f "$TMPFILE2" ]
+then
+	new file
+		file:!:name="SORTFILE"
+		file:SORTFILE:x=0
+		file:SORTFILE:y=2
+		file:SORTFILE:csv=true
+		file:SORTFILE:head_skip=0
+		file:SORTFILE:read_step=1
+		file:SORTFILE:final_line=-1
+		file:SORTFILE:file="$TMPFILE2"
+		file:SORTFILE:opendata
+		while file:SORTFILE:getdata
+		do
+			NUMX=${file:SORTFILE:data_x}
+			NUM=${file:SORTFILE:data_y}
+			NUM=`iexpr $NUM`
+			movelast file:"ID$NUM"
+		done
+		file:SORTFILE:closedata
+	del file:SORTFILE
+else
+	new dialog
+	dialog::message:"Can't open the temporally file."
+	del dialog
+fi
+system:0:unlink_temp_file "$TMPFILE"
+system:0:unlink_temp_file "$TMPFILE2"

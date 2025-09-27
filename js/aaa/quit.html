@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+<title>quit</title>
+<meta http-equiv="content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="content-script-type" content="text/javascript">
+<link rev=made href="mailto:zxb01226@nifty.ne.jp">
+<script src="display.js">
+</script>
+</head>
+<body>
+<script language="JavaScript">
+
+WAIT = 350;
+WIDTH = 30;
+
+MESSAGE = "もう来ねぇよ！";
+
+QUITSTR = new Array();
+QUITSTR[0]  = "　　　　　　┏━┓　";
+QUITSTR[1]  = "　　　　　　┃※┃　";
+QUITSTR[2]  = 0;
+QUITSTR[3]  = "（Д´　）　ヽ（｀Д´）ノヽ（｀Д´）ノヽ（｀Д´）ノ　";
+QUITSTR[4]  = "Ｕ┌／　）□―┤￣￣￣├――┤￣￣￣├――┤￣￣￣｜　";
+QUITSTR[5]  = "◎┗＜━◎　　　￣◎￣　　　　￣◎￣　　　　￣◎￣　〜〜　";
+
+QUITSTR2 = new Array();
+QUITSTR2[0] = "　　プン　　┣━┛　　　　　　バカ　　　　　　　　　";
+QUITSTR2[1] = "プン　　　　┣━┛　　　　　　バカ　　　　　　　　　";
+QUITSTR2[2] = "　　プン　　┣━┛　　　　　　　　　　　　　ゴルァ　"
+QUITSTR2[3] = "プン　　　　┣━┛　　　　　　　　　　　　　ゴルァ　"
+
+dispQuit = function(i){
+  if(i < -WIDTH){
+    return;
+  }
+  var str;
+  var k = Math.abs(i % QUITSTR2.length);
+  var len = MESSAGE.length
+  for(var y = 0; y < HEIGHT - 1; y++){
+    if(y == 0){
+      str = QUITSTR[0];
+    }else if(y > 0 && y <  len + 1){
+      str = QUITSTR[1].replace("※", MESSAGE.charAt(y - 1));
+    }else if(y == 1 + len){
+      str = QUITSTR2[k];
+    }else{
+      str = QUITSTR[y - len + 1];
+    }
+    for(x = 0; x < str.length; x++){
+      display.mvAddChar(x + i, y, str.charAt(x));
+    }
+  }
+  i--;
+  setTimeout("dispQuit(" + i + ")", WAIT);
+}
+
+setWait = function(){
+  WAIT = document.prm.wait.value
+}
+
+HEIGHT = QUITSTR.length + MESSAGE.length;
+display = new Display(WIDTH, HEIGHT, 1);
+display.createDisplay();
+dispQuit(WIDTH);
+</script>
+<form name="prm">
+Wait: <input type="text" value="350" name="wait"> 
+<input type="button" value="Run" onClick="setWait();dispQuit(WIDTH);">
+</form>
+
+もとネタは<a href="http://matsu-www.is.titech.ac.jp/~fukuchi/rooms/shortshort/index.html#quit">こちら</a>
+</body>
+</html>
+

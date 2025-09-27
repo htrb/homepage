@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>JSGraph</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+<style>ul {list-style-type: none;}</style>
+</head>
+<body>
+<script src="jsgraph_old.js" type="text/javascript"></script>
+<h1>JSGraph</h1>
+
+<div id="mygraph" style="width: 800px; height: 500px;"></div>
+<script type="text/javascript" src="jsgraph_ui.js"></script>
+<noscript>
+<p><img src="jsgraph.png" alt="graph" width="640" height="450"></p>
+<p>JavaScript が使用できる環境では上のようなグラフが表示されているはずです。</p>
+</noscript>
+<div>
+<ul>
+<li>
+     <input id="draw1" type="checkbox" checked>
+     <label>Division: <input id="div1" type="text" value="100" size="5"></label>
+     <label>Min: <input id="min1" type="text" value="-2.3" size="5"></label>
+     <label>Max: <input id="max1" type="text" value="2.3" size="5"></label>
+     <label>y = <input id="eqn1" type="text" value="exp(-pow(x,2))*tanh(x)" size="20"></label>
+<li>
+     <input id="draw2" type="checkbox" checked>
+     <label>Division: <input id="div2" type="text" value="200" size="5"></label>
+     <label>Min: <input id="min2" type="text" value="-2.3" size="5"></label>
+     <label>Max: <input id="max2" type="text" value="2.3" size="5"></label>
+     <label>y = <input id="eqn2" type="text" value="exp(-pow(x,2))*tanh(x)*pow(sin(x*4),2)" size="20"></label>
+<li>
+     <input id="draw3" type="checkbox">
+     <label>Division: <input id="div3" type="text" value="100" size="5"></label>
+     <label>Min: <input id="min3" type="text" value="-2.3" size="5"></label>
+     <label>Max: <input id="max3" type="text" value="2.3" size="5"></label>
+     <label>y = <input id="eqn3" type="text" value="exp(-pow(x,2))" size="20"></label>
+</ul>
+<input type="button" onclick="draw()" value="Draw">
+<input type="button" onclick="graph.clear()" value="Clear">
+</p>
+</form>
+<hr>
+<h2>ソース</h2>
+<p><a href="jsgraph_old.js">jsgraph_old.js</a>
+</p>
+<h2>特徴</h2>
+<ul>
+ <li> JavaScript で強引にグラフを描画。
+ <li> IE, Mozilla で動作確認。
+ <li> 比較的簡単な手順でグラフの作成が可能(なつもり)。
+ <li> キャプションはマウスでドラッグすることにより位置の変更が可能。
+ <li> グラフをドラッグすることで、グラフ全体の位置を変更可能。
+ <li> グラフの隅をドラッグすることでグラフサイズの変更が可能。
+ <li> JavaScript を利用してインタラクティブにグラフの表示を変更可能。
+ <li> 軸ナンバリング部分は現状あまり自信がありません。
+ <li> 動作が遅い。大量のデータを描かせるようなことは考えない方が良いでしょう。
+</ul>
+
+<h2>使い方</h2>
+<ol>
+ <li> &lt;script src="jsgraph.js" type="text/javascript"&gt;&lt;/script&gt;<br>
+      で jsgraph.js を読み込む。
+ <li> &lt;div id="mygraph" style="width: 800px; height: 500px;"&gt;&lt;/div&gt; <br>
+      等として、グラフ用の領域を確保する。
+ <li> graph = new JSGraph('mygraph'); <br>
+      で JSGraph オブジェクトを生成。
+ <li> data = new Data();<br>
+      で Data オブジェクトを生成。
+ <li> data.str2data(s, RS, FS);<br>
+      で値を入力。s をレコードセパレータ RS、フィールドセパレータ FS で配列に変換し、
+      一番目のフィールドを x データ、二番目のフィールドを y データとして Data
+      オブジェクトに保存します。
+ <li> data.add_data(x, y);<br>
+      というメソッドも使用できます。
+ <li> data.set_color('#0000ff');<br>
+      data.set_text('Data2');<br>
+      でデータの描画色、キャプションを指定。
+ <li> graph.add_data(data);<br>
+      で JSGraph オブジェクトにデータ追加。
+ <li> graph.autoscale();<br>
+      で軸スケールを自動設定します。
+ <li> グラフのタイトル、x, y 軸のキャプションはそれぞれ<br>
+      graph.title.set_text("Title");<br>
+      graph.caption_x.set_text("x");<br>
+      graph.caption_y.set_text("y");<br>
+      で変更できます。
+ <li> graph.draw();<br>
+      でグラフを描画。
+</ol>
+
+<h2>参考文献</h2>
+<ul>
+ <li> 久野靖「入門WWW」2000年 ASCII
+ <li> 久野靖「入門JavaScript」2001年 ASCII
+</ul>
+
+<h2>履歴</h2>
+<ul>
+ <li>2005/04/01<br>
+      ・ 移動、リサイズの高速化。<br>
+      ・ 動作例更新。
+ <li>2005/03/29<br>
+      ・ 対数軸対応。<br>
+      ・ 動作例更新。
+ <li>2003/06/20 Version 0.3<br>
+      ・ autoscale 時のエラーチェックを追加。<br>
+      ・ キャプションなど一部の設定メソッドの統一。
+ <li>2003/06/19 Version 0.2<br>
+      ・ リサイズ時の座標計算のバグ修正。<br>
+      ・ ステータスラインにマウスポインタのグラフ上の座標を表示するように
+      した。
+ <li>2003/06/18 初版公開
+</ul>
+<hr>
+<a href="./">Return</a>
+</div>
+</body>
+</html>

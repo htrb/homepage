@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+<title>quit</title>
+<meta http-equiv="content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="content-script-type" content="text/javascript">
+<style>
+p#str {position: absolute; width: auto; height: auto; overflow: hidden; font-family: monospace}
+</style>
+</head>
+<body>
+<p id="str"></p>
+<script type="text/javascript">
+
+Wait = 200;
+
+D51STR = new Array();
+SMOKE1 = new Array();
+SMOKE2 = new Array();
+COAL   = new Array();
+
+SMOKE1[0] = "　　　　　　　　　　　(　) (@@) ( )　(@)　()　　@@　　O　　 @　　 O　　 @　　　O　";
+SMOKE1[1] = "　　　　　　　　 (@@@)　";
+SMOKE1[2] = "　　　　　　 (　　)　";
+SMOKE1[3] = "　　　　　(@@@@)　";
+SMOKE1[4] = "";
+SMOKE1[5] = "　　　 (　 )　 ";
+
+SMOKE2[0] = "　　　　　　　　　　　 (@@) (　) (@)　( )　@@　　()　　@　　 O　　 @　　 O　　　@ ";
+SMOKE2[1] = "　　　　　　　　　(　 ) ";
+SMOKE2[2] = "　　　　　　　(@@@@) ";
+SMOKE2[3] = "　　　　　 (　　) ";
+SMOKE2[4] = "";
+SMOKE2[5] = "　　　　 (@@@) ";
+
+D51STR[0] =  "　　　====　　　　________　　　　　　　　___________ ";
+D51STR[1] =  "　_D _|　|_______/　　　　\\__I_I_____===__|_________| ";
+D51STR[2] =  "　 |(_)---　|　 H\\________/ |　 |　　　　=|___ ___|　";
+D51STR[3] =  "　 /　　 |　|　 H　|　|　　 |　 |　　　　 ||_| |_||　";
+D51STR[4] =  "　|　　　|　|　 H　|__--------------------| [___] |　";
+D51STR[5] =  "　| ________|___H__/__|_____/[][]~\\_______|　　　 |　";
+D51STR[6] =  "　|/ |　 |-----------I_____I [][] []　D　 |=======|__";
+
+D51STR[7] =  "__/ =| o |=-~~\\　/~~\\　/~~\\　/~~\\ ____Y___________|__";
+D51STR[8] =  " |/-=|___|=　　||　　||　　||　　|_____/~\\___/　　　 ";
+D51STR[9] =  "　\\_/　　　\\O=====O=====O=====O_/　　　\\_/　　　　　 ";
+
+D51STR[10] = "__/ =| o |=-~~\\　/~~\\　/~~\\　/~~\\ ____Y___________|__";
+D51STR[11] = " |/-=|___|=O=====O=====O=====O　 |_____/~\\___/　　　 ";
+D51STR[12] = "　\\_/　　　\\__/　\\__/　\\__/　\\__/　　　\\_/　　　　　 ";
+
+D51STR[13] = "__/ =| o |=-O=====O=====O=====O \\ ____Y___________|__";
+D51STR[14] = " |/-=|___|=　　||　　||　　||　　|_____/~\\___/　　　 ";
+D51STR[15] = "　\\_/　　　\\__/　\\__/　\\__/　\\__/　　　\\_/　　　　　 ";
+
+D51STR[16] = "__/ =| o |=-~O=====O=====O=====O\\ ____Y___________|__";
+D51STR[17] = " |/-=|___|=　　||　　||　　||　　|_____/~\\___/　　　 ";
+D51STR[18] = "　\\_/　　　\\__/　\\__/　\\__/　\\__/　　　\\_/　　　　　 ";
+
+D51STR[19] = "__/ =| o |=-~~\\　/~~\\　/~~\\　/~~\\ ____Y___________|__";
+D51STR[20] = " |/-=|___|=　 O=====O=====O=====O|_____/~\\___/　　　 ";
+D51STR[21] = "　\\_/　　　\\__/　\\__/　\\__/　\\__/　　　\\_/　　　　　 ";
+
+D51STR[22] = "__/ =| o |=-~~\\　/~~\\　/~~\\　/~~\\ ____Y___________|__";
+D51STR[23] = " |/-=|___|=　　||　　||　　||　　|_____/~\\___/　　　 ";
+D51STR[24] = "　\\_/　　　\\_O=====O=====O=====O/　　　\\_/　　　　　 ";
+
+COAL[0] = "　　_________________　"
+COAL[1] = "　 _|　　　　　　　　\\_____A "
+COAL[2] = " =|　　　　　　　　　　　　| "
+COAL[3] = " -|　　　　　　　　　　　　| "
+COAL[4] = "__|________________________|_ "
+COAL[5] = "|__________________________|_ "
+COAL[6] = "　 |_D__D__D_|　|_D__D__D_|　 "
+COAL[7] = "　　\\_/　 \\_/　　\\_/　 \\_/ "
+
+PAR = document.getElementById("str");
+
+ROW = 6;
+COL = SMOKE1.length + D51STR.length - 15;
+var str;
+
+getStr = function(i, y){
+  if(i % 2 == 0 && y < 6){
+    str = SMOKE1[y];
+  }else if(i % 2 == 1 && y < 6){
+    str = SMOKE2[y];
+  }else if(y >= 6 && y < 13){
+    str = D51STR[y - 6];
+  }else{
+    str = D51STR[y - 6 + 3 * i];
+  }
+  if(y > 7){
+    str += COAL[y - 8];
+  }
+  return str;
+}
+
+run = function(i){
+  if(X - i* 10 < -WIDTH){
+    window.history.back();
+    return;
+  }
+  var str;
+  PAR.style.left = (X - i * 10) + 'px';
+  for(var j = 0; j < COL; j++){
+    str = getStr(i % ROW, j);
+    PAR.childNodes[j * 2].nodeValue = str;
+  }
+  i++;
+  setTimeout("run(" + i + ")", Wait);
+}
+
+for(var i = 0; i < COL; i++){
+  str = getStr(0, i);
+  PAR.style.left = '0px';
+  PAR.style.visibility = 'hidden';
+  PAR.appendChild(document.createTextNode(str));
+  PAR.appendChild(document.createElement('br'));
+}
+
+X = window.screen.width;
+WIDTH = PAR.offsetWidth;
+PAR.style.width = PAR.offsetWidth + "px";
+PAR.style.height = PAR.offsetHeight + "px";
+PAR.style.left = X + 'px';
+PAR.style.visibility = 'visible';
+run(0);
+</script>
+</body>
+</html>
+
+

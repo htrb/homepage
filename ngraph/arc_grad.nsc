@@ -1,0 +1,41 @@
+# arc_grad.nsc Version 1.00 written by H.I. 2000
+
+#概  要：グラデーションつきの円を描画します。
+
+#使用法：適当な大きさ、色の円を描画してからこのマクロを実行すると
+#	 最後に描画した円がグラデーション付きになります。
+#============================================================================
+
+DIV=30
+
+if exist arc:!
+then
+ R=${arc::R}
+ G=${arc::G}
+ B=${arc::B}
+ DR=`dexpr "(255-$R)/($DIV+1)"`
+ DG=`dexpr "(255-$G)/($DIV+1)"`
+ DB=`dexpr "(255-$B)/($DIV+1)"`
+
+ X=${arc::x}
+ Y=${arc::y}
+
+ RX=${arc::rx}
+ RY=${arc::ry}
+ DRX=`dexpr "$RX/($DIV+1)"`
+ DRY=`dexpr "$RY/($DIV+1)"`
+
+ i=0
+ while [ $i -lt $DIV ]
+ do
+  i=`iexpr "$i+1"`
+  new arc angle1=0 angle2=36000 fill=true
+  arc::rx=`iexpr "$RX-$DRX*$i"`
+  arc::ry=`iexpr "$RY-$DRY*$i"`
+  arc::x=`iexpr "$X-$DRX*$i/3"`
+  arc::y=`iexpr "$Y-$DRY*$i/3"`
+  arc::R=`iexpr "$R+$DR*$i"`
+  arc::G=`iexpr "$G+$DG*$i"`
+  arc::B=`iexpr "$B+$DB*$i"`
+ done
+fi

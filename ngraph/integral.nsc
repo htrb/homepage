@@ -1,0 +1,185 @@
+# integral.nsc Version 1.00 written by H.I. 1998
+
+#概  要：Ngraph 上のデータに対して積分計算を行います。また、Polygon を利用し
+#        積分を行った範囲を塗りつぶします。実際に行っている計算は
+#        ΣYn*ABS(Xn+1 - Xn) です。Xn は単調増加 or 単調減少を仮定しています。
+#        Ngraph Version 6.00.04 以上で実行可能です。
+
+#使用法：矩形を利用して X 方向の積分範囲の設定を行います。結果は矩形の左上に
+#        出力されます。矩形が存在しない場合、表示されている範囲について計算を
+#        行います。データが参照する y 座標の範囲を超えたデータは無視されます。
+#        実行すると、範囲指定に矩形を使うか （Use Rectangle?）どのデータを対象
+#        とするか（Input DATA No.）、Polygon を描画するか（Draw polygon?）を聞
+#        いてきますから、答えてください。なお、データが１つしか設定されていない
+#        場合、data_id の問い合わせは行いません。
+
+#============================================================================
+# Polygon の色の設定。好みの値に設定してください。
+R=0
+G=256
+B=256
+#============================================================================
+# 矩形が存在しない場合の結果出力位置のY座標。好みの値に設定してください。
+LEGENDY=5000
+#============================================================================
+
+DATANUM=`object file -instance`
+if [ $DATANUM = 0 ]
+then
+# データが存在しない場合はエラー。
+	new dialog
+	dialog::beep
+	dialog::message "No data file."
+	del dialog
+	exit
+elif [ $DATANUM = 1 ]
+then
+# データが１つの場合は id=0 のデータを対象にする。
+	DATA=0
+else
+# それ以外の場合は id を問い合わせる。
+	new dialog
+	DATA=${dialog::input:"Input DATA No."}
+	del dialog
+fi
+
+if [ "$DATA" ]
+then
+
+# Polygon を描画するかどうか。
+	set +e
+	new dialog
+	dialog::yesno:"Draw polygon?"
+	POLY=$?
+	del dialog
+	set -e
+
+# 対象とするデータが参照する軸を得る
+	AXISX=`get file:$DATA -field axis_x`
+	AXISY=`get file:$DATA -field axis_y`
+
+# 矩形が存在しない場合、積分範囲は X軸の左端から右端まで。
+	LEFT=`get $AXISX -field x`
+	RIGHT=`get $AXISX -field length`
+	RIGHT=`iexpr "$LEFT+$RIGHT"`
+
+	NUMBER=`object rectangle -instance`
+
+	if [ $NUMBER != 0 ]
+	then
+# 矩形が存在する場合、積分範囲は矩形左端から右端まで。
+		set +e
+		new dialog
+		dialog::yesno:"Use Rectangle?"
+		USERECT=$?
+		del dialog
+		set -e
+		if [ $USERECT = 0 ]
+		then
+			LEGENDY=`iexpr "MIN(${rectangle:!:y1},${rectangle:!:y2})"`
+			LEFT=`iexpr "MIN(${rectangle:!:x1},${rectangle:!:x2})"`
+			RIGHT=`iexpr "MAX(${rectangle:!:x1},${rectangle:!:x2})"`
+		fi
+	fi
+
+	DIRY=`get $AXISY -field direction`
+	if [ $DIRY = 9000 ]
+	then
+		BOTTOM=`get $AXISY -field y`
+		TOP=`get $AXISY -field length`
+		TOP=`iexpr "$BOTTOM-$TOP"`
+	elif [ $DIRY = 27000 ]
+	then
+		TOP=`get $AXISY -field y`
+		BOTTOM=`get $AXISY -field length`
+		BOTTOM=`iexpr "$BOTTOM+$TOP"`
+	else
+		new dialog
+		dialog::beep
+		dialog::message "Direction of Y-Axis must be 9000 or 27000."
+		del dialog
+		exit
+	fi
+
+	AXISX=`get $AXISX -field y`
+
+	SUM=0
+	DFLUG=0
+	eval file:"$DATA":opendatac
+	while file::getdata
+	do
+		X=${file::coord_x}
+		Y=${file::coord_y}
+		SFLUG=`iexpr "SIGN($X-$LEFT)*SIGN($RIGHT-$X)+SIGN($Y-$TOP)*SIGN($BOTTOM-$Y)"`
+		if [ $SFLUG = 2 ]
+		then
+# データが積分範囲内にあれば、
+			if [ $DFLUG = 0 ]
+			then
+# 積分範囲で最初のデータに対する処理。
+				POINTS="${file::coord_x} $AXISX ${file::coord_x} ${file::coord_y}"
+				DATAX0=${file::data_x}
+				FIRSTX=${file::data_x}
+				DATAY0=${file::data_y}
+				DFLUG=1
+			else
+# 積分範囲で２回目以降のデータに対する処理。
+				POINTS="$POINTS $X ${file::coord_y}"
+				DATAX1=${file::data_x}
+				SUM=`dexpr "$SUM+$DATAY0*ABS($DATAX1-$DATAX0)"`
+				DATAX0=$DATAX1
+				DATAY0=${file::data_y}
+				LASTX=${file::coord_x}
+			fi
+		fi
+	done
+	file::closedata
+
+	if [ $DFLUG = 1 ]
+	then
+		if [ $POLY = 0 ]
+		then
+# Polygon の描画。
+			new polygon
+			polygon::fill="even_odd_rule"
+			polygon::R="$R"
+			polygon::G="$G"
+			polygon::B="$B"
+			polygon::points="$POINTS $LASTX $AXISX"
+		fi
+# 積分結果の表示。
+		STARTX=`dexpr "MIN($FIRSTX,$DATAX0)"`
+		STOPX=`dexpr "MAX($FIRSTX,$DATAX0)"`
+		new text
+		text::x="$LEFT"
+		text::y="$LEGENDY"
+		text::text="Integral\&:$SUM\nFrom\&:$STARTX\nTo\&:$STOPX"
+
+		if [ $NUMBER != 0 ]
+		then
+#矩形を消すかどうか問い合わせる。
+			if [ $USERECT = 0 ]
+			then
+				set +e
+				new dialog
+				dialog::yesno:"Delete rectangle?"
+				DELRECT=$?
+				del dialog
+				set -e
+				if [ $DELRECT = 0 ]
+				then
+					del rectangle:!
+				fi
+			fi
+		fi
+
+		gra::clear
+		gra::draw
+	else
+# 積分範囲内にデータが存在しなかった。
+		new dialog
+		dialog::beep
+		dialog::message "No data."
+		del dialog
+	fi
+fi

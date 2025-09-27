@@ -1,0 +1,141 @@
+#merge2.nsc Version 1.00 written by H.I. 1998
+
+#概  要：merge した gra イメージの位置、サイズの変更、削除、コピー
+#        を行います。
+
+#使用法：merge.nsc で位置、サイズの指定に使用した矩形を移動、サイズ変
+#        更、削除、コピーしてマクロを実行します。それぞれ対応した gra
+#        イメージの位置、サイズの変更、削除、コピーを行います。
+#        削除の場合のみ、削除するかどうかの問い合わせがあります。
+
+getGRAprm() {
+	if [ -f "$GRAFILE" ]
+	then
+		new file
+			file:!:hidden=false
+			file:!:x=0
+			file:!:y=0
+			file:!:remark='%'\'''
+			file:!:ifs=' 	,'
+			file:!:head_skip=0
+			file:!:read_step=1
+			file:!:final_line=-1
+			file:!:file="$GRAFILE"
+		file:!:opendata
+			GRAheader=`get file:! -field column:"1 1"`
+			if [ "$GRAheader" != '%Ngraph' ]
+			then
+				new dialog
+				dialog::message:"$GRAFILE is not GRA file."
+				del dialog
+				file:!:closedata
+				del file
+				exit
+			fi
+			COMMAND=""
+			LINE=0
+			while [ "$COMMAND" != "I" ]
+			do
+				COMMAND=`get file:! -field column:"$LINE 1"`
+				LINE=`iexpr $LINE+1`
+				if [ $LINE = 30 ]
+				then
+					new dialog
+					dialog::message:"I think $GRAFILE is not GRA file."
+					del dialog
+					file:!:closedata
+					del file
+					exit
+				fi
+			done
+
+			LINE=`iexpr $LINE-1`
+			GRAleft=`get file:! -field column:"$LINE 3"`
+			GRAwidth=`get file:! -field column:"$LINE 5"`
+			GRAwidth=`iexpr $GRAwidth-$GRAleft`
+
+		file:!:closedata
+		del file:!
+	else
+		new dialog
+		dialog::message:"$GRAFILE does not exist."
+		del dialog
+		exit
+	fi
+}
+
+
+NUMBER_M=`object merge -instance`
+if [ $NUMBER_M = 0 ]
+then
+	new dialog
+	dialog::message:"merge file is not found."
+	del dialog
+	exit
+fi
+while [ $NUMBER_M != 0 ]
+do
+	NUMBER_M=`iexpr $NUMBER_M-1`
+	eval ID_M='${'merge:$NUMBER_M:name'}'
+	if [ "$ID_M" ]
+	then
+		eval GRAFILE='${'merge:$NUMBER_M:file'}'
+		getGRAprm
+		EXIST_R=0
+		NUMBER_R=`object rectangle -instance`
+		if [ $NUMBER_R != 0 ]
+		then
+			while [ $NUMBER_R != 0 ]
+			do
+				NUMBER_R=`iexpr $NUMBER_R-1`
+				eval ID_R='${'rectangle:$NUMBER_R:name'}'
+				if [ "$ID_R" = "$ID_M" ]
+				then
+					NUM_M=$NUMBER_M
+					if [ $EXIST_R != 0 ]
+					then
+						new merge
+						eval cpy merge:$NUMBER_M,!
+						NUM_M=${merge:!:id}
+					fi
+					EXIST_R=1
+					eval X1='${'rectangle:$NUMBER_R:x1'}'
+					eval X2='${'rectangle:$NUMBER_R:x2'}'
+					eval Y1='${'rectangle:$NUMBER_R:y1'}'
+					eval Y2='${'rectangle:$NUMBER_R:y2'}'
+					TOP_MARGIN=`iexpr "MIN($Y1,$Y2)"`
+					LEFT_MARGIN=`iexpr "MIN($X1,$X2)"`
+					ZOOM=`iexpr "ABS($X1-$X2)*10000/$GRAwidth"`
+					eval merge:$NUM_M:top_margin=$TOP_MARGIN
+					eval merge:$NUM_M:left_margin=$LEFT_MARGIN
+					eval merge:$NUM_M:zoom=$ZOOM
+					eval NAME=merge'${'rectangle:$NUMBER_R:oid'}'
+
+					SearchName
+					while  exist rectangle:"$NAME"
+					do
+						SearchName
+						NAME="A$NAME"
+					done
+					eval merge:$NUM_M:name=$NAME
+					eval rectangle:$NUMBER_R:name=$NAME
+				fi
+			done
+		fi
+		if [ $EXIST_R = 0 ]
+		then
+			set +e
+			new dialog
+			dialog::yesno:"Deleat Merge ($GRAFILE)?"
+			YESNO=$?
+			del dialog
+			set -e
+			if [ $YESNO = 0 ]
+			then
+				eval "del merge:$NUMBER_M"
+			fi
+		fi
+	fi
+done
+gra::clear
+gra::draw

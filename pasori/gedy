@@ -1,0 +1,1349 @@
+#! /usr/bin/ruby1.9.3
+# -*- coding: utf-8 -*-
+=begin
+
+Copyright (C) 2008, Hiroyuki Ito. ZXB01226@nifty.com
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+USA.
+
+=end
+
+# $Id: main.rb,v 1.4 2008-02-17 05:35:47 hito Exp $
+
+require 'gtk2'
+require 'date'
+require 'optparse'
+require 'fileutils'
+
+require "pasori"
+
+class Edy
+
+  attr_reader :idm
+
+  TYPE_CHARGE,
+  TYPE_EDY_GIFT,
+  TYPE_EXPENSE = [0x02, 0x04, 0x20]
+
+  Type = {
+    TYPE_CHARGE => "チャージ",
+    TYPE_EDY_GIFT => "Edyギフト",
+    TYPE_EXPENSE => "出金",
+  }
+
+  class History
+
+    [
+     :ID_TYPE,
+     :ID_MISC,
+     :ID_COUNT,
+     :ID_DATE,
+     :ID_EXPENSE,
+     :ID_BALANCE,
+    ].each_with_index {|sym, i|
+      const_set(sym, i)
+    }
+
+    Epoch = Time.local(2000, 1, 1)
+
+    attr_reader :data, :type, :date, :balance, :count
+
+    def initialize(data)
+      @data = data
+      a = data.unpack('CCnNNN')
+      @type = a[ID_TYPE]
+      @date = Epoch + (a[ID_DATE] >> 17) * 86400 + (a[ID_DATE] & 0x1ffff)
+      @expense = a[ID_EXPENSE]
+      @balance = a[ID_BALANCE]
+      @count = a[ID_COUNT]
+    end
+
+    def expense
+      case (@type)
+      when TYPE_EXPENSE
+        @expense
+      when TYPE_EDY_GIFT, TYPE_CHARGE
+        nil
+      else
+        @else
+      end
+    end
+
+    def charge
+      case (@type)
+      when TYPE_EXPENSE
+        nil
+      when TYPE_EDY_GIFT, TYPE_CHARGE
+        @expense
+      end
+    end
+
+    def type_str
+      t = Type[@type]
+      t = sprintf("不明 (0x%02x)", @type) unless (t)
+      t
+    end
+  end
+
+  def initialize
+    @history = []
+  end
+
+  def get_data
+    @pasori = Pasori.open {|pasori|
+      pasori.felica_polling(Felica::POLLING_EDY) {|felica|
+        id = felica.read(Felica::SERVICE_EDY_NUMBER, 0)
+        raise "cannnot open Edy." unless (id)
+        @id = id.unpack("nnnnnnnn")
+        @idm = felica.idm
+
+        @history.clear
+        felica.foreach(Felica::SERVICE_EDY_HISTORY) {|l|
+          h = History.new(l)
+          break if (h.type == 0 &&
+                    h.date == History::Epoch &&
+                    h.charge.to_i == 0 &&
+                    h.expense.to_i == 0)
+          @history.push(h)
+        }
+      }
+    }
+    @history
+  end
+
+  def id
+    @id[1..4]
+  end
+
+  def each(&block)
+    @history.each{|h|
+      yield(h)
+    }
+  end
+end
+
+class DialogWindow < Gtk::Window
+  attr_reader :geometry
+
+  def initialize(parent)
+    super(Gtk::Window::TOPLEVEL)
+    @parent = parent
+    @parent.add_group(self)
+
+    signal_connect('delete-event') {|w, e|
+      w.hide
+      w.signal_emit_stop('delete-event')
+    }
+
+    @geometry = @parent.get_gconf("/window/#{self.class.to_s.gsub('Window','').downcase}_geometry")
+  end
+
+  def show
+    if (self.visible?)
+      self.present
+      return
+    end
+    self.parse_geometry(@geometry) if (@geometry)
+    self.show_all
+  end
+
+  def hide
+    return unless (self.visible?)
+    save_geometry
+    self.hide_all
+  end
+
+  private
+
+  def save_geometry
+    @geometry  = self.size.join('x')
+    @geometry += self.position.collect{|v| sprintf('%+d', v)}.join('')
+
+    @parent.set_gconf("/window/#{self.class.to_s.gsub('Window','').downcase}_geometry", @geometry)
+  end
+end
+
+class MyLabel < Gtk::Label
+  def initialize(s, f = false)
+    super(s, f)
+    self.xpad = 10
+  end
+end
+
+class Gtk::Window
+  # Gtk::Window#parse_geometry is buggy now?
+  def parse_geometry(geometry)
+    geo =  geometry.split(/([+\-])|x/)
+
+    x = (geo[2] == "+") ? 1 : -1
+    x *= geo[3].to_i
+
+    y = (geo[4] == "+") ? 1 : -1
+    y *= geo[5].to_i
+
+    set_default_size(geo[0].to_i, geo[1].to_i)
+    move(x, y)
+  end
+end
+
+class TreeView < Gtk::TreeView
+  def initialize(ts)
+    super(ts)
+
+    self.headers_visible = true
+    self.rules_hint = true
+
+    signal_connect("key-press-event") {|w, e|
+      case (e.keyval)
+      when Gdk::Keyval::GDK_space
+        toggle_expand(w.selection.selected)
+      end
+    }
+  end
+
+  def toggle_expand(iter)
+    return unless (iter)
+    path = iter.path
+    if (row_expanded?(path))
+      collapse_row(path)
+    else
+      expand_row(path, false)
+    end
+  end
+end
+
+class PopupMenu < Gtk::Menu
+  def initialize
+    super
+    @register = Gtk::ImageMenuItem.new(Gtk::Stock::EDIT)
+    @copy = Gtk::ImageMenuItem.new(Gtk::Stock::COPY)
+
+    append(@register)
+    append(@copy)
+    self.show_all
+  end
+
+  def copy_event(&block)
+    @copy.signal_connect("activate") {|w|
+      yield(w)
+    }
+  end
+
+  def register_event(&block)
+    @register.signal_connect("activate") {|w|
+      yield(w)
+    }
+  end
+
+  def popup(iter, clipboard, button, time)
+    @register.sensitive = ! iter.nil?
+    @copy.sensitive = ! iter.nil?
+
+    super(nil, nil, button, time)
+  end
+end
+
+def err_message(str, type = Gtk::MessageDialog::ERROR)
+  mes = Gtk::MessageDialog.new(GEDY,
+                               Gtk::Dialog::MODAL,
+                               type,
+                               Gtk::MessageDialog::BUTTONS_OK,
+                               str)
+  mes.title = "Error"
+  mes.run
+  mes.destroy
+end
+
+def conf_message(str, default = true, type = Gtk::MessageDialog::QUESTION)
+  mes = Gtk::MessageDialog.new(GEDY,
+                               Gtk::Dialog::MODAL,
+                               type,
+                               Gtk::MessageDialog::BUTTONS_YES_NO,
+                               str)
+  if (default)
+    mes.set_default_response(Gtk::MessageDialog::RESPONSE_YES)
+  else
+    mes.set_default_response(Gtk::MessageDialog::RESPONSE_NO)
+  end
+  mes.title = "Confirm"
+  r = mes.run
+  mes.destroy
+  r == Gtk::Dialog::RESPONSE_YES
+end
+
+def ary2csv(ary)
+  l = ary.map {|d|
+    if (d.kind_of?(Numeric))
+      sprintf("%d", d)
+    elsif (d.kind_of?(String))
+      d = d.gsub('"', '""') if (d.index('"'))
+      d = d.gsub(/.+/) {|m| %!"#{m}"!} if (d.index(',') || d.index('"'))
+      d
+    else
+      d
+    end
+  }
+  l.join(',')
+end
+
+class InformationView < TreeView
+  PAD = 2
+
+  [
+   :COLUMN_DATE,
+   :COLUMN_TIME,
+   :COLUMN_CHARGE,
+   :COLUMN_EXPENCE,
+   :COLUMN_BALANCE,
+   :COLUMN_MISC,
+   :COLUMN_NUMBER,
+   :COLUMN_BINARY,
+  ].each_with_index {|sym, i|
+    const_set(sym, i)
+  }
+
+  def initialize(parent, suica, clipboard)
+    super(Gtk::ListStore.new(String, String,
+                             Integer, Integer, Integer,
+                             String, Integer,
+                             String))
+
+    @parent = parent
+    @clipboard = clipboard
+    @suica = suica
+    init
+  end
+
+  def init
+    renderer_s = Gtk::CellRendererText.new
+    renderer_n = Gtk::CellRendererText.new
+    renderer_n.xalign = 1.0
+    [
+     [_('日付'),     COLUMN_DATE,    renderer_s, true],
+     [_('時刻'),     COLUMN_TIME,    renderer_s, true],
+     [_('チャージ'), COLUMN_CHARGE,  renderer_n, true],
+     [_('支払'),     COLUMN_EXPENCE, renderer_n, true],
+     [_('残高'),     COLUMN_BALANCE, renderer_n, true],
+     [_('備考'),     COLUMN_MISC,    renderer_s, true],
+     [_('No.'),      COLUMN_NUMBER,  renderer_n, true],
+     ['binary',      COLUMN_BINARY,  renderer_s, false],
+    ].each {|(title, id, renderer, visible)|
+      column = Gtk::TreeViewColumn.new(title, renderer, :text => id)
+      column.clickable = false
+      column.resizable = true
+      column.visible = visible
+      append_column(column)
+    }
+
+    clear
+    
+    @popup_menu = PopupMenu.new
+    @popup_menu.register_event {|w|
+      itr = selection.selected
+      if (itr)
+        @parent.show_edit_window(itr[COLUMN_BINARY])
+      end
+    }
+
+    @popup_menu.copy_event {|w|
+      itr = selection.selected
+      @clipboard.text = @suica.parse_data(itr[COLUMN_BINARY]).join(',')
+    }
+
+    signal_connect('button-press-event') {|w, e|
+      if e.kind_of? Gdk::EventButton
+        itr = selection.selected
+        if (itr && itr.parent && e.button == 3)
+          @popup_menu.popup(itr, @clipboard, e.button, e.time)
+        end
+      end
+    }
+
+    set_size_request(480, 200)
+    selection.mode = Gtk::SELECTION_SINGLE
+  end
+
+  def selected
+    selection.selected
+  end
+
+  def save
+    @file_dialog = Gtk::FileChooserDialog.new("Save File",
+                                              @parent,
+                                              Gtk::FileChooser::ACTION_SAVE,
+                                              nil,
+                                              [Gtk::Stock::CANCEL, Gtk::Dialog::RESPONSE_CANCEL],
+                                              [Gtk::Stock::SAVE, Gtk::Dialog::RESPONSE_ACCEPT]) unless (@file_dialog)
+    @file_dialog.set_do_overwrite_confirmation(true);
+
+    if (@file_dialog.run == Gtk::Dialog::RESPONSE_ACCEPT)
+      _save(@file_dialog.filename)
+    end
+    @file_dialog.hide
+  end
+
+  def _save(file)
+    File.open(file, "w") {|f|
+      model.each {|model, path, row|
+        f.puts(csv(row))
+      }
+    }
+  end
+
+  def csv(iter)
+    a = (0..COLUMN_BINARY).map {|j|
+      iter[j]
+    }
+    ary2csv(a)
+  end
+
+  def append_history(data)
+    row = model.append
+    row[COLUMN_NUMBER] = data.count
+    row[COLUMN_DATE] = data.date.strftime('%Y/%m/%d')
+    row[COLUMN_TIME] = data.date.strftime('%H:%M')
+    row[COLUMN_CHARGE] = data.charge.to_i
+    row[COLUMN_EXPENCE] =  data.expense.to_i
+    row[COLUMN_BALANCE] = data.balance
+    row[COLUMN_MISC] = (data.type == Edy::TYPE_EDY_GIFT) ? data.type_str : ""
+    row[COLUMN_BINARY] = data.data.unpack("C*").map{|c| sprintf("%02X", c)}.join
+  end
+
+  def clear
+    model.clear
+  end
+end
+
+class SetupWindow < DialogWindow
+  attr_reader :modified
+
+  def initialize(parent)
+    super(parent)
+    self.modal = true
+    self.transient_for = parent
+
+    vbox = Gtk::VBox.new
+
+    hbox = create_panel
+    vbox.pack_start(hbox)
+    vbox.pack_end(create_root_btns, false, false, 4)
+
+    self.title = "#{APP_NAME} setup"
+    add(vbox)
+
+    signal_connect('delete-event') {|w, e|
+      w.cancel
+      w.signal_emit_stop('delete-event')
+    }
+  end
+
+  def ok
+    @parent.set_gconf('/general/conf_quit', @conf_quit.active?)
+    hide
+  end
+
+  def cancel
+    hide
+  end
+
+  def show
+    super
+
+    @conf_quit.active = (@parent.get_gconf('/general/conf_quit').to_s == "true")
+  end
+
+  def hide
+    super
+  end
+
+  private
+
+  def add_option(vbox, lable_str, *widget)
+    hbox = Gtk::HBox.new
+    hbox.pack_start(MyLabel.new(lable_str), false, false, 0) if (lable_str)
+    widget.each {|w|
+      if (w.instance_of?(Gtk::Entry))
+        hbox.pack_start(w, true, true, 4)
+      else
+        hbox.pack_start(w, false, false, 4)
+      end
+    }
+    vbox.pack_start(hbox, false, false, 10)
+  end
+
+  def create_panel
+    hbox = Gtk::HBox.new(true, 1)
+
+    vbox = Gtk::VBox.new
+
+    @conf_quit = Gtk::CheckButton.new(_("終了時に確認する"))
+    add_option(vbox, nil, @conf_quit)
+
+    hbox.pack_start(Gtk::Frame.new.add(vbox))
+
+    hbox
+  end
+
+  def create_root_btns
+    create_btns([
+                  [:@setup_ok_btn, Gtk::Stock::OK, :ok, :pack_end],
+                  [:@setup_cancel_btn, Gtk::Stock::CANCEL, :cancel, :pack_end]
+                ], 10)
+  end
+
+  def create_btns(data, pad = 0)
+    hbox = Gtk::HBox.new
+
+    data.each {|b|
+      btn = Gtk::Button.new(b[1])
+      btn.signal_connect("clicked") {|w|
+        send(b[2])
+      }
+      hbox.send(b[3], btn, false, false, pad)
+      instance_variable_set(b[0], btn)
+    }
+
+    hbox
+  end
+
+end
+
+class GEdy  < Gtk::Window
+  def initialize(edy)
+    super(Gtk::Window::TOPLEVEL)
+
+    @edy = edy
+    @app_conf = ConfigFile.new(CONF_FILE)
+
+    signal_connect('delete_event'){|w, e|
+      close
+      w.signal_emit_stop('delete-event')
+    }
+    signal_connect('destroy_event'){|w, e|
+      close
+      w.signal_emit_stop('destroy_event')
+    }
+
+    @window_group = Gtk::WindowGroup.new
+    @window_group.add(self)
+
+    @clipboard = self.get_clipboard(Gdk::Atom.new(0))
+    @tree_view = InformationView.new(self, edy, @clipboard)
+
+    scrolled_window = Gtk::ScrolledWindow.new
+    scrolled_window.hscrollbar_policy = Gtk::POLICY_AUTOMATIC
+    scrolled_window.vscrollbar_policy = Gtk::POLICY_AUTOMATIC
+    scrolled_window.add(@tree_view)
+
+    vbox = Gtk::VBox.new
+    set_icon(Icon)
+
+    create_ui(vbox)
+
+    @edy_number = Gtk::Label.new
+    @edy_number.xalign = 0.05
+    vbox.pack_start(@edy_number, false, false, 5)
+    vbox.pack_start(scrolled_window, true, true)
+
+    set_action_sensitive("FileSaveAction",false)
+
+    add(vbox)
+  end
+
+  def create_ui(vbox)
+    @ui = Gtk::UIManager.new
+    @action_group = Gtk::ActionGroup.new(APP_NAME);
+    define_action_item(@action_group)
+    @ui.insert_action_group(@action_group, 0)
+
+    @accel_group = @ui.accel_group
+    add_accel_group(@accel_group);
+
+    ui = <<EOF
+<ui>
+  <menubar name="MenuBar">
+    <menu name="FileMenu" action="FileMenuAction">
+      <menuitem name="FileRead" action="FileReadAction"/>
+      <menuitem name="FileSave" action="FileSaveAction"/>
+      <menuitem name="FileQuit" action="FileQuitAction"/>
+    </menu>
+    <menu name="EditMenu" action="EditMenuAction">
+      <menuitem name="EditCopy" action="EditCopyAction"/>
+    </menu>
+    <menu name="SettingMenu" action="SettingMenuAction">
+      <menuitem name="SettingPreference" action="SettingPreferenceAction"/>
+    </menu>
+    <menu name="HelpMenu" action="HelpMenuAction">
+      <menuitem name="HelpAbout" action="HelpAboutAction"/>
+    </menu>
+  </menubar>
+  <toolbar name="Toolbar">
+    <toolitem name="Read" action="FileReadAction"/>
+    <toolitem name="Save" action="FileSaveAction"/>
+    <separator/>
+    <toolitem name="SettingPreference" action="SettingPreferenceAction"/>
+  </toolbar>
+</ui>
+EOF
+
+    @ui.add_ui(ui)
+
+    w = @ui.get_widget("/MenuBar")
+    vbox.pack_start(w, false, false, 0)
+
+    w = @ui.get_widget("/Toolbar")
+    vbox.pack_start(w, false, false, 0)
+  end
+
+  def define_action_item(action_group)
+    [
+     [
+      "FileReadAction",
+      _('読込(_R)'),
+      _('データの読込'),
+      proc{open},
+      Gtk::Stock::CONNECT,
+     ],
+     [
+      "FileSaveAction",
+      _('保存(_S)'),
+      _('データの保存'),
+      proc{save},
+      Gtk::Stock::SAVE,
+     ],
+     [
+      "FileQuitAction",
+      _("終了(_Q)"),
+      _("プログラムの終了"),
+      proc{close},
+      Gtk::Stock::QUIT,
+     ],
+     [
+      "EditCopyAction",
+      _("コピー(_C)"),
+      _("データのコピー"),
+      proc{
+        itr = @tree_view.selected
+        if (itr)
+          @clipboard.text = (0..InformationView::COLUMN_BINARY).map {|i|
+            itr[i].to_s
+          }.join(',')
+        end
+      },
+      Gtk::Stock::COPY,
+     ],
+     [
+      "SettingPreferenceAction",
+      _("設定(_P)"),
+      _("環境設定"),
+      proc{show_setup_win},
+      Gtk::Stock::PREFERENCES,
+     ],
+     [
+      "HelpAboutAction",
+      _("情報(_A)"),
+      _("このプログラムについて"),
+      proc{create_about},
+      Gtk::Stock::ABOUT,
+     ],
+     [
+      "FileMenuAction",
+      _("ファイル(_F)"),
+      _("ファイルメニュー"),
+      nil,
+      nil,
+     ],
+     [
+      "EditMenuAction",
+      _("編集(_E)"),
+      _("編集メニュー"),
+      nil,
+      nil,
+     ],
+     [
+      "SettingMenuAction",
+      _("設定(_S)"),
+      _("設定メニュー"),
+      nil,
+      nil,
+     ],
+     [
+      "HelpMenuAction",
+      _("ヘルプ(_H)"),
+      _("ヘルプメニュー"),
+      nil,
+      nil,
+     ],
+    ].each { |item|
+      action = Gtk::Action.new(item[0], item[1], item[2], item[4])
+      if (item[3])
+        action.signal_connect("activate") {
+          item[3].call
+        }
+      end
+      action_group.add_action(action)
+    }
+    action_group.translation_domain = nil
+  end
+
+  def init()
+    @app_conf.read
+    main_size = get_gconf('/window/main_geomtry')
+    self.parse_geometry(main_size) if (main_size)
+    show_all
+  end
+
+  def set_action_sensitive(name, state)
+    action = @action_group.get_action(name)
+    action.sensitive = state if (action)
+  end
+
+  def open
+    @tree_view.clear
+
+    begin
+      @edy.get_data
+      @edy.each {|l|
+        @tree_view.append_history(l)
+      }
+      id = @edy.id
+      @edy_number.text = sprintf("Edy: %04x-%04x-%04x-%04x", id[0], id[1], id[2], id[3])
+      set_action_sensitive("FileSaveAction", true)
+    rescue => ever
+      err_message("データの読込に失敗しました。\n#{ever.to_s}")
+      set_action_sensitive("FileSaveAction",false)
+    end
+  end
+
+  def save
+    @tree_view.save
+  end
+
+  def close
+    conf_quit = (get_gconf('/general/conf_quit').to_s == "true")
+
+    if (! conf_quit || conf_message(_('プログラムを終了しますか？'), false))
+      save_win_size
+      @app_conf.save
+      Gtk::main_quit
+    end
+  end
+
+  def save_win_size
+    main_geom  = self.size.join('x')
+    main_geom += self.position.collect{|v| sprintf('%+d', v)}.join('')
+    set_gconf('/window/main_geomtry', main_geom)
+  end
+
+  def set_gconf(path, val)
+    @app_conf["#{CONF_PATH}#{path}"] = val unless (val.nil?)
+  end
+
+  def get_gconf(path)
+    @app_conf["#{CONF_PATH}#{path}"]
+  end
+
+  def add_group(win)
+    @window_group.add(win)
+  end
+
+  def show_setup_win
+    if (@setup_win.nil?)
+      @setup_win = SetupWindow.new(self)
+      @setup_win.signal_connect('hide') {|w|
+        if (w.modified)
+        end
+      }
+    end
+    @setup_win.show
+  end
+
+  def create_about
+    Gtk::AboutDialog.show(self,
+                          {
+                            "program-name" => APP_NAME,
+                            "version" => APP_VERSION,
+                            "copyright" => COPY_RIGHT,
+                            "comments" => "Edy データ表示プログラム",
+                            "authors" => APP_AUTHORS,
+                            "logo" => Icon,
+                          })
+  end
+end
+
+class ConfigFile
+  def initialize(conf_file)
+    @conf = {}
+    @file = conf_file
+
+    read
+  end
+
+  def read
+    return unless (File.exist?(@file))
+    File.open(@file, "r:utf-8") { |f|
+      f.each { |l|
+        l.chomp!
+        n = l.index("\t")
+        key = l[0..(n - 1)]
+        val = l[(n + 1)..- 1]
+        @conf[key] = val
+      }
+    }
+  end
+
+  def save
+    File.open(@file, "w:utf-8") {|f|
+      @conf.each {|k, v|
+        f.puts("#{k}\t#{v}")
+      }
+    }
+  end
+
+  def get_conf(key)
+    @conf[key]
+  end
+
+  def set_conf(key, val)
+    @conf[key] = val
+  end
+
+  def [](key)
+    get_conf(key)
+  end
+
+  def []=(key, val)
+    set_conf(key, val)
+  end
+end
+$GEDY_XPM = [
+"128 128 363 2",
+"  	c None",
+". 	c #000000",
+"+ 	c #000303",
+"@ 	c #000E11",
+"# 	c #00171B",
+"$ 	c #001D23",
+"% 	c #00262E",
+"& 	c #00323C",
+"* 	c #003741",
+"= 	c #00343F",
+"- 	c #002831",
+"; 	c #001F25",
+"> 	c #00181D",
+", 	c #001013",
+'" 	c #000507',
+') 	c #001318',
+'! 	c #00343E',
+'~ 	c #006174',
+'{ 	c #0092AF',
+'] 	c #00B9DE',
+'^ 	c #00D6FF',
+'/ 	c #00E3FF',
+'( 	c #00E2FF',
+'_ 	c #00E4FF',
+': 	c #00DBFF',
+'< 	c #00C0E6',
+'[ 	c #009CBB',
+'} 	c #006D82',
+'| 	c #003B47',
+'1 	c #001A20',
+'2 	c #001417',
+'3 	c #005566',
+'4 	c #0096B4',
+'5 	c #00CCF4',
+'6 	c #00E1FF',
+'7 	c #00D8FF',
+'8 	c #00D5FF',
+'9 	c #00D4FE',
+'0 	c #00D4FF',
+'a 	c #00DFFF',
+'b 	c #00A2C3',
+'c 	c #006478',
+'d 	c #001F26',
+'e 	c #004553',
+'f 	c #00A0BF',
+'g 	c #00D2FB',
+'h 	c #00DAFF',
+'i 	c #00D9FF',
+'j 	c #00D7FF',
+'k 	c #00ADD0',
+'l 	c #005E70',
+'m 	c #000405',
+'n 	c #007890',
+'o 	c #00CAF2',
+'p 	c #00CFF8',
+'q 	c #0095B2',
+'r 	c #001216',
+'s 	c #000607',
+'t 	c #00B9DF',
+'u 	c #00191E',
+'v 	c #000506',
+'w 	c #00ACCE',
+'x 	c #00C9F0',
+'y 	c #001B21',
+'z 	c #009EBD',
+'A 	c #00C7EE',
+'B 	c #00C6ED',
+'C 	c #00C9F1',
+'D 	c #00CEF7',
+'E 	c #00BEE3',
+'F 	c #001519',
+'G 	c #00778E',
+'H 	c #00D1FB',
+'I 	c #00B2D5',
+'J 	c #0093B1',
+'K 	c #006A7F',
+'L 	c #004C5B',
+'M 	c #003641',
+'N 	c #004A58',
+'O 	c #006579',
+'P 	c #008DA8',
+'Q 	c #00AED0',
+'R 	c #00CDF5',
+'S 	c #0099B8',
+'T 	c #0088A2',
+'U 	c #0089A4',
+'V 	c #0087A1',
+'W 	c #00A2C2',
+'X 	c #00D0F9',
+'Y 	c #00AACC',
+'Z 	c #0087A2',
+'` 	c #000709',
+' .	c #004350',
+'..	c #00CBF3',
+'+.	c #00DDFF',
+'@.	c #005768',
+'#.	c #00A5C5',
+'$.	c #00DCFF',
+'%.	c #002229',
+'&.	c #003B48',
+'*.	c #005567',
+'=.	c #00ABCD',
+'-.	c #00697E',
+';.	c #00839C',
+'>.	c #00252C',
+',.	c #001C22',
+'".	c #00819A',
+').	c #002D35',
+'!.	c #004452',
+'~.	c #005D6F',
+'{.	c #00B8DC',
+'].	c #002A32',
+'^.	c #00D1FA',
+'/.	c #00758C',
+'(.	c #000C0F',
+'_.	c #000B0E',
+':.	c #0085A0',
+'<.	c #00414F',
+'[.	c #00748A',
+'}.	c #000202',
+'|.	c #001317',
+'1.	c #0095B3',
+'2.	c #008DAA',
+'3.	c #000D10',
+'4.	c #000708',
+'5.	c #00424E',
+'6.	c #006C81',
+'7.	c #007991',
+'8.	c #006A7E',
+'9.	c #003945',
+'0.	c #00B9DD',
+'a.	c #00D5FE',
+'b.	c #00242B',
+'c.	c #002C35',
+'d.	c #006376',
+'e.	c #00B5D8',
+'f.	c #00B6DB',
+'g.	c #002D36',
+'h.	c #005668',
+'i.	c #00B1D4',
+'j.	c #002F38',
+'k.	c #005464',
+'l.	c #004E5E',
+'m.	c #000203',
+'n.	c #006175',
+'o.	c #00D2FC',
+'p.	c #007A92',
+'q.	c #00748B',
+'r.	c #00BDE2',
+'s.	c #00232A',
+'t.	c #00C8F0',
+'u.	c #00D4FD',
+'v.	c #00D3FD',
+'w.	c #008AA5',
+'x.	c #000E10',
+'y.	c #0091AD',
+'z.	c #00C1E8',
+'A.	c #00272E',
+'B.	c #005262',
+'C.	c #008CA7',
+'D.	c #001316',
+'E.	c #000F12',
+'F.	c #00252D',
+'G.	c #004653',
+'H.	c #00AFD2',
+'I.	c #00BADF',
+'J.	c #0086A0',
+'K.	c #002C34',
+'L.	c #00839D',
+'M.	c #00B8DD',
+'N.	c #005D70',
+'O.	c #007990',
+'P.	c #007C94',
+'Q.	c #007B92',
+'R.	c #0089A3',
+'S.	c #0094B2',
+'T.	c #007B93',
+'U.	c #00BFE4',
+'V.	c #00171C',
+'W.	c #00A5C6',
+'X.	c #00C8EF',
+'Y.	c #008BA7',
+'Z.	c #00CAF3',
+'`.	c #00E0FF',
+' +	c #00D3FC',
+'.+	c #0090AC',
+'++	c #00272F',
+'@+	c #0096B3',
+'#+	c #005F72',
+'$+	c #00CEF6',
+'%+	c #000B0D',
+'&+	c #00B0D3',
+'*+	c #001E24',
+'=+	c #007086',
+'-+	c #00424F',
+';+	c #00BDE3',
+'>+	c #00DEFF',
+',+	c #002931',
+'"+	c #007389',
+')+	c #00788F',
+'!+	c #009DBB',
+'~+	c #005A6B',
+'{+	c #003E4B',
+']+	c #000001',
+'^+	c #004755',
+'/+	c #004351',
+'(+	c #006F85',
+'_+	c #001A1F',
+':+	c #00404D',
+'<+	c #00B4D7',
+'[+	c #000304',
+'}+	c #004D5C',
+'|+	c #008CA8',
+'1+	c #005667',
+'2+	c #00323B',
+'3+	c #002A33',
+'4+	c #0097B5',
+'5+	c #00BEE4',
+'6+	c #0093B0',
+'7+	c #00C6EE',
+'8+	c #004552',
+'9+	c #00B5DA',
+'0+	c #002D37',
+'a+	c #006275',
+'b+	c #003842',
+'c+	c #00A4C5',
+'d+	c #002830',
+'e+	c #00242C',
+'f+	c #00738B',
+'g+	c #00BCE2',
+'h+	c #00687D',
+'i+	c #00677B',
+'j+	c #00090B',
+'k+	c #00596A',
+'l+	c #00687C',
+'m+	c #001C21',
+'n+	c #00A3C3',
+'o+	c #003C48',
+'p+	c #00AED1',
+'q+	c #00B1D5',
+'r+	c #002127',
+'s+	c #00181C',
+'t+	c #00505F',
+'u+	c #001115',
+'v+	c #0091AE',
+'w+	c #00282F',
+'x+	c #00313C',
+'y+	c #003C47',
+'z+	c #00677A',
+'A+	c #00C5EC',
+'B+	c #00697D',
+'C+	c #00CDF6',
+'D+	c #00596B',
+'E+	c #00A8C9',
+'F+	c #00CAF1',
+'G+	c #00748C',
+'H+	c #007F99',
+'I+	c #00859E',
+'J+	c #005465',
+'K+	c #008EA9',
+'L+	c #00090A',
+'M+	c #005869',
+'N+	c #0090AD',
+'O+	c #001014',
+'P+	c #005F71',
+'Q+	c #006B80',
+'R+	c #003F4C',
+'S+	c #006D83',
+'T+	c #006E83',
+'U+	c #00758B',
+'V+	c #00303A',
+'W+	c #005C6F',
+'X+	c #00A1C2',
+'Y+	c #00EBFF',
+'Z+	c #000101',
+'`+	c #007F97',
+' @	c #007E96',
+'.@	c #000C0E',
+'+@	c #009AB9',
+'@@	c #004856',
+'#@	c #003A46',
+'$@	c #009DBD',
+'%@	c #001418',
+'&@	c #00A6C6',
+'*@	c #006C80',
+'=@	c #003E4A',
+'-@	c #00AFD1',
+';@	c #002E37',
+'>@	c #006072',
+',@	c #00ADCF',
+'"@	c #000A0B',
+')@	c #00B2D6',
+'!@	c #007087',
+'~@	c #00728A',
+'{@	c #00080A',
+']@	c #004756',
+'^@	c #00778F',
+'/@	c #003540',
+'(@	c #0088A3',
+'_@	c #00B0D2',
+':@	c #00B7DB',
+'<@	c #00404C',
+'[@	c #005E71',
+'}@	c #006477',
+'|@	c #00C4EA',
+'1@	c #00A7C8',
+'2@	c #00BFE6',
+'3@	c #001B20',
+'4@	c #00414D',
+'5@	c #00414E',
+'6@	c #00667B',
+'7@	c #00A0C0',
+'8@	c #00809A',
+'9@	c #000809',
+'0@	c #009FBE',
+'a@	c #006F84',
+'b@	c #004451',
+'c@	c #004F5E',
+'d@	c #00829B',
+'e@	c #000D0F',
+'f@	c #007E97',
+'g@	c #00B6DA',
+'h@	c #006D84',
+'i@	c #003844',
+'j@	c #002329',
+'k@	c #00859F',
+'l@	c #001E23',
+'m@	c #00BBE0',
+'n@	c #003A47',
+'o@	c #00C7EF',
+'p@	c #00C4EB',
+'q@	c #00CCF5',
+'r@	c #00CFF7',
+'s@	c #00BDE1',
+'t@	c #00C1E7',
+'u@	c #00C3E9',
+'v@	c #004D5D',
+'w@	c #003F4B',
+'x@	c #00667A',
+'y@	c #00849E',
+'z@	c #00C2E8',
+'A@	c #00C0E5',
+'B@	c #00C2E9',
+'C@	c #006679',
+'D@	c #005C6E',
+'E@	c #002128',
+'F@	c #004B5A',
+'G@	c #00A4C4',
+'H@	c #00697F',
+'I@	c #00BADE',
+'J@	c #00738A',
+'K@	c #004F5F',
+'L@	c #003843',
+'M@	c #008BA5',
+'N@	c #009DBC',
+'O@	c #00333D',
+'P@	c #004958',
+'Q@	c #005A6C',
+'R@	c #00B4D8',
+'S@	c #00849F',
+'T@	c #00151A',
+'U@	c #007187',
+'V@	c #0086A1',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .                                 ',
+'                          . . + @ # $ % & * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * = - ; > , " . .                           ',
+'                      . . ) ! ~ { ] ^ / / ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( / _ : < [ } | 1 . .                       ',
+'                  . . 2 3 4 5 6 : 7 ^ 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 0 8 7 : a 8 b c d . .                   ',
+'                . . e f g h ^ 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 i j k l m .                 ',
+'              . m n o j 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 7 p q r .               ',
+'            . s [ 8 8 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 9 8 8 t u .             ',
+'          . v w 7 9 8 8 8 8 9 9 8 8 8 8 8 8 8 8 8 9 9 8 8 8 8 8 8 8 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 8 8 8 8 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 ^ x y .           ',
+'        . + z 7 9 8 8 8 8 9 8 ^ 8 p o A B A C D 9 ^ 8 8 8 8 8 8 8 8 8 8 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 9 9 9 9 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 ^ E F .         ',
+'      . . G ^ 9 8 8 8 9 9 7 H I J K L | M | N O P Q R 7 8 9 8 8 8 8 8 8 S T U U U U U U U U U U U U U U U V W X 8 8 8 8 8 8 8 8 8 8 8 8 8 8 ^ Y Z U U V A 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 ^ z ` .       ',
+'      .  ...8 8 8 8 9 8 +.w O ; . . . . . . . . . F @.#.$.9 9 8 8 8 8 8 %.. . . . . . . . . . . . . . . . . &.B 8 8 8 8 8 8 8 8 8 8 8 8 8 8 i *.. . . . =.8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 H -..       ',
+'    . r f j 8 8 8 9 ^ h ;.>.. . . . . . . . . . . . . ,.".a 9 8 8 8 8 8 ).. . . . . . . . . . . . . . . . . !.A 8 8 8 8 8 8 8 8 8 8 8 8 8 8 i ~.. . . . k 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 j {.]..     ',
+'    . 3 ^.8 9 8 9 8 i /.(.. . . . . . . . . . . . . . . _.:.a 9 8 8 8 8 ).. . . . . . . . . . . . . . . . . <.A 8 8 8 8 8 8 8 8 8 8 8 8 8 8 i ~.. . . . k 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 i [.}.    ',
+'  . |.1.h 8 8 8 8 h 2.3.. . . . . 4.5.6.7.8.9.. . . . . . # 0.7 a.8 8 8 ).. . . . b.c.c.c.c.c.c.c.c.c.c.c.% d.o 8 8 8 8 8 8 8 8 8 8 8 8 8 8 i ~.. . . . k 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 7 e.>..   ',
+'  . ! o ^ 9 8 9 ^ f.g.. . . . m h.A ^ 9 9 9 9 i.j.. . . . }.k.6 0 8 8 8 ).. . . . I 9 9 9 9 9 9 9 9 9 9 9 9 9 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 i ~.. . . . k 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l..   ',
+'  m.n.6 9 8 8 8 o.p.. . . . v q.( 8 9 8 8 9 9 i r.& . . . . s.< j 8 8 8 ).. . . . I 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 ^ o.5 x t...o.8 i ~.. . . . k 8 u.^.H H H o.9 8 8 8 8 8 8 8 v.H H H ^.u.8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 $.w.(.  ',
+'  x.y.$.8 8 8 8 z.A.. . . . B./ 9 9 8 8 8 8 8 9 a C.D.E.1 F.G.H.7 8 8 8 ).. . . . I 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 ^ 8 I.J.L j.K.G.L.M.: N.. . . . k ^ o O.P.P.Q.R.^.9 8 8 8 8 9 i S.T.P.P.p.U.8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 7 ] V.. ',
+'. V.M.7 8 8 8 9 W.. . . . v B ^ 9 8 8 8 8 8 8 8 ^ X.".Y.=.Z.`.7 9 8 8 8 ).. . . . I 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 ^  +.+b.. . . . . . ++@+#+. . . . k ^ $+@ . . . . 0.8 8 8 8 8 8 ^ %+. . . , &+^ 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 +.b.. ',
+'. *+0 ^ 8 8 8 o.=+. . . . -+i 9 8 8 8 8 8 8 8 8 9 ^ +.$.i j 8 9 8 8 8 8 ).. . . . ;+( ( ( ( ( ( ( ( ( ( ( >+^ 9 8 9 8 8 Z (.. . . . . . . . @ ,+. . . . k 8 v."+. . . . )+8 8 8 8 8 i !+. . . . ~+R 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 / {+]+',
+'. % / 8 8 8 8 ^.e . . . . O.^ 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 ).. . . . | ^+^+^+^+^+^+^+^+^+^+/+(+B 8 8 9 7 w _+. . . . . ++:+$ . . . . . . . k 8 9 <+[+. . . b.h 9 8 8 9 6 }+. . . s |+i 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 `.1+}.',
+'. 2+/ 9 8 8 8 X 3+. . . . 4+8 8 8 8 8 9 i a a a a a a a a a `.: 9 8 8 8 ).. . . . . . . . . . . . . . . . | 5+^ 8 8 $+O . . . . s 6+7+A B 7.. . . . . . k 8 8 t.8+. . . . 9+^ 8 8 ^ H F . . . 0+f.j 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a a+m.',
+'. b+( 8 8 8 8 p $ . . . . c+8 8 8 8 8 : w.A.d+d+d+d+d+d+d+d+e+f++.8 8 8 ).. . . . . . . . . . . . . . . . | U.^ 8 8 g+s.. . . . 1.7 8 8 8 : h+. . . . . k 8 8 8 C.. . . . i+: 9 8 : { j+. . . k+: 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 p m+. . . . n+8 8 8 8 8 $.)+. . . . . . . . . . ~.a 8 8 8 ).. . . . . . . . . . . . . . . . o+U.^ 8 8 p+. . . . A.$.9 8 8 8 8 g m.. . . . k 8 9 ^ q+r+. . . s+$.8 8 `.t+}.. . u+v+: 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 X w+. . . . J 8 8 8 8 8 $.O.. . . . . . . . . . N.a 8 8 8 ).. . . . x+y+y+y+y+y+y+y+y+y+y+b+z+A+8 8 v.6+. . . . B+7 8 8 8 8 9 : ! . . . . k 8 8 8 C+D+. . . . E+i j t.b.. . . K.F+j 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 ^.-+. . . . G+^ 8 8 8 8 $./.. . . . . . . . . . N.a 8 8 8 ).. . . . E ( ( ( ( ( ( ( ( ( ( / >+^ 9 8 o.H+. . . . I+j 8 8 8 8 8 i J+. . . . k 8 8 9 : K+L+. . . M+6 $.N+O+. . [+P+( 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 o.Q+. . . . R+i 9 8 8 8 7 E+S+T+T+T+U+>.. . . . N.a 8 8 8 ).. . . . I 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 g 7.. . . . R.j 8 8 8 8 8 7 #+. . . . k 8 8 9 j E V+. . . $ v.+.W+. . . %+w i 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 9 X+. . . . m x 8 8 8 8 9 7 +.+.+.+.Y+N Z+. . . N.a 8 8 8 ).. . . . I 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 o.`+. . . .  @j 8 8 8 8 8 i D+. . . . k 8 8 8 8 : #+Z+. . .@+@B = . . . g.$.8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 5+$ . . . . l ( 9 8 8 8 8 8 8 8 9 ( @@Z+. . . N.a 8 8 8 ).. . . . I 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 v.{ . . . . a+7 8 8 8 8 9 : #@. . . . k 8 8 8 9 : $@%@. . }.~+&@O+. . . T.+.9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 p *@. . . . v S.>+9 9 8 8 8 9 9 ^ a =@. . . . N.a 8 8 8 ).. . . . I 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 -@. . . . w+: 9 8 8 8 8 8 v . . . . k 8 8 8 8 8 7 ;@. . . K.>@. . . [+R ^ 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 9 j ,@_+. . . . "@U 8 v.8 8 8 v.o.)@| . . . . . N.a 8 8 8 ).. . . . &+o.o.o.o.o.o.o.o.o.o.o.o.o.9 8 8 g+s.. . . . f 7 8 8 8 h !@. . . . . k 8 8 8 8 9 >+~@v . . [+{@. . . ]@+.9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 ^ ^@}.. . . . . /@(@_@:@H.J.<@. . . . . . . [@a 8 8 8 ).. . . . }@^@^@^@^@^@^@^@^@^@^@^@^@!@|@8 8 C+c . . . . , 1@x ..t.Z m.. . . . . k 8 8 8 8 8 7 2@E.. . . . . . . f j 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 9 j R ~+Z+. . . . . . . . . . . . . . . . . 3@|+: 8 8 8 ).. . . . . . . . . . . . . . . . . . ,@8 9 7 =.> . . . . Z+4@1+& . . }.. . . . k 8 8 8 8 8 9 / 5@. . . . . . # ^ 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 9 i o 6@j+. . . . . . . . . . . . . . m ^+7@: 9 8 8 8 ).. . . . . . . . . . . . . . . . . . H.8 9 8 9 8@9@. . . . . . . . . 1+. . . . k 8 8 8 8 8 9 i 0@. . . . . . a@8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 9 7 o.4+b@. . . . . . . . . . . .@c@{ A $.8 9 8 8 8 % . . . . . . . . . . . . . . . . . . k 8 8 9 ^ X d@x.. . . . . . e@f@Q . . . . w 8 8 8 8 8 8 8 j m+. . . . . g@8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 9 8 7 |@1@h@i@%@. . . s j@L k@-@X.7 ^ 9 8 8 8 8 8 B+N }+}+}+}+}+}+}+}+}+}+}+}+}+}+}+}+ .r.8 8 8 9 ^ o.H.[@l@. . y P+Y 9 ;+e }+L ^+m@8 8 8 8 8 8 9 h T+. . . . n@..9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 9 8 8 8 X ..o@A+p@p@B x R o.8 8 8 9 8 8 8 8 8 8 D R R R R R R R R R R R R R R R R R q@v.8 8 8 8 9 8 8 r@t.A+A+X.p 8 8 v.q@R R R v.8 8 8 8 8 8 9 $.L . . . . V  +8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 8 8 8 j s@Z+. . . |.i.^ 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 v.o@o o t@].. . . . B.t.8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 u@<@@@b@_.. . . . 4.6+i 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 t@y . . . . . . . v@x ^ 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 A+! . . . . . . w@:@h 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 5 x@3.m.m.) =@y@t@7 9 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 ..z@A@< B@t.o.^ 9 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 8 8 8 8 8 8 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. b+( 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a l+m.',
+'. /@/ 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a C@m.',
+'. K._ 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 `.D@}.',
+'. E@+.8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 6 F@Z+',
+'. _+A+j 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 / g.. ',
+'. r G@h 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 ^ q@,.. ',
+'  9@G >+9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 h 0@u+. ',
+'  . G.$.8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 a H@v   ',
+'  . E@Q i 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 ^ C+! .   ',
+'    }."+i 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 h v+, .   ',
+'    . c.I@j 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 ^ 5 F@.     ',
+'      . J@o.8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 ^ J 9@.     ',
+'      . x.w 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 z@d+.       ',
+'        . % $+8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 K@.         ',
+'        . . L@^ 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 7 h+. .         ',
+'          . . R+r@^ 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 ^ 9 6.. .           ',
+'            . . = 0.^ ^ 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 9 8 j A+@.. .             ',
+'              . . $ M@..h ^ 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 h o.N@O@. .               ',
+'                  . s P@6+9 >+i 8 9 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 9 8 7 +.: n+Q@, .                   ',
+'                    . . u+9./.R@$.( >+$.: : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : $.+.`.6 U.S@!._+. .                     ',
+'                        . . ` T@++l.U@V@6+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+1.w.G @.;@> %+. .                         ',
+'                              . . Z+[+m m v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v v m [+}.. .                               ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                '
+]
+
+def _(s)
+  s
+end
+
+APP_VERSION = "0.9.0"
+APP_NAME = "GEdy"
+APP_AUTHORS = ["H.Ito"]
+COPY_RIGHT = "Copyright © 2008 #{APP_AUTHORS[0]}"
+
+APP_PATH = ENV["HOME"] + "/." + APP_NAME
+CONF_PATH = "/apps/#{APP_NAME}"
+CONF_FILE = "#{APP_PATH}/#{APP_NAME}.cfg"
+
+unless (FileTest.exist?(APP_PATH))
+  Dir::mkdir(APP_PATH)
+end
+
+Icon = Gdk::Pixbuf.new($GEDY_XPM)
+
+edy = Edy.new
+
+GEDY = GEdy.new(edy)
+Gtk::main if (GEDY.init())

@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>Utilities for Linux framebuffer</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+<h1>おまけ</h1>
+<div>
+<hr>
+
+<h2>w3m を利用した画像サムネイル表示スクリプト</h2>
+<div>
+<h3>Download</h3>
+<p>
+<a href="tgv-0.1.tar.gz">tgv-0.1.tar.gz</a>
+</p>
+
+<h3>提供するもの</h3>
+<ul>
+  <li>tgv : w3m を利用して画像サムネイルを表示します。
+</ul>
+
+<h3>必要なもの</h3>
+<ul>
+  <li>Ruby
+  <li>w3m-img
+</ul>
+
+<h3>利用法</h3>
+<ul>
+ <li>スクリプト中の下記記述を環境に合わせて変更してください。
+     <pre>
+MAX_WIDTH  = 100
+MAX_HEIGHT = 80
+W3MIMGSIZE = "/usr/local/lib/w3m/w3mimgsizefb"
+COL = 5
+     </pre>
+     <dl>
+      <dt> MAX_WIDTH, MAX_HEIGHT</dt>
+      <dd> サムネイル表示の最大サイズ
+      <dt> W3MIMGSIZE</dt>
+      <dd> w3mimgsize (または互換のプログラム)をフルパスで指定
+      <dt> COL</dt>
+      <dd> サムネイル表示のカラム数
+     </dl>
+ <li>tgv [-f] files ...
+ <dl>
+  <dt>-f</dt>
+  <dd>画像サイズを調べません。起動は速くなりますが、サムネイル表示の
+      縦横比率は崩れます。</dd>
+  <dt>files</dt>
+  <dd>表示させる画像ファイル。</dd>
+ </dl>
+</ul>
+
+<h3>開発環境</h3>
+<ul>
+  <li> Ruby 1.6.7
+  <li> w3m 0.3
+</ul>
+
+<h3>履歴</h3>
+<ul>
+  <li>2002/07/12 開発開始
+  <li>2002/07/15 公開
+  <li>2002/07/16 ドキュメント訂正
+</ul>
+
+<h3>連絡先</h3>
+  ZXB01226 at nifty.com
+</div>
+<hr>
+<a href="./">戻る</a>
+</div>
+</body>
+</html>

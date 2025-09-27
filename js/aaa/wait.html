@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+<title>quit</title>
+<meta http-equiv="content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="content-script-type" content="text/javascript">
+<link rev=made href="mailto:zxb01226@nifty.ne.jp">
+<script src="display.js">
+</script>
+</head>
+<body>
+<script language="JavaScript">
+
+Wait = 350;
+
+WAITSTR = new Array();
+
+WAITSTR[0]  = "☆チン　　　　　マチクタヒ゛レタ〜";
+WAITSTR[1]  = "　　　　　　　　　　　　　　　　　　　　　　　　　　　　";
+WAITSTR[2]  = "　　　　　☆チン〃　　Λ＿＿Λ　　／￣￣￣￣￣￣￣￣￣";
+WAITSTR[3]  = "　　　　　　　＿＿＼（＼・∀・）＜　まだぁ〜？";
+WAITSTR[4]  = "　　　　　　　＼＿／⊂　⊂＿）　　＼＿＿＿＿＿＿＿＿＿";
+WAITSTR[5]  = "　　　　　　／￣￣￣￣￣￣／|";
+WAITSTR[6]  = "　　　　　　|￣￣￣￣￣｜　|";
+WAITSTR[7]  = "　　　　　　|愛媛みかん｜／";
+
+WAITSTR[8]  = "　　　　　　　　　　　　　　　　　";
+WAITSTR[9]  = "　　　　　　　　　　　　　　　　　　　マチクタヒ゛レタ〜";
+WAITSTR[10] = "　　　☆チン　　　　　Λ＿＿Λ　　／￣￣￣￣￣￣￣￣￣";
+WAITSTR[11] = "　　　　　　ヽ＿＿＿｜＼・∀・）＜　まだぁ〜？";
+
+WAITSTR[12] = "☆チン　　　　　マチクタヒ゛レタ〜";
+WAITSTR[13] = "　　　　　　　　　　　　　　　　　　　マチクタヒ゛レタ〜";
+WAITSTR[14] = "　　　　　　　　　　　Λ＿＿Λ　　／￣￣￣￣￣￣￣￣￣";
+WAITSTR[15] = "　　　　　　　＿＿＼（　｜∀・）＜　　　　　　";
+
+dispWait = function(i){
+  if(i < 1){
+    display.clearDisplay();
+    return;
+  }
+  var str;
+  var k = i % 3;
+  for(var y = 0; y < 8; y++){
+    if(y < 4 && k == 1){
+      str = WAITSTR[y + 8];
+    }else if(y < 4 && k == 2){
+      str = WAITSTR[y + 12];
+    }else{
+      str = WAITSTR[y];
+    }
+    for(x = 0; x < str.length; x++){
+      display.mvAddChar(x, y, str.charAt(x));
+    }
+  }
+  i--;
+  setTimeout("dispWait(" + i + ")", Wait);
+}
+
+setWait = function(){
+  Wait = document.prm.wait.value
+}
+setRepeat = function(){
+  Repeat = document.prm.repeat.value
+}
+
+display = new Display(WAITSTR[1].length, 8, 1);
+display.createDisplay();
+dispWait(30);
+</script>
+<form name="prm">
+Wait: <input type="text" value="350" name="wait"> 
+Repeat: <input type="text" value="50" name="repeat"> 
+<input type="button" value="Run" onClick="setWait();setRepeat();dispWait(Repeat);">
+</form>
+
+</body>
+</html>
+

@@ -1,0 +1,17 @@
+body {color: black; background-color: white; margin-left: 2%; width: 96%}
+h1 {font-size: xx-large; color: red}
+h2 {font-size: x-large; color: #999933}
+h3 {font-size: large; color: #999933}
+h2+div {margin-left: 2%}
+h3+div {margin-left: 2%}
+h2+p {margin-left: 2%}
+h3+p {margin-left: 2%}
+pre {color: #333333}
+table {border-collapse: collapse; border-spacing: 0px;}
+table.small {font-size: small;}
+a {text-decoration: none}
+a:link    {color: #006666;}
+a:visited {color: #006699;}
+a:hover   {color: #009999;}
+a:active  {color: #009999;}
+a:focus   {color: #009999;}

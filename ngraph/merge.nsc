@@ -1,0 +1,163 @@
+# merge.nsc Version 1.00 written by H.I. 1998
+
+#概  要：最後に描画した rectangle（矩形）にあわせて gra 
+#        ファイルを merge します。
+
+#使用法：まず、GRA ファイルをマージしたい場所に、マージしたいサイズの
+#        矩形を描画してマクロを実行します。途中で「Adjust width?」と
+#        聞いてきますが、'Yes' で 矩形の幅に、'No' で矩形の高さに 
+#        zoom を調整します。
+#        下の設定は好みに合わせて変更してください。
+
+#============================================================================
+ADJUSTRECT=1         # merge 後に矩形を GRA にあわせる。0=No 1=Yes
+ERASERECT=0          # merge 後に矩形を見えなくする。0=No 1=Yes
+#============================================================================
+getGRAprm() {
+	if [ -f "$GRAFILE" ]
+	then
+# GRA ファイルをデータとしてセット
+	new file
+		file:!:hidden=false
+		file:!:x=0
+		file:!:y=0
+		file:!:remark='%'\'''
+		file:!:ifs=' 	,'
+		file:!:head_skip=0
+		file:!:read_step=1
+		file:!:final_line=-1
+		file:!:file="$GRAFILE"
+
+	file:!:opendata
+# GRA ファイルか？
+		GRAheader=`get file:! -field column:"1 1"`
+		if [ "$GRAheader" != '%Ngraph' ]
+		then
+			new dialog
+			dialog::message:"$GRAFILE is not GRA file."
+			del dialog
+			file:!:closedata
+			del file
+			exit
+		fi
+# I コマンドを探す
+		COMMAND=""
+		LINE=0
+		while [ "$COMMAND" != "I" ]
+		do
+			COMMAND=`get file:! -field column:"$LINE 1"`
+			LINE=`iexpr $LINE+1`
+# 30行までに I コマンドが見つからない場合エラー
+			if [ $LINE = 30 ]
+			then
+				new dialog
+				dialog::message:"I think $GRAFILE is not GRA file."
+				del dialog
+				file:!:closedata
+				del file
+				exit
+			fi
+		done
+			LINE=`iexpr $LINE-1`
+			GRAleft=`get file:! -field column:"$LINE 3"`
+			GRAtop=`get file:! -field column:"$LINE 4"`
+			GRAwidth=`get file:! -field column:"$LINE 5"`
+			GRAheight=`get file:! -field column:"$LINE 6"`
+
+	file:!:closedata
+	del file:!
+	else
+		new dialog
+		dialog::message:"$GRAFILE does not exist."
+		del dialog
+		exit
+	fi
+}
+
+NUMBER=`object rectangle -instance`
+if [ $NUMBER = 0 ]
+then
+#	Rectangle のインスタンスの数が 0 ならエラーを表示し終了
+	new dialog
+	dialog::message:"Rectangle is not found."
+	del dialog
+	exit
+fi
+
+
+#lectangle の位置などを取得
+TOPMARGIN=`iexpr "MIN(${rectangle:!:y1},${rectangle:!:y2})"`
+LEFTMARGIN=`iexpr "MIN(${rectangle:!:x1},${rectangle:!:x2})"`
+ZOOMX=`iexpr "ABS(${rectangle:!:x2}-${rectangle:!:x1})"`
+ZOOMX=`iexpr $ZOOMX*10000`
+ZOOMY=`iexpr "ABS(${rectangle:!:y2}-${rectangle:!:y1})"`
+ZOOMY=`iexpr $ZOOMY*10000`
+
+new dialog
+	GRAFILE=${dialog::get_open_file:"gra_file(*.gra) *.gra"}
+del dialog
+
+if [ "$GRAFILE" ]
+then
+
+	getGRAprm
+	set +e
+	new dialog
+	dialog::yesno:"Adjust width? ('Yes':Width, 'No':Height.)"
+	WorH=$?
+	del dialog
+	set -e
+
+# 矩形の高さにあわせるか、幅に合わせるか
+	case "$WorH" in
+	1)
+		GRAheight=`iexpr $GRAheight-$GRAtop`
+		ZOOM=`iexpr $ZOOMY/$GRAheight`
+	;;
+	*)
+		GRAwidth=`iexpr $GRAwidth-$GRAleft`
+		ZOOM=`iexpr $ZOOMX/$GRAwidth`
+	;;
+	esac
+
+# GRA ファイルを merge する
+	new merge
+		merge::hidden=false
+		merge::R=0
+		merge::G=0
+		merge::B=0
+		merge::clip=true
+		merge::redraw_flag=true
+		merge::save_path=unchange
+		merge::symbol_greek=true
+		merge::top_margin="$TOPMARGIN"
+		merge::left_margin="$LEFTMARGIN"
+		merge::zoom="$ZOOM"
+		merge::file="$GRAFILE"
+
+	NAME="merge${rectangle:!:oid}"
+
+	while exist rectangle:"$NAME"
+	do
+		NAME="A$NAME"
+	done
+	merge::name=$NAME
+	rectangle:!:name=$NAME
+
+	if [ $ERASERECT = 1 ]
+	then
+		rectangle:!:hidden=true
+	fi
+
+	if [ $ADJUSTRECT = 1 ]
+	then
+		rectangle:!:y1="$TOPMARGIN"
+		rectangle:!:x1="$LEFTMARGIN"
+		rectangle:!:y2=`iexpr "$TOPMARGIN+($ZOOM*$GRAheight)/10000"`
+		rectangle:!:x2=`iexpr "$LEFTMARGIN+($ZOOM*$GRAwidth)/10000"`
+	fi
+
+	gra::clear
+	gra::draw
+fi
+

@@ -1,0 +1,58 @@
+# script.nsc Version 1.00 written by H.I. 1998
+
+#概  要：指定したファイルを Ngraphマクロとして実行します。
+
+#使用法：addin メニューでこのマクロを選び、 option に実行したいマクロとオプシ
+#        ョンを入力します。このとき、マクロのパスと拡張子は省略します。パスは
+#        Ngraph がインストールされたディレクトリ、拡張子は .nsc を自動的に付
+#        加します。入力されたファイルが存在した場合すぐに実行します。なにも入
+#        力しないか、入力されたファイルが存在しない場合、ファイル名入力ウィン
+#        ドウが開きますから、そこで起動したいマクロを選択して下さい。その後、
+#        オプション入力ウィンドウが開きますから、必用ならオプションを入力して
+#        下さい。「c:\program files」などスペースを含むフォルダに Ngraph をイ
+#        ンストールした場合、下のコメントにしたがってください。
+#============================================================================
+# SCRIPT_DIR にスクリプトがあるディレクトリを代入。
+# Ngraph と別のディレクトリにスクリプトを入れる場合は
+# $NGRAPHLIB をそのディレクトリに変更する。
+SCRIPT_DIR=$NGRAPHLIB
+
+# カレントディレクトリを DIRECTRY に保存。
+DIRECTRY=`pwd`
+
+FILE=$SCRIPT_DIR/$1.nsc
+if [ -f "$FILE" ]
+then
+#	$FILE が存在したら、それを実行。
+	shift
+	new shell
+	shell::shell "$FILE $@"
+	del shell
+else
+#	$FILE.nsc が存在しない場合。
+#	ファイル入力ウィンドウを開く。
+	cd "$SCRIPT_DIR"
+	new dialog
+	FILE=${dialog::get_open_file:'NSC_File(*.nsc) *.nsc'}
+	del dialog
+	cd "$DIRECTRY"
+	if [ "$FILE" ]
+	then
+#		$FILE が存在したら、オプション入力ウィンドウを開く。
+		new dialog
+		OPTIONS=${dialog::input:'Input Options.'}
+		del dialog
+#		実行。
+#============================================================================
+		new shell
+		shell::shell "$FILE $OPTIONS"
+		del shell
+
+#	スペースを含むフォルダにスクリプトがある場合、下のコメントを
+#	はずして、上の３行をコメントにしてください。
+
+#		. "$FILE" $OPTIONS
+
+#============================================================================
+	fi
+fi

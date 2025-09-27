@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>H. Ito. Home Page</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="black.css" type="text/css">
+</head>
+<body>
+Linux(HedHat Linux 5.2) で National Instruments の PCI-6052E DAQ ボードを
+使ってみました。
+
+動作確認環境
+
+$ cat /etc/redhat-release 
+Red Hat Linux release 5.2 (Apollo)
+
+$ gcc --version
+2.7.2.3
+
+$ rpm -q glibc
+glibc-2.0.7-29
+
+$ rpm -q kernel
+kernel-2.0.36-0.7
+
+
+http://www.ni.com/linux/daq_eseriesdl.htm から edaq-0.9.5.tar.gz
+をダウンロード。
+
+デフォルトの driver/Makefile で NG
+-DMODVERSIONS がないと  "Unresolved symbols" がでる。
+/sbin/depmod -ae の出力結果
+
+# /sbin/depmod -ae
+/lib/modules/2.0.36/misc/edaq.o: unresolved symbol(s)
+        request_region
+        pcibios_read_config_byte
+        vremap
+        schedule
+        kmalloc
+        unregister_chrdev
+        release_region
+        register_chrdev
+        vfree
+        pcibios_present
+        pcibios_write_config_word
+        free_irq
+        pcibios_read_config_dword
+        do_gettimeofday
+        interruptible_sleep_on
+        kfree
+        request_irq
+        wake_up_interruptible
+        sprintf
+        check_region
+        pcibios_read_config_word
+        printk
+
+Vine 2.1.5(Kernel 2.2.14) NG
+"Unresolved symbols" がでる。
+
+driver/niboards に PCI-6052E のエントリを追加
+
+RedHat 系では cd /usr/include ; ln -s linux-2.0.36-lv3 linux-2.0.36 等
+
+driver/ai.c (int AIIOCtl (pd dev, unsigned int cmd, unsigned long arg)) の修正
+
+
+
+comedi (http://stm.lbl.gov/comedi) は現時点では機能不足の感あり。
+
+Debian 用パッケージが存在するが、これは comedilib (共通 API) のみ。
+comedi (ドライバ) は別途インストールする必要がある。
+comedi のコンパイルには /usr/src/linux/.config が必要。
+
+Debian の場合
+
+cd /usr/src/linux
+cp　/boot/config-2.2.17　.config
+(make　oldconfig)
+
+で .config を作成する必要がある。
+
+
+</body>
+</html>

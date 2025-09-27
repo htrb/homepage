@@ -1,0 +1,285 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>JSGraph</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+<script src="jsgraph.js" type="text/javascript"></script>
+<h1>JSGraph</h1>
+
+<div id="mygraph" style="width: 800px; height: 500px;"></div>
+<script type="text/javascript" src="jsgraph_ui.js"></script>
+<noscript>
+<p><img src="jsgraph.png" alt="graph" width="640" height="450"></p>
+<p>JavaScript が使用できる環境では上のようなグラフが表示されているはずです。</p>
+</noscript>
+<div>
+<ul>
+ <li> <label><input id="type_func" type="radio" name="type" checked>Function</label>
+      <ul>
+       <li>
+	    <input id="draw1" type="checkbox" checked>
+	    <label>Division: <input id="div1" type="text" value="100" size="5"></label>
+	    <label>Min: <input id="min1" type="text" value="-2.3" size="5"></label>
+	    <label>Max: <input id="max1" type="text" value="2.3" size="5"></label>
+	    <label>y = <input id="eqn1" type="text" value="exp(-pow(x,2))*tanh(x)" size="20"></label>
+       <li>
+	    <input id="draw2" type="checkbox" checked>
+	    <label>Division: <input id="div2" type="text" value="200" size="5"></label>
+	    <label>Min: <input id="min2" type="text" value="-2.3" size="5"></label>
+	    <label>Max: <input id="max2" type="text" value="2.3" size="5"></label>
+	    <label>y = <input id="eqn2" type="text" value="exp(-pow(x,2))*tanh(x)*pow(sin(x*4),2)" size="20"></label>
+       <li>
+	    <input id="draw3" type="checkbox">
+	    <label>Division: <input id="div3" type="text" value="100" size="5"></label>
+	    <label>Min: <input id="min3" type="text" value="-2.3" size="5"></label>
+	    <label>Max: <input id="max3" type="text" value="2.3" size="5"></label>
+	    <label>y = <input id="eqn3" type="text" value="exp(-pow(x,2))" size="20"></label>
+      </ul>
+ <li> <label><input type="radio" name="type">Data</label>
+      <ul>
+       <li> <label><input id="data1" type="checkbox" checked>data 1</label>
+	    <label><input id="data2" type="checkbox" checked>data 2</label>
+       <li> X Axis:
+	    <label><input type="radio" id="type_utc" name="axis" onclick="change_axis_style();" checked>UTC</label>
+	    <label><input type="radio" id="type_mjd" name="axis" onclick="change_axis_style();">MJD</label>
+
+      </ul>
+</ul>
+<p>
+<input type="button" onclick="draw()" value="Draw">
+<input type="button" onclick="graph.clear()" value="Clear">
+<input type="button" onclick="graph.zoom_in();graph.draw()" value="Zoom in">
+<input type="button" onclick="graph.zoom_out();graph.draw()" value="Zoom out">
+<label><input id="resize_mode" type="checkbox" onclick='resize_mode();'>resize mode</label>
+</p>
+<p>
+スタイル：
+<label><input type="radio" name="style" onclick="set_style('c');graph.draw();">●</label>
+<label><input type="radio" name="style" onclick="set_style('r');graph.draw();">■</label>
+<label><input type="radio" name="style" onclick="set_style('l');graph.draw();" checked>−</label>
+<label><input type="radio" name="style" onclick="set_style('lc');graph.draw();">−+●</label>
+<label><input type="radio" name="style" onclick="set_style('lr');graph.draw();">−+■</label>
+</p>
+<p>
+<label>Line width:
+<select id="line_width" name="line_width" onchange="set_line_width();graph.draw();">
+ <option value="1" label="1">1</option>
+ <option value="2" label="2" selected>2</option>
+ <option value="3" label="3">3</option>
+ <option value="4" label="4">4</option>
+</select>
+</label>
+<label>Mark size:
+<select id="mark_size" name="mark_size" onchange="set_mark_size();graph.draw();">
+ <option value="1" label="1">1</option>
+ <option value="2" label="2" selected>2</option>
+ <option value="3" label="3">3</option>
+ <option value="4" label="4">4</option>
+ <option value="5" label="5">5</option>
+ <option value="6" label="6" selected>6</option>
+</select>
+</label>
+</p>
+</form>
+<hr>
+<h2>ソース</h2>
+<p><a href="https://github.com/htrb/jsgraph">jsgraph (GitHub)</a>
+</p>
+<h2>特徴</h2>
+<ul>
+ <li> HTML5 の canvas または VML を利用し JavaScript でグラフを描画。
+ <li> Firefox 1.5, IE6 で動作確認、Safari でも動作するかもしれません。
+ <li> 比較的簡単な手順でグラフの作成が可能(なつもり)。
+ <li> scale_mode (デフォルト) ではグラフをクリックして表示のセンタリング、
+      ドラッグによる範囲指定でグラフの拡大が可能 (IE では範囲指定時にお
+      かしな挙動をすることがあります) 。
+ <li> resize_mode ではグラフをドラッグすることで、グラフ全体の位置を変更
+      可能。また、グラフの隅をドラッグすることでグラフサイズの変更が可能。
+ <li> データの描画スタイルは●、■、線、●または■と線から選択可能。
+ <li> キャプションはマウスでドラッグすることにより位置の変更が可能。
+ <li> JavaScript を利用してインタラクティヴにグラフの表示を変更可能。
+ <li> x 軸はデータの値を unix time や MJD として解釈し、軸目盛を西暦で表
+      示させることができます。
+ <li> 軸ナンバリング部分は現状あまり自信がありません。
+ <li> 動作が遅い。大量のデータを描かせるようなことは考えない方が良いでしょう。
+</ul>
+
+<h2>使い方</h2>
+<h3>簡単な使い方</h3>
+<ol>
+ <li> &lt;script src="jsgraph.js" type="text/javascript"&gt;&lt;/script&gt;<br>
+      で jsgraph.js を読み込む。
+ <li> &lt;div id="mygraph" style="width: 800px; height: 500px;"&gt;&lt;/div&gt; <br>
+      等として、グラフ用の領域を確保する。
+ <li> graph = new JSGraph('mygraph'); <br>
+      で JSGraph オブジェクトを生成。
+ <li> graph.load(file1, file2, ....)<br>
+      でサーバにあるデータファイル file1, file2, ... を読み込んでグラフ
+      を表示します。&lt;body onload="graph.load(file1, file2)"&gt;の様に html
+      ファイルの読み込みが完了してから実行するようにしてください。
+ <li> <a href="jsgraph_simple.html">サンプル</a>
+</ol>
+<h3>詳細な使い方</h3>
+<ol>
+ <li> &lt;script src="jsgraph.js" type="text/javascript"&gt;&lt;/script&gt;<br>
+      で jsgraph.js を読み込む。
+ <li> &lt;div id="mygraph" style="width: 800px; height: 500px;"&gt;&lt;/div&gt; <br>
+      等として、グラフ用の領域を確保する。
+ <li> graph = new JSGraph('mygraph'); <br>
+      で JSGraph オブジェクトを生成。
+ <li> data = new Data();<br>
+      で Data オブジェクトを生成。
+      <ol>
+       <li> data.read_data(s, [nx, ny, [FS,] [RS]]);<br> で値を入力。s をレコードセパレー
+	    タ RS、フィールドセパレータ FS で配列に変換し、nx 番目のフィー
+	    ルドを x データ、ny 番目のフィールドを y データとして Data オ
+	    ブジェクトに保存します。２番目以降の引数を指定しない場合は
+	    「nx=1, ny=2, FS=new RegExp("[ ,\t]+"), RS="\n"」となります。
+       <li> data.add_data(x, y);<br>
+	    というメソッドも使用できます。
+       <li> data.load(path, [nx, ny, [FS,] [RS]]);<br>
+	    で XMLHttpRequest によるデータ取得も出来ます。
+	    data.load(path) でデータ取得した場合は<br>
+	    data.wait(function(){graph.autoscale(); graph.draw()});<br>
+	    の様に data.wait(func) でデータの取得を待ってからグラフを描
+	    画してください。
+      </ol>
+ <li> data.set_color('#0000ff');<br>
+      data.set_text('Data2');<br>
+      でデータの描画色、キャプションを指定。
+ <li> data.set_text(style);<br>
+      でデータの表示スタイルを設定。<br>
+      style は "r" は■、"c" は●、"l" は線で表示。また "lr", "lc" で各々
+      ■と線、●と線で表示します。デフォルトは "c"。
+ <li> graph.add_data(data);<br>
+      で JSGraph オブジェクトにデータ追加。
+ <li> scale_x_type(type), scale_y_type(type) で軸のタイプを選択。x 軸は 
+      "linear", "log", "unix", "mjd" から、y 軸は "linear", "log" から軸
+      の種類を選べます。x 軸の "unix", "mjd" は x の値をそれぞれ1970/1/1 
+      からの通算秒数、MJD (修正ユリウス日) と解釈して西暦で軸の目盛を表
+      示します。いまのところ一時間満の範囲を表示させる場合は使いものにな
+      りません。
+ <li> graph.autoscale();<br>
+      で軸スケールを自動設定します。
+ <li> グラフのタイトル、x, y 軸のキャプションはそれぞれ<br>
+      graph.title.set_text("Title");<br>
+      graph.caption_x.set_text("x");<br>
+      graph.caption_y.set_text("y");<br>
+      で変更できます。
+ <li> graph.draw();<br>
+      でグラフを描画。
+</ol>
+
+<h2>今後の予定</h2>
+<ul>
+ <li> 各種機能強化
+</ul>
+
+<h2>参考文献</h2>
+<ul>
+ <li> 久野靖「入門WWW」2000年 ASCII
+ <li> 久野靖「入門JavaScript」2001年 ASCII
+</ul>
+
+<h2>履歴</h2>
+<ul>
+ <li>2009/05/23
+      <ul>
+       <li> IE でのグラフセンタリング、トリミングの動作を改善。
+      </ul>
+ <li>2009/05/19
+      <ul>
+       <li> IE8 対応
+      </ul>
+ <li>2009/03/06
+      <ul>
+       <li> 軸のキャプション、グラフタイトルの位置が自動調整されるように
+	    した。
+      </ul>
+ <li>2006/11/22
+      <ul>
+       <li> 軸ナンバリングの改善
+      </ul>
+ <li>2006/11/21
+      <ul>
+       <li> 浮動小数点の誤差の影響で 'linear' 軸の指数表示が異常になる場
+	    合のあった不具合の修正。
+      </ul>
+ <li>2006/11/07
+      <ul>
+       <li> 日付軸対応で非常に長い期間 (10年以上) もそれなりの表示になる
+	    ようにした。
+      </ul>
+ <li>2006/11/06
+      <ul>
+       <li> 日付軸対応で一時間以上の範囲では時刻も表示できるようにした。
+      </ul>
+ <li>2006/11/05
+      <ul>
+       <li> 日付軸対応
+      </ul>
+ <li>2006/02/12
+      <ul>
+       <li> 簡易インターフェイス追加
+      </ul>
+ <li>2006/02/03
+      <ul>
+       <li> XMLHttpRequest を用いた動的データ取得機能の追加。
+       <li> Data オブジェクトに set_line_width(), set_mark_size() を追加。
+      </ul>
+ <li>2006/01/31
+      <ul>
+       <li> IE での範囲指定時の挙動を少し改善。
+       <li> Zoom_in, zoom_out, センタリング、範囲指定拡大各機能の対数軸
+	    対応。
+      </ul>
+ <li>2006/01/30
+      <ul>
+       <li> VML を利用し IE に（一応）対応。
+       <li> resize_mode の不具合修正。
+      </ul>
+ <li>2006/01/28
+      <ul>
+       <li> zoom_in(), zoom_out(), resize_mode(), scale_mode() 追加。
+       <li> マウスクリックによるセンタリング機能、範囲指定によるズーム機
+	    能追加。
+      </ul>
+ <li>2006/01/24
+      <ul>
+       <li> canvas 利用版。
+       <li> Data オブジェクトに setstyle() を追加。
+      </ul>
+ <li>2005/04/01
+      <ul>
+       <li> 移動、リサイズの高速化。
+       <li> 動作例更新。
+      </ul>
+ <li>2005/03/29
+      <ul>
+       <li> 対数軸対応。
+       <li> 動作例更新。
+      </ul>
+ <li>2003/06/20 Version 0.3
+      <ul>
+       <li> autoscale 時のエラーチェックを追加。
+       <li> キャプションなど一部の設定メソッドの統一。
+      </ul>
+ <li>2003/06/19 Version 0.2
+      <ul>
+       <li> リサイズ時の座標計算のバグ修正。
+       <li> ステータスラインにマウスポインタのグラフ上の座標を表示するよ
+	    うにした。
+      </ul>
+ <li>2003/06/18 初版公開
+</ul>
+<hr>
+<a href="./">Return</a>
+</div>
+</body>
+</html>

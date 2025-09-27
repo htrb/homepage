@@ -1,0 +1,343 @@
+require "kconv"
+
+class GraFile
+  GRA_PREFIX = "%Ngraph GRAF"
+  SEPARATOR  = Regexp::new(/[,\t ]/)
+  REG_HEX    = Regexp::new(/\\x[0-9a-fA-F][0-9a-fA-F]/)
+  NGP_FILE   = Regexp::new(/.*\.ngp$/)
+  NGP_WIDTH  = Regexp::new(/gra::paper_width=[0-9]+/)
+  NGP_HEIGHT = Regexp::new(/gra::paper_height=[0-9]+/)
+
+  def GraFile.foreach(f, ignore_path = "")
+    f =  "|ngraph -i ngp2 - #{ignore_path} - #{f}" if(f =~ NGP_FILE)
+    file = open(f, "r")
+    if(file.gets.chomp != GRA_PREFIX) then return nil end
+
+    size = nil
+    file.each do |l|
+      l.chomp!
+      cmd = l[0]
+      case cmd
+      when ?I, ?E, ?V, ?A, ?G, ?M, ?N, ?L, ?T, ?C, ?B, ?P, ?R, ?D, ?H
+	item = l.split(SEPARATOR).collect!{|i| i.to_i}
+	if(item.size != item[1] + 2) then return nil end
+	item.delete_at(1)
+	item[0] = cmd
+	if(cmd == ?I)
+	  size = [item[3], item[4]]
+	end
+
+      when ?%, ?F, ?K
+	item = [cmd, l[1..-1]]
+
+      when ?S
+	s = " "
+	item = [cmd, l[1..-1]]
+      else
+	return nil
+      end
+      yield(item)
+    end
+    file.close
+    size
+  end
+
+  def GraFile.size(f)
+    size = nil
+    file = File::new(f, "r")
+    if(f =~ NGP_FILE)
+      width = nil
+      height = nil
+      file.each{|l|
+	if(l =~ NGP_WIDTH)
+	  width = l.split("=")[1].to_f
+	elsif(l =~ NGP_HEIGHT)
+	  height = l.split("=")[1].to_f
+	end
+      }
+      size = if(width && height) then [width, height] else [21000, 29700] end
+    else
+      if(file.gets.chomp! == GRA_PREFIX)
+	file.each{|l|
+	  l.chomp!
+	  if(l[0] == ?I)
+	    item = l.split(SEPARATOR).collect!{|i| i.to_i}
+	    size = [item[4], item[5]]
+	    break
+	  end
+	}
+      end
+    end
+    file.close
+    size
+  end
+end
+
+class Gra2Ngp
+  NGRAPH_INI = "/Ngraph.ini"
+  NGRAPH_PATH = [ENV["NGRAPHHOME"], ENV["HOME"], "/usr/local/lib/Ngraph"]
+
+  JOIN_STYLE = ["miter", "round", "bevel"]
+  FILL_RULE  = ["empty", "even_odd_rule", "winding_rule"]
+  ARC_MODE   = [true, true, false]
+
+  def initialize
+    @size = [0, 0]
+    @margin = [0, 0]
+
+    @font = ["Helv", "Goth", 1800, 0, 0]
+    @color = [0, 0, 0]
+    @org_ptr = [0, 0]
+    @cur_ptr = [0, 0]
+    @line_array = []
+    @line_style = [40, JOIN_STYLE[0], ""]
+    @zoom = 1000
+    @fontmap = nil
+
+    read_fontmap
+  end
+
+  def draw(i)
+    if(i[0] != ?T && !@line_array.empty?)
+      draw_lines(@line_array)
+      @line_array.clear
+    end
+
+    case i[0]
+    when ?I
+      @margin[0..1] = [i[1], i[2]]
+      @size[0..1] = [i[3], i[4]]
+      @org_ptr[0..1] = @margin
+      @zoom = i[5]
+      @line_array.clear
+      new_gra
+
+    when ?V
+      @org_ptr[0..1] = [i[1], i[2]]
+
+    when ?A
+      width = [1, i[2]].max
+      if i[1] == 0
+	style = ""
+      else
+	style = i[6..-1].join(" ")
+      end
+      join = JOIN_STYLE[i[4]]
+      @line_style = [width, join, i[5], style]
+
+    when ?G
+      @color = i[1..3]
+
+    when ?M
+      @cur_ptr[0..1] = [i[1], i[2]]
+
+    when ?N
+      @cur_ptr[0..1] = [@cur_ptr[0]+i[1], @cur_ptr[1]+i[2]]
+
+    when ?L
+      draw_line(@org_ptr[0]+i[1], @org_ptr[1]+i[2], @org_ptr[0]+i[3], @org_ptr[1]+i[4])
+
+    when ?T
+      if(@line_array.empty?)
+	@line_array.push(@cur_ptr[0]+@org_ptr[0])
+	@line_array.push(@cur_ptr[1]+@org_ptr[1])
+      end
+      @line_array.push(@org_ptr[0]+i[1])
+      @line_array.push(@org_ptr[1]+i[2])
+      @cur_ptr[0..1] = [i[1], i[2]]
+
+    when ?C
+      x = @org_ptr[0]+i[1]
+      y = @org_ptr[1]+i[2]
+      draw_arc(i[7] != 0, ARC_MODE[i[7]], x, y, i[3], i[4], i[5], i[6])
+
+    when ?B
+      draw_rectangle(i[5] != 0, @org_ptr[0]+i[1], @org_ptr[1]+i[2], @org_ptr[0]+i[3], @org_ptr[1]+i[4])
+
+    when ?P
+      draw_point(@org_ptr[0]+i[1], @org_ptr[1]+i[2])
+
+    when ?R
+      draw_lines(add_offset(i[2..-1], @org_ptr))
+
+    when ?D
+      draw_polygon(FILL_RULE[i[2]], add_offset(i[3..-1], @org_ptr))
+
+    when ?H
+      @font[2..3] = [i[1], i[2], i[3]]
+
+    when ?F
+      if(@fontmap[i[1]] == 1)
+	@font[1] = i[1]
+      else
+	@font[0] = i[1]
+      end
+
+    when ?S
+      draw_str(i[1].tosjis.gsub(/[@^_%']/,'\\\\\0')) #'
+
+    when ?K
+      draw_str(i[1].tosjis)
+
+    when ?%
+	print "# #{i[1]}\n"
+
+    end
+  end
+
+  def draw_line(x1, y1, x2, y2)
+    print <<-EOF
+      new line
+      line::R=#{@color[0]}
+      line::G=#{@color[1]}
+      line::B=#{@color[2]}
+      line::points='#{x1} #{y1} #{x2} #{y2}'
+      line::width=#{@line_style[0]}
+      line::join=#{@line_style[1]}
+      line::miter_limit=#{@line_style[2]}
+      line::style='#{@line_style[3]}'
+
+      EOF
+  end
+
+  def draw_rectangle(fill, x1, y1, x2, y2)
+    print <<-EOF
+      new rectangle
+      rectangle::R=#{@color[0]}
+      rectangle::G=#{@color[1]}
+      rectangle::B=#{@color[2]}
+      rectangle::x1='#{x1}'
+      rectangle::y1='#{y1}'
+      rectangle::x2='#{x2}'
+      rectangle::y2='#{y2}'
+      rectangle::fill='#{fill}'
+      rectangle::width=#{@line_style[0]}
+      rectangle::style='#{@line_style[3]}'
+
+      EOF
+  end
+
+  def draw_lines(ptr)
+    print <<-EOF
+      new line
+      line::R=#{@color[0]}
+      line::G=#{@color[1]}
+      line::B=#{@color[2]}
+      line::width=#{@line_style[0]}
+      line::join=#{@line_style[1]}
+      line::miter_limit=#{@line_style[2]}
+      line::style='#{@line_style[3]}'
+      line::points='#{ptr.join(" ")}'
+
+      EOF
+  end
+
+  def draw_polygon(fill, ptr)
+    print <<-EOF
+      new polygon
+      polygon::R=#{@color[0]}
+      polygon::G=#{@color[1]}
+      polygon::B=#{@color[2]}
+      polygon::fill=#{fill}
+      polygon::width=#{@line_style[0]}
+      polygon::join=#{@line_style[1]}
+      polygon::miter_limit=#{@line_style[2]}
+      polygon::style='#{@line_style[3]}'
+      polygon::points='#{ptr.join(" ")}'
+
+    EOF
+  end
+
+  def draw_str(str)
+    print <<-EOF
+      new text
+      text::text='#{str}'
+      text::x=#{@cur_ptr[0]+@org_ptr[0]}
+      text::y=#{@cur_ptr[1]+@org_ptr[1]}
+      text::font=#{@font[0]}
+      text::jfont=#{@font[1]}
+      text::pt=#{@font[2]}
+      text::space=#{@font[3]}
+      text::direction=#{@font[4]}
+      text::R=#{@color[0]}
+      text::G=#{@color[1]}
+      text::B=#{@color[2]}
+
+    EOF
+  end
+
+  def draw_arc(fill, pieslice, x, y, rx, ry, start, stop)
+    print <<-EOF
+      new arc
+      arc::R=#{@color[0]}
+      arc::G=#{@color[1]}
+      arc::B=#{@color[2]}
+      arc::fill=#{fill}
+      arc::pieslice=#{pieslice}
+      arc::x=#{x}
+      arc::y=#{y}
+      arc::rx=#{rx}
+      arc::ry=#{ry}
+      arc::width=#{@line_style[0]}
+      arc::style='#{@line_style[3]}'
+
+    EOF
+  end
+
+  def new_gra
+    print <<-EOF
+      new gra name:viewer
+      gra::left_margin=#{@margin[0]}
+      gra::top_margin=#{@margin[1]}
+      gra::zoom=#{@zoom}
+      gra::paper_width=#{@size[0]}
+      gra::paper_height=#{@size[1]}
+
+    EOF
+  end
+
+  def add_offset(a, o)
+    ptr = []
+    (0...a.size/2).each do |i|
+      ptr.push(a[i*2]   + o[0])
+      ptr.push(a[i*2+1] + o[1])
+    end
+    ptr
+  end
+
+  def read_fontmap
+    file = nil
+    if NGRAPH_PATH.each { |path|
+	if(path != nil && test(?r, path + NGRAPH_INI))
+	  file = path + NGRAPH_INI
+	  break
+	end
+      } then
+      printf $stderr, "Can't find %s\n\n", NGRAPH_INI
+      exit
+    end
+    fmap = {}
+    section = nil
+    IO::foreach(file) do |l|
+      l.chomp!
+      if(l =~ /^\[.+\]$/)
+	section = l;
+	next
+      end
+
+      if(section == '[x11menu]')
+	m = l.split('=')
+	if(m[0] == 'font_map')
+	  f = m[1].split(',')
+	  fmap[f[0]] = f[2].to_i
+	end
+      end
+    end
+    @fontmap = fmap
+  end
+end
+
+ngp = Gra2Ngp.new
+GraFile.foreach(ARGV[0]){|l|
+  ngp.draw(l)
+}

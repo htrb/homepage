@@ -1,0 +1,20 @@
+# command.nsc Version 1.00 written by H.I. 1999
+
+#概  要：文字列を Ngraphマクロとして実行します。
+
+#使用法：マクロを実行すると、文字列入力のダイアログボックスが開きますので、
+#        Ngraph script のコマンドを入力してください。
+#        Ngraph shell でコマンドを入力するのと違い、Windows 標準のラインエ
+#        ディット、カット＆ペーストを利用できますので場合によっては使い勝手
+#        がいいかと思います。
+#============================================================================
+new dialog
+	set +e
+	COMMAND=${dialog::input:'Input macro command'}
+	if [ "$COMMAND" ]
+	then
+	  eval $COMMAND
+	fi
+	set -e
+del dialog
+

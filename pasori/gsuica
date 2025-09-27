@@ -1,0 +1,2084 @@
+#! /usr/bin/ruby1.9.3
+# -*- coding: utf-8 -*-
+=begin
+
+Copyright (C) 2005-2006, Hiroyuki Ito. ZXB01226@nifty.com
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+USA.
+
+=end
+
+# $Id: main.rb,v 1.9 2011/09/10 05:58:31 hito Exp $
+
+require 'gtk2'
+require 'date'
+require 'optparse'
+require 'fileutils'
+
+require "pasori"
+
+class Suica
+  InOutType = {
+    0x2000 => '出場',
+    0x4000 => '出定',
+    0xa000 => '入場',
+    0xc000 => '入定',
+    0x0040 => '清算',
+  }
+
+  IN_OUT_TYPE_IN = [0xA0, 0xC0]
+
+  TerminalType = {
+    0x03 => '精算機',
+    0x05 => '車載端末',
+    0x07 => '券売機',
+    0x08 => '券売機',
+    0x09 => '入金機',
+    0x12 => '券売機',
+    0x14 => '券売機等',
+    0x15 => '券売機等',
+    0x16 => '改札機',
+    0x17 => '簡易改札機',
+    0x18 => '窓口端末',
+    0x19 => '窓口端末',
+    0x1A => '改札端末',
+    0x1B => '携帯電話',
+    0x1C => '乗継精算機',
+    0x1D => '連絡改札機',
+    0x1F => '簡易入金機',
+    0x23 => '新幹線改札機',
+    0x46 => 'VIEW ALTTE',
+    0x48 => 'VIEW ALTTE',
+    0xC7 => '物販端末',
+    0xC8 => '自販機',
+  }
+
+  ExpenseType = {
+    0x01 => '改札出場',
+    0x02 => 'チャージ',
+    0x03 => '磁気券購入',
+    0x04 => '精算',
+    0x05 => '入場精算',
+    0x06 => '改札窓口処理',
+    0x07 => '新規発行',
+    0x08 => '窓口控除',
+    0x0d => 'バス',
+    0x0f => 'バス',
+    0x11 => '再発行処理',
+    0x13 => '支払(新幹線利用)',
+    0x14 => '入場時オートチャージ',
+    0x15 => '出場時オートチャージ',
+    0x1f => 'バスチャージ',
+    0x23 => 'バス路面電車企画券購入',
+    0x46 => '物販',
+    0x48 => '特典チャージ',
+    0x49 => 'レジ入金',
+    0x4a => '物販取消',
+    0x4b => '入場物販',
+    0xc6 => '現金併用物販',
+    0xcb => '入場現金併用物販',
+    0x84 => '他社精算',
+    0x85 => '他社入場精算',
+  }
+
+  TYPE_SHOP = 0xC7
+  TYPE_VEND = 0xC8
+  TYPE_CAR  = 0x05
+
+
+  EXPENSE_TRAIN = [0x01]
+  EXPENSE_TRAIN_MISC = [0x03, 0x04, 0x05, 0x06, 0x07, 0x11, 0x13, 0x84, 0x85]
+  EXPENSE_TRAIN_ALL = [EXPENSE_TRAIN, EXPENSE_TRAIN_MISC].flatten
+
+  EXPENSE_BUS = [0x0d, 0x0f, 0x23]
+  EXPENSE_SHOP  = [0x46, 0xc6, 0xcb]
+  EXPENSE_CHARGE = [0x02, 0x1f, 0x49]
+  EXPENSE_ACHARGE = [0x14, 0x15]
+  EXPENSE_GIFT = [0x48]
+
+  EXPENSE_CHARGE_ALL = [EXPENSE_CHARGE, EXPENSE_ACHARGE].flatten
+
+  MARSHAL_FILE = "StationCode.bin"
+
+  require 'csv'
+
+  attr_reader :in_out, :history, :idm
+
+  class DB
+    DB_TYPE_TRAIN = 0
+    DB_TYPE_SHOP  = 1
+    DB_TYPE_CAR   = 3
+
+    DB_TYPE = [DB_TYPE_TRAIN, DB_TYPE_SHOP, DB_TYPE_CAR]
+
+    DB_FILE = "StationCode"
+    USER_FILE = "UserData"
+
+    SHOP_REGION_SUICA = 1
+    SHOP_REGION_ICOCA = 2
+    SHOP_REGION_IRUCA = 4
+
+    attr_accessor :shop_region
+
+    def initialize(path)
+      @user_data = {}
+      @db_shop = {}
+      @db_car = {}
+      @db_train = {}
+      @db_path = path
+      DB_TYPE.each {|type|
+        read_db("#{path}/#{DB_FILE}#{type}.csv", 3, type, false)
+      }
+      @shop_region = SHOP_REGION_SUICA
+    end
+
+    def get_station(t, r, l, s)
+      a = code2str(t, r, l, s)
+
+      if (a)
+        [a[0], a[1]]
+      else
+        if (s == -1 && l == -1)
+          ["", ""]
+        elsif (s == 0 && l == 0)
+          ["", ""]
+        else
+          [sprintf("不明(%02x)", l),  sprintf("不明(%02x)", s)]
+        end
+      end
+    end
+
+    def code2str(t, r, l, s)
+      return ["",""] if ((l == 0 && s == 0) || (l.nil? && s.nil?))
+
+      case (t)
+      when TYPE_SHOP, TYPE_VEND
+        db = @db_shop
+        r = @shop_region
+      when TYPE_CAR
+        db = @db_car
+        t = -1
+        r = -1
+      else
+        db = @db_train
+        t = -1
+      end
+
+      r = -1 if (r.nil?)
+      t = -1 if (t.nil?)
+
+      d = db[[t, r, l, s].pack("n4")]
+      return d
+    end
+
+    def read_user_db
+      DB_TYPE.each {|type|
+        read_db("#{@db_path}/#{USER_FILE}#{type}.csv", 0, type, true)
+      }
+    end
+
+    def read_db(file, skip, type, user_data)
+      return unless (FileTest.readable?(file))
+
+      case (type)
+      when DB_TYPE_TRAIN
+        _read_db(@db_train, file, skip, [-1,  0, 1, 2], 3, 5, 9, user_data)
+      when DB_TYPE_SHOP
+        _read_db(@db_shop, file, skip, [ 1,  0, 2, 3], 4, 5, 8, user_data)
+      when DB_TYPE_CAR
+        _read_db(@db_car, file, skip, [-1, -1, 0, 1], 2, 4, 6, user_data)
+      end
+    end
+
+    def _read_db(data, file, skip, key_col, col3, col4, col_num, user_data)
+      i = 0
+      user_db = {} if (user_data)
+      key_val = [0, 0, 0, 0]
+      CSV.foreach(file) {|d|
+        i += 1
+        next if (i < skip || d.size != col_num)
+
+        begin
+          key_col.each_with_index {|k, c|
+            key_val[c] = (k < 0) ? -1: d[k].hex
+          }
+        rescue
+          next
+        end
+
+        l = key_val.pack("n4")
+        data[l] = [d[col3].to_s, d[col4].to_s]
+        if (user_data)
+          user_db[l] = [d[col3].to_s, d[col4].to_s]
+        end
+      }
+      @user_data[file] = user_db if (user_data)
+      data
+    end
+
+    def save_user_db
+      DB_TYPE.each {|type|
+        file = "#{@db_path}/#{USER_FILE}#{type}.csv"
+        db = @user_data[file]
+        next unless (db)
+
+        _save_db(file, db) {|terminal, region, lcode, scode, l, s|
+          case (type)
+          when DB_TYPE_TRAIN
+            [region, lcode, scode, l, nil, s, nil, nil, nil]
+          when DB_TYPE_SHOP
+            [region, terminal, lcode, scode, l, s, nil, nil]
+          when DB_TYPE_CAR
+            [lcode, scode, l, nil, s, nil]
+          end
+        }
+      }
+    end
+
+    def _save_db(file, db, &block)
+      dir = File.dirname(file)
+      FileUtils.makedirs(dir) unless (File.exist?(dir))
+      begin
+        File.open(file, "w") {|f|
+          db.each {|key, val|
+            code = key.unpack("n4")
+            data = yield(code[0], code[1], code[2], code[3], val[0], val[1])
+            f.puts(Suica::ary2csv(data))
+          }
+        }
+      rescue => ever
+        err_message("データ保存時にエラーが発生しました。\n#{ever.to_s}")
+      end
+    end
+
+    def update_db(terminal, region, lcode, scode, l, s)
+      case (terminal)
+      when TYPE_SHOP, TYPE_VEND
+        db = @db_shop
+        db_type = DB_TYPE_SHOP
+        region = @shop_region
+      when TYPE_CAR
+        db = @db_car
+        terminal = -1
+        region = -1
+        db_type = DB_TYPE_CAR
+      else
+        db = @db_train
+        terminal = -1
+        db_type = DB_TYPE_TRAIN
+      end
+
+      file = "#{@db_path}/#{USER_FILE}#{db_type}.csv"
+
+      k = [terminal, region, lcode, scode].pack("n4")
+      db[k] = [l, s]
+
+      @user_data[file] = {} unless (@user_data.key?(file))
+      @user_data[file][k] = [l, s]
+    end
+
+    def get_train_region(r, l)
+      if (r == 0 && l < 0x80)
+        0
+      elsif (r == 0 && l >= 0x80)
+        1
+      elsif (r == 1)
+        2
+      else
+        0
+      end
+    end
+  end
+
+  class Data
+    TYPE_IN_OUT = 0x00
+    TYPE_HISTORY = 0x01
+
+    attr_reader :data_type, :terminal, :manage_type, :date, :time,
+    :in_line, :in_station, :out_line, :out_station,
+    :balance, :expense, :number, :region, :binary
+
+    def initialize(type, bin, db)
+      @db = db
+      @type = type
+      case (type)
+      when TYPE_IN_OUT
+        parse_in_out_data(bin)
+      when TYPE_HISTORY
+        parse_history_data(bin)
+      end
+      update
+    end
+
+    def get_type(data)
+      if (data[0] != 0 && data[1] == 0)
+        TYPE_IN_OUT
+      else
+        TYPE_HISTORY
+      end
+    end
+
+    def update
+      case (@type)
+      when TYPE_IN_OUT
+        set_in_out_data
+      when TYPE_HISTORY
+        set_history_data
+      end
+    end
+
+    def parse_history_data(data)
+      d = data.unpack('CCnnCCCCvN')
+      @data_type = TYPE_HISTORY
+      @terminal = [d[0], nil]
+      @manage_type = [d[1], nil]
+      @date = [d[3], nil]
+
+      case (d[0])
+      when TYPE_SHOP, TYPE_VEND
+        @in_line = [d[6], nil]
+        @in_station = [d[7], nil]
+        @out_line = [nil, nil]
+        @out_station = [nil, nil]
+        @time = [((d[4] << 8) + d[5]) >> 5, nil]
+        @region = [d[9] & 0xff, nil]
+      when TYPE_CAR
+        @in_line = [(d[4] << 8) + d[5], nil]
+        @in_station = [(d[6] << 8) + d[7], nil]
+        @out_line = [nil, nil]
+        @out_station = [nil, nil]
+        @time = [nil, nil]
+        @region = [nil, nil]
+      else
+        @in_line = [d[4], nil]
+        @in_station = [d[5], nil]
+        @out_line = [d[6], nil]
+        @out_station = [d[7], nil]
+        @time = [nil, nil]
+        @region = [(d[9] >> 4) & 0xf, nil]
+      end
+
+      @balance = [d[8], nil]
+      @expense = [nil, nil]
+      @number = [d[9] >> 8, nil]
+      @binary = [data, nil]
+    end
+
+    def set_history_data
+      @terminal[1] = check_val(TerminalType, @terminal[0])
+      @manage_type[1] = check_val(ExpenseType, @manage_type[0])
+
+      y = (@date[0] >> 9) + 2000
+      m = (@date[0] >> 5) & 0b1111
+      d = @date[0] & 0b11111
+      @date[1] = sprintf("%04d/%02d/%02d", y, m, d)
+
+      @in_line[1], @in_station[1] =
+        @db.get_station(@terminal[0],
+                        @region[0] ? (@region[0] >> 2) & 0x3 : @region[0],
+                        @in_line[0], @in_station[0])
+
+      @out_line[1], @out_station[1] =
+        @db.get_station(@terminal[0],
+                        @region[0] ? @region[0] & 0x3: @region[0],
+                        @out_line[0], @out_station[0])
+
+      if(@time[0])
+        @time[1] = sprintf("%02d:%02d", @time[0] >> 6, @time[0] & 0x3f)
+      else
+        @time[1] = ""
+      end
+
+      @balance[1] = @balance[0].to_s
+      @expense[1] = ""
+      @number[1] = @number[0].to_s
+      @region[1] = @region[0].to_s
+
+      @binary[1] = Suica::hex_dump(@binary[0])
+    end
+
+    def parse_in_out_data(data)
+      d = data.unpack('nCCCCnnvN')
+      @data_type = [TYPE_IN_OUT, NIL]
+      @terminal = [nil, nil]
+      @manage_type = [d[0], nil]
+      @date = [d[5], nil]
+      @time = [d[6], nil]
+
+      if (IN_OUT_TYPE_IN.include?(d[0]))
+        @in_line = [d[1], nil]
+        @in_station = [d[2], nil]
+        @out_line = [nil, nil]
+        @out_station = [nil, nil]
+      else
+        @in_line = [nil, nil]
+        @in_station = [nil, nil]
+        @out_line = [d[1], nil]
+        @out_station = [d[2], nil]
+      end      
+      @balance = [nil, nil]
+      @expense = [d[7], nil]
+      @number = [nil, nil]
+      @region = [d[8] & 0xff, nil] # Fix me: is it right?
+      @binary = [data, nil]
+    end
+
+    def set_in_out_data
+      y = (@date[0] >> 9) + 2000
+      m = (@date[0] >> 5) & 0x0f
+      d = @date[0] & 0x1f
+
+      row = []
+      @terminal[1] = ""
+      @manage_type[1] = InOutType[@manage_type[0]]
+      @date[1] = sprintf("%04d/%02d/%02d", y, m, d)
+      @time[1] = sprintf("%02x:%02x", @time[0] >> 8, @time[0] & 0xff)
+
+      @in_line[1], @in_station[1] =
+        @db.get_station(@terminal[0], (@region[0] >> 2) & 0x3, @in_line[0], @in_station[0])
+      @out_line[1], @out_station[1] = 
+        @db.get_station(@terminal[0], @region[0] & 0x3, @out_line[0], @out_station[0])
+
+      @balance[1] = ""
+      @expense[1] = @expense[0].to_s
+      @number[1] = ""
+      @region[1] = ""
+
+      @binary[1] = Suica::hex_dump(@binary[0])
+    end
+
+    def check_val(hash, val)
+      v = hash[val]
+      if (v)
+        v
+      else
+        sprintf("不明(%02x)", val)
+      end
+    end
+
+    def to_s
+      @binary[1]
+    end
+  end
+
+  def initialize(path)
+    if (check_db_marshal(path))
+      File.open("#{path}/#{MARSHAL_FILE}", "r") {|f|
+        @db = Marshal.load(f)
+      }
+    else
+      @db = DB.new(path)
+    end
+    @db.read_user_db
+    @idm = nil
+
+    read_type("#{path}/InOut.csv", InOutType)
+    read_type("#{path}/Terminal.csv", TerminalType)
+    read_type("#{path}/Type.csv", ExpenseType)
+
+    @db_path = path
+    @user_type_modified = false
+  end
+
+  def shop_region=(region)
+    @db.shop_region = region
+  end
+
+  def get_data
+    Pasori.open {|pasori|
+      felica = pasori.felica_polling(Felica::POLLING_SUICA)
+      if (felica.nil?)
+        felica = pasori.felica_polling(Felica::POLLING_IRUCA)
+      end
+
+      return if (felica.nil?)
+
+      @idm = felica.idm
+
+      @in_out = []
+      felica.foreach(Felica::SERVICE_SUICA_IN_OUT) {|l|
+        @in_out.push(Data.new(Data::TYPE_IN_OUT, l, @db))
+      }
+      
+      @history = []
+      felica.foreach(Felica::SERVICE_SUICA_HISTORY) {|l|
+        @history.push(Data.new(Data::TYPE_HISTORY, l, @db))
+      }
+      felica.close
+    }
+  end
+
+  def save_user_db
+    @db.save_user_db
+  end
+
+  def update_db(data, lcode, scode, l, s)
+    @db.update_db(data.terminal[0], data.region[0], lcode, scode, l, s)
+  end
+
+  def update_terminal(type, code, text)
+    if (type == Data::TYPE_IN_OUT)
+      InOutType[code] = text
+    else
+      TerminalType[code] = text
+    end
+    @user_type_modified = true
+  end
+
+  def update_type(code, text)
+    ExpenseType[code] = text
+    @user_type_modified = true
+  end
+
+  def save_db
+    save_db_marshal("#{@db_path}/#{MARSHAL_FILE}") if (! check_db_marshal(@db_path))
+  end
+
+  def save_user_data
+    return unless (@user_type_modified)
+    save_type("#{@db_path}/Terminal.csv", TerminalType)
+    save_type("#{@db_path}/InOut.csv", InOutType)
+    save_type("#{@db_path}/Type.csv", ExpenseType)
+  end
+
+  def read_type(file, hash)
+    return unless (FileTest.readable?(file))
+    IO.foreach(file) { |l|
+      a = l.chomp.split(',')
+      hash[a[0].hex] = a[1]
+    }
+  end
+
+  def save_type(file, hash)
+    dir = File.dirname(file)
+    FileUtils.makedirs(dir) unless (File.exist?(dir))
+    begin
+      File.open(file, "w") {|f|
+        hash.each {|k, v|
+          f.printf("%02x,%s\n", k, v)
+        }
+      }
+    rescue => ever
+      err_message("データ保存時にエラーが発生しました。\n#{ever.to_s.toutf8}")
+    end
+  end
+
+  def check_db_marshal(path)
+    mfile = "#{path}/#{MARSHAL_FILE}"
+    return false unless (File.exist?(mfile))
+    
+    mstat = File.stat(mfile)
+    DB::DB_TYPE.each {|type|
+      dfile = "#{path}/#{DB::DB_FILE}#{type}.csv"
+      dstat = File.stat(dfile)
+      return false if (dstat.mtime - mstat.mtime > 0)
+    }
+    true
+  end
+
+  def save_db_marshal(file)
+    File.open(file, "w") {|f|
+      Marshal.dump(@db, f)
+    }
+  end
+
+  def Suica::hex_dump(data)
+    data.unpack("C*").map{|c| sprintf("%02X", c)}.join
+  end
+
+  def Suica::ary2csv(ary)
+    l = ary.map {|d|
+      if (d.kind_of?(Numeric))
+        sprintf("%x", d)
+      elsif (d.kind_of?(String))
+        d = d.gsub('"', '""') if (d.index('"'))
+        d = d.gsub(/.+/) {|m| %!"#{m}"!} if (d.index(',') || d.index('"'))
+        d
+      else
+        d
+      end
+    }
+    l.join(',')
+  end
+end
+
+class MyLabel < Gtk::Label
+  def initialize(s, f = false)
+    super(s, f)
+    self.xpad = 10
+  end
+end
+
+class Gtk::Window
+  # Gtk::Window#parse_geometry is buggy now?
+  def parse_geometry(geometry)
+    geo =  geometry.split(/([+\-])|x/)
+
+    x = (geo[2] == "+") ? 1 : -1
+    x *= geo[3].to_i
+
+    y = (geo[4] == "+") ? 1 : -1
+    y *= geo[5].to_i
+
+    set_default_size(geo[0].to_i, geo[1].to_i)
+    move(x, y)
+  end
+end
+
+class TreeView < Gtk::TreeView
+  def initialize(ts)
+    super(ts)
+
+    self.headers_visible = true
+    self.rules_hint = true
+
+    signal_connect("key-press-event") {|w, e|
+      case (e.keyval)
+      when Gdk::Keyval::GDK_space
+        toggle_expand(w.selection.selected)
+      end
+    }
+  end
+
+  def toggle_expand(iter)
+    return unless (iter)
+    path = iter.path
+    if (row_expanded?(path))
+      collapse_row(path)
+    else
+      expand_row(path, false)
+    end
+  end
+end
+
+class PopupMenu < Gtk::Menu
+  def initialize
+    super
+    @register = Gtk::ImageMenuItem.new(Gtk::Stock::EDIT)
+    @copy = Gtk::ImageMenuItem.new(Gtk::Stock::COPY)
+
+    append(@register)
+    append(@copy)
+    self.show_all
+  end
+
+  def copy_event(&block)
+    @copy.signal_connect("activate") {|w|
+      yield(w)
+    }
+  end
+
+  def register_event(&block)
+    @register.signal_connect("activate") {|w|
+      yield(w)
+    }
+  end
+
+  def popup(iter, clipboard, button, time)
+    @register.sensitive = ! iter.nil?
+    @copy.sensitive = ! iter.nil?
+
+    super(nil, nil, button, time)
+  end
+end
+
+def err_message(str, type = Gtk::MessageDialog::ERROR)
+  mes = Gtk::MessageDialog.new(GSuica,
+                               Gtk::Dialog::MODAL,
+                               type,
+                               Gtk::MessageDialog::BUTTONS_OK,
+                               str)
+  mes.title = "Error"
+  mes.run
+  mes.destroy
+end
+
+def conf_message(str, default = true, type = Gtk::MessageDialog::QUESTION)
+  mes = Gtk::MessageDialog.new(GSuica,
+                               Gtk::Dialog::MODAL,
+                               type,
+                               Gtk::MessageDialog::BUTTONS_YES_NO,
+                               str)
+  if (default)
+    mes.set_default_response(Gtk::MessageDialog::RESPONSE_YES)
+  else
+    mes.set_default_response(Gtk::MessageDialog::RESPONSE_NO)
+  end
+  mes.title = "Confirm"
+  r = mes.run
+  mes.destroy
+  r == Gtk::Dialog::RESPONSE_YES
+end
+
+class DialogWindow < Gtk::Window
+  attr_reader :geometry
+
+  def initialize(parent)
+    super(Gtk::Window::TOPLEVEL)
+    @parent = parent
+
+    signal_connect('delete-event') {|w, e|
+      w.hide
+      w.signal_emit_stop('delete-event')
+    }
+
+    @geometry = @parent.get_gconf("/window/#{self.class.to_s.gsub('Window','').downcase}_geometry")
+  end
+
+  def show
+    if (self.visible?)
+      self.present
+      return
+    end
+    self.parse_geometry(@geometry) if (@geometry)
+    self.show_all
+  end
+
+  def hide
+    return unless (self.visible?)
+    save_geometry
+    self.hide_all
+  end
+
+  private
+
+  def save_geometry
+    @geometry  = self.size.join('x')
+    @geometry += self.position.collect{|v| sprintf('%+d', v)}.join('')
+
+    @parent.set_gconf("/window/#{self.class.to_s.gsub('Window','').downcase}_geometry", @geometry)
+  end
+end
+
+class EditWindow < DialogWindow
+  PADDING = 2
+
+  def initialize(parent, suica)
+    super(parent)
+    @vbox =Gtk::VBox.new
+    @title = "Gsuica Edit"
+    @suica = suica
+
+    set_modal(true)
+    set_transient_for(parent)
+
+    signal_connect('key-press-event') {|w, e|
+      case (e.keyval)
+      when Gdk::Keyval::GDK_W, Gdk::Keyval::GDK_w
+        hide if ((e.state & Gdk::Window::CONTROL_MASK).to_i != 0)
+      end
+    }
+
+    init
+    add(@vbox)
+  end
+
+  def init
+    frame = Gtk::Frame.new
+    vbox = Gtk::VBox.new
+
+    @label = []
+    @entry = []
+    @id = []
+    [
+     [_('端末'), Suica::COLUMN_TERMINAL],
+     [_('処理'), Suica::COLUMN_TYPE],
+     [_('入線区'), Suica::COLUMN_IN_LINE],
+     [_('入場駅'), Suica::COLUMN_IN_STATION],
+     [_('出線区'), Suica::COLUMN_OUT_LINE],
+     [_('出場駅'), Suica::COLUMN_OUT_STATION]
+    ].each {|(title, col)|
+      hbox = Gtk::HBox.new
+      label = Gtk::Label.new(title+":")
+      arrow = Gtk::Label.new("➔")
+
+      id = Gtk::Entry.new
+      id.width_chars = 8
+      id.editable = false
+      id.can_focus = false
+
+      entry = Gtk::Entry.new
+      entry.width_chars = 20
+      entry.editable = true
+
+      @id[col] = id
+      @entry[col] = entry
+      @label[col] = [label, arrow]
+
+      hbox.pack_start(label, false, false, PADDING)
+      hbox.pack_start(id, false, false, PADDING)
+      hbox.pack_start(arrow, false, false, PADDING)
+      hbox.pack_start(entry, true, true, PADDING)
+
+      vbox.pack_start(hbox, true, true, PADDING)
+    }
+    frame.add(vbox)
+    @vbox.pack_start(frame, true, true, PADDING)
+    add_btns
+  end
+
+  def add_btns
+    hbox = Gtk::HBox.new
+    @ok_btn = Gtk::Button.new(Gtk::Stock::ADD)
+    @cancel_btn = Gtk::Button.new(Gtk::Stock::CANCEL)
+
+    @ok_btn.signal_connect("clicked") {|w|
+      update_db
+      @parent.update
+      hide
+    }
+
+    @cancel_btn.signal_connect("clicked") {|w|
+      hide
+    }
+
+    hbox.pack_end(@ok_btn, false, false, PADDING)
+    hbox.pack_end(@cancel_btn, false, false, PADDING)
+    @vbox.pack_start(hbox, false, false, PADDING)
+  end
+
+  def update_db
+    update_each_data(Suica::COLUMN_TERMINAL, @data.terminal)
+    update_each_data(Suica::COLUMN_TYPE, @data.manage_type)
+    update_each_data(Suica::COLUMN_IN_LINE, @data.in_line)
+    update_each_data(Suica::COLUMN_IN_STATION, @data.in_station)
+    update_each_data(Suica::COLUMN_OUT_LINE, @data.out_line)
+    update_each_data(Suica::COLUMN_OUT_STATION, @data.out_station)
+  end
+
+  def update_each_data(i, data)
+    if (@id[i] && data[0] && @entry[i].text != data[1] && data[1].length >= 0)
+      case (i)
+      when Suica::COLUMN_IN_LINE, Suica::COLUMN_IN_STATION
+        @suica.update_db(@data,
+                         @data.in_line[0],
+                         @data.in_station[0],
+                         @entry[Suica::COLUMN_IN_LINE].text,
+                         @entry[Suica::COLUMN_IN_STATION].text)
+        when Suica::COLUMN_OUT_LINE, Suica::COLUMN_OUT_STATION
+        @suica.update_db(@data,
+                         @data.out_line[0],
+                         @data.out_station[0],
+                         @entry[Suica::COLUMN_OUT_LINE].text,
+                         @entry[Suica::COLUMN_OUT_STATION].text)
+        when  Suica::COLUMN_TERMINAL
+          @suica.update_terminal(type, data[0], @entry[i].text)
+        when  Suica::COLUMN_TYPE
+          @suica.update_type(data[0], @entry[i].text)
+      end
+    end
+  end
+
+  def show(data)
+    @data = data
+
+    case data.terminal[0]
+    when Suica::TYPE_SHOP, Suica::TYPE_VEND
+      @label[Suica::COLUMN_IN_LINE][0].text = _("会社:")
+      @label[Suica::COLUMN_IN_STATION][0].text = _("店舗:")
+    else
+      @label[Suica::COLUMN_IN_LINE][0].text = _("入線区:")
+      @label[Suica::COLUMN_IN_STATION][0].text = _("入場駅:")
+    end
+
+    set_val(Suica::COLUMN_TERMINAL, data.terminal)
+    set_val(Suica::COLUMN_TYPE, data.manage_type)
+    set_val(Suica::COLUMN_IN_LINE, data.in_line)
+    set_val(Suica::COLUMN_IN_STATION, data.in_station)
+    set_val(Suica::COLUMN_OUT_LINE, data.out_line)
+    set_val(Suica::COLUMN_OUT_STATION, data.out_station)
+
+    super()
+  end
+
+  def set_val(i, val)
+    if (@id[i])
+      if (val[0].nil? || val[1].nil?)
+        @id[i].sensitive = false
+        @entry[i].sensitive = false
+        @label[i][0].sensitive = false
+        @label[i][1].sensitive = false
+        @id[i].text = ""
+        @entry[i].text = ""
+      else
+        @id[i].sensitive = true
+        @entry[i].sensitive = true
+        @label[i][0].sensitive = true
+        @label[i][1].sensitive = true
+        @id[i].text = sprintf("%02X", val[0])
+        @entry[i].text = val[1]
+      end
+    end
+  end
+
+end
+
+class InformationView < TreeView
+  PAD = 2
+
+  def initialize(parent, suica, clipboard)
+    super(Gtk::TreeStore.new(String, String, String, String,
+                             String, String, String, String,
+                             String, String, String, String,
+                             Suica::Data))
+
+    @parent = parent
+    @clipboard = clipboard
+    @suica = suica
+    init
+  end
+
+  def init
+    renderer_s = Gtk::CellRendererText.new
+    renderer_n = Gtk::CellRendererText.new
+    renderer_n.xalign = 1.0
+    [
+     [_('端末'),   Suica::COLUMN_TERMINAL,    renderer_s, true],
+     [_('処理'),   Suica::COLUMN_TYPE,        renderer_s, true],
+     [_('日付'),   Suica::COLUMN_DATE,        renderer_s, true],
+     [_('時刻'),   Suica::COLUMN_TIME,        renderer_s, true],
+
+     [_('入線区'), Suica::COLUMN_IN_LINE,     renderer_s, true],
+     [_('入場駅'), Suica::COLUMN_IN_STATION,  renderer_s, true],
+     [_('出線区'), Suica::COLUMN_OUT_LINE,    renderer_s, true],
+     [_('出場駅'), Suica::COLUMN_OUT_STATION, renderer_s, true],
+
+     [_('残高'),   Suica::COLUMN_BALANCE,     renderer_n, true],
+     [_('支出'),   Suica::COLUMN_EXPENCE,     renderer_n, true],
+     [_('連番'),   Suica::COLUMN_NUMBER,      renderer_n, true],
+     [_('地域'),   Suica::COLUMN_REGION,      renderer_n, false],
+
+    ].each {|(title, id, renderer, visible)|
+      column = Gtk::TreeViewColumn.new(title, renderer, :text => id)
+      column.clickable = false
+      column.resizable = true
+      column.visible = visible
+      append_column(column)
+    }
+
+    column = Gtk::TreeViewColumn.new('', renderer_s)
+    column.visible = false
+    append_column(column)
+
+    clear
+
+    @popup_menu = PopupMenu.new
+    @popup_menu.register_event {|w|
+      itr = selection.selected
+      if (itr)
+        @parent.show_edit_window(itr[Suica::COLUMN_BINARY])
+      end
+    }
+
+    @popup_menu.copy_event {|w|
+      itr = selection.selected
+      @clipboard.text = (0..Suica::COLUMN_BINARY).map {|i|
+        itr[i].to_s
+      }.join(',')
+    }
+
+    signal_connect('button-press-event') {|w, e|
+      if e.kind_of? Gdk::EventButton
+        itr = selection.selected
+        if (itr && itr.parent && e.button == 3)
+          @popup_menu.popup(itr, @clipboard, e.button, e.time)
+        end
+      end
+    }
+
+    set_size_request(480, 200)
+    selection.mode = Gtk::SELECTION_SINGLE
+  end
+
+  def selected
+    selection.selected
+  end
+
+  def save
+    @file_dialog = Gtk::FileChooserDialog.new("Save File",
+                                              @parent,
+                                              Gtk::FileChooser::ACTION_SAVE,
+                                              nil,
+                                              [Gtk::Stock::CANCEL, Gtk::Dialog::RESPONSE_CANCEL],
+                                              [Gtk::Stock::SAVE, Gtk::Dialog::RESPONSE_ACCEPT]) unless (@file_dialog)
+    @file_dialog.set_do_overwrite_confirmation(true);
+
+    if (@file_dialog.run == Gtk::Dialog::RESPONSE_ACCEPT)
+      _save(@file_dialog.filename)
+    end
+    @file_dialog.hide
+  end
+
+  def _save(file)
+    File.open(file, "w") {|f|
+      n = @history.n_children
+      (0...n - 1).each {|i|
+        row = @history.nth_child(i)
+        a = (0..Suica::COLUMN_BINARY).map {|j|
+          row[j].to_s
+        }
+        f.puts(ary2csv(a))
+      }
+    }
+  end
+
+  def update_data
+    _update_data(@in_out)
+    _update_data(@history)
+    update
+  end
+
+  def _update_data(iter)
+    n = iter.n_children
+    (0...n).each {|j|
+      row = iter.nth_child(j)
+      a = row[Suica::COLUMN_BINARY]
+      a.update
+      set_data(row, a)
+    }
+  end
+
+  def update
+    expand_all
+    n = @history.n_children
+    return if (n < 1)
+    row = @history.nth_child(n - 1)
+    return if (row.nil?)
+    balance = row[Suica::COLUMN_BALANCE].to_i
+    (0...n - 1).each {|i|
+      row = @history.nth_child(n - 2 - i)
+      b = row[Suica::COLUMN_BALANCE].to_i
+      row[Suica::COLUMN_EXPENCE] = (balance - b).to_s
+      balance = b
+    }
+  end
+
+  def append_in_out(data)
+    row = model.append(@in_out)
+    set_data(row, data)
+  end
+
+  def append_history(data)
+    return if (data.number[0] < 1)
+    row = model.append(@history)
+    set_data(row, data)
+  end
+
+  def set_data(row, data)
+    row[Suica::COLUMN_TERMINAL] = data.terminal[1]
+    row[Suica::COLUMN_TYPE] = data.manage_type[1]
+    row[Suica::COLUMN_DATE] = data.date[1]
+    row[Suica::COLUMN_TIME] = data.time[1]
+    row[Suica::COLUMN_IN_LINE] = data.in_line[1]
+    row[Suica::COLUMN_IN_STATION] = data.in_station[1]
+    row[Suica::COLUMN_OUT_LINE] = data.out_line[1]
+    row[Suica::COLUMN_OUT_STATION] = data.out_station[1]
+    row[Suica::COLUMN_BALANCE] = data.balance[1]
+    row[Suica::COLUMN_EXPENCE] = data.expense[1]
+    row[Suica::COLUMN_NUMBER] = data.number[1]
+    row[Suica::COLUMN_REGION] = data.region[1]
+    row[Suica::COLUMN_BINARY] = data
+  end
+
+  def clear
+    model.clear
+
+    @in_out = model.append(nil)
+    @in_out[Suica::COLUMN_TERMINAL] = _("入出場記録")
+    @in_out[Suica::COLUMN_TYPE] = ""
+    @in_out[Suica::COLUMN_DATE] = ""
+    @in_out[Suica::COLUMN_TIME] = ""
+    @in_out[Suica::COLUMN_IN_LINE] = ""
+    @in_out[Suica::COLUMN_IN_STATION] = ""
+    @in_out[Suica::COLUMN_OUT_LINE] = ""
+    @in_out[Suica::COLUMN_OUT_STATION] = ""
+    @in_out[Suica::COLUMN_BALANCE] = ""
+    @in_out[Suica::COLUMN_EXPENCE] = ""
+
+    @history = model.append(nil)
+    @history[Suica::COLUMN_TERMINAL] = _("履歴")
+    @history[Suica::COLUMN_TYPE] = ""
+    @history[Suica::COLUMN_DATE] = ""
+    @history[Suica::COLUMN_TIME] = ""
+    @history[Suica::COLUMN_IN_LINE] = ""
+    @history[Suica::COLUMN_IN_STATION] = ""
+    @history[Suica::COLUMN_OUT_LINE] = ""
+    @history[Suica::COLUMN_OUT_STATION] = ""
+    @history[Suica::COLUMN_BALANCE] = ""
+    @history[Suica::COLUMN_EXPENCE] = ""
+  end
+end
+
+class SetupWindow < DialogWindow
+  SHOP_REGION_VAL = [
+    ["Suica/PASMO", 1],
+    ["ICOCA", 2],
+    ["IruCa", 4],
+  ]
+
+  def initialize(parent)
+    super(parent)
+    self.modal = true
+    self.transient_for = parent
+
+    vbox = Gtk::VBox.new
+
+    hbox = create_panel
+    vbox.pack_start(hbox)
+    vbox.pack_end(create_root_btns, false, false, 4)
+
+    self.title = "#{APP_NAME} setup"
+    add(vbox)
+
+    signal_connect('delete-event') {|w, e|
+      w.cancel
+      w.signal_emit_stop('delete-event')
+    }
+  end
+
+  def ok
+    @parent.set_gconf('/general/conf_quit', @conf_quit.active?)
+    @parent.set_gconf('/general/shop_region', SHOP_REGION_VAL[@shop_region.active][1])
+    hide
+  end
+
+  def cancel
+    hide
+  end
+
+  def show
+    super
+
+    @conf_quit.active = (@parent.get_gconf('/general/conf_quit').to_s == "true")
+    shop_region = @parent.get_gconf('/general/shop_region').to_i
+    shop_region = 1 if (shop_region.nil?)
+    index = 0
+    SHOP_REGION_VAL.each_index {|i|
+      index = i if (SHOP_REGION_VAL[i][1] == shop_region)
+    }
+    @shop_region.active = index
+  end
+
+  def hide
+    super
+  end
+
+  private
+
+  def add_option(vbox, lable_str, *widget)
+    hbox = Gtk::HBox.new
+    hbox.pack_start(MyLabel.new(lable_str), false, false, 0) if (lable_str)
+    widget.each {|w|
+      if (w.instance_of?(Gtk::Entry))
+        hbox.pack_start(w, true, true, 4)
+      else
+        hbox.pack_start(w, false, false, 4)
+      end
+    }
+    vbox.pack_start(hbox, false, false, 10)
+  end
+
+  def create_panel
+    hbox = Gtk::HBox.new(true, 1)
+
+    vbox = Gtk::VBox.new
+
+    @conf_quit = Gtk::CheckButton.new(_("終了時に確認する"))
+    add_option(vbox, nil, @conf_quit)
+
+    @shop_region = Gtk::ComboBox.new
+    SHOP_REGION_VAL.each {|k|
+      @shop_region.append_text(k[0])
+    }
+    add_option(vbox, "店舗エリア:", @shop_region)
+
+    hbox.pack_start(Gtk::Frame.new.add(vbox))
+
+    hbox
+  end
+
+  def create_shop_region_combo_box
+
+  end
+
+  def create_root_btns
+    create_btns([
+                  [:@setup_ok_btn, Gtk::Stock::OK, :ok, :pack_end],
+                  [:@setup_cancel_btn, Gtk::Stock::CANCEL, :cancel, :pack_end]
+                ], 10)
+  end
+
+  def create_btns(data, pad = 0)
+    hbox = Gtk::HBox.new
+
+    data.each {|b|
+      btn = Gtk::Button.new(b[1])
+      btn.signal_connect("clicked") {|w|
+        send(b[2])
+      }
+      hbox.send(b[3], btn, false, false, pad)
+      instance_variable_set(b[0], btn)
+    }
+
+    hbox
+  end
+
+end
+
+class GSuica_ui < Gtk::Window
+  def initialize(suica)
+    super(Gtk::Window::TOPLEVEL)
+
+    @suica = suica
+    @app_conf = GsuicaConfig.new(CONF_FILE)
+
+    signal_connect('delete_event'){|w, e|
+      close
+      w.signal_emit_stop('delete-event')
+    }
+    signal_connect('destroy_event'){|w, e|
+      close
+      w.signal_emit_stop('destroy_event')
+    }
+
+    @window_group = Gtk::WindowGroup.new
+    @window_group.add(self)
+
+    @clipboard = self.get_clipboard(Gdk::Atom.new(0))
+    @tree_view = InformationView.new(self, suica, @clipboard)
+
+    set_shop_region
+
+    scrolled_window = Gtk::ScrolledWindow.new
+    scrolled_window.hscrollbar_policy = Gtk::POLICY_AUTOMATIC
+    scrolled_window.vscrollbar_policy = Gtk::POLICY_AUTOMATIC
+    scrolled_window.add(@tree_view)
+
+    vbox = Gtk::VBox.new
+    set_icon(Icon)
+
+    create_ui(vbox)
+
+    vbox.pack_start(scrolled_window, true, true, 0)
+    add(vbox)
+  end
+
+  def create_ui(vbox)
+    @ui = Gtk::UIManager.new
+    @action_group = Gtk::ActionGroup.new(APP_NAME);
+    define_action_item(@action_group)
+    @ui.insert_action_group(@action_group, 0)
+
+    @accel_group = @ui.accel_group
+    add_accel_group(@accel_group);
+
+    ui = <<EOF
+<ui>
+  <menubar name="MenuBar">
+    <menu name="FileMenu" action="FileMenuAction">
+      <menuitem name="FileRead" action="FileReadAction"/>
+      <menuitem name="FileSave" action="FileSaveAction"/>
+      <menuitem name="FileQuit" action="FileQuitAction"/>
+    </menu>
+    <menu name="EditMenu" action="EditMenuAction">
+      <menuitem name="EditCopy" action="EditCopyAction"/>
+      <separator/>
+      <menuitem name="EditEdit" action="EditEditAction"/>
+    </menu>
+    <menu name="SettingMenu" action="SettingMenuAction">
+      <menuitem name="SettingPreference" action="SettingPreferenceAction"/>
+    </menu>
+    <menu name="HelpMenu" action="HelpMenuAction">
+      <menuitem name="HelpAbout" action="HelpAboutAction"/>
+    </menu>
+  </menubar>
+  <toolbar name="Toolbar">
+    <toolitem name="Read" action="FileReadAction"/>
+    <toolitem name="Save" action="FileSaveAction"/>
+    <separator/>
+    <toolitem name="SettingPreference" action="SettingPreferenceAction"/>
+  </toolbar>
+</ui>
+EOF
+
+    @ui.add_ui(ui)
+
+    w = @ui.get_widget("/MenuBar")
+    vbox.pack_start(w, false, false, 0)
+
+    w = @ui.get_widget("/Toolbar")
+    vbox.pack_start(w, false, false, 0)
+  end
+
+  def define_action_item(action_group)
+    [
+     [
+      "FileReadAction",
+      _('読込(_R)'),
+      _('データの読込'),
+      proc{open},
+      Gtk::Stock::CONNECT,
+     ],
+     [
+      "FileSaveAction",
+      _('保存(_S)'),
+      _('データの保存'),
+      proc{save},
+      Gtk::Stock::SAVE,
+     ],
+     [
+      "FileQuitAction",
+      _("終了(_Q)"),
+      _("プログラムの終了"),
+      proc{close},
+      Gtk::Stock::QUIT,
+     ],
+     [
+      "EditCopyAction",
+      _("コピー(_C)"),
+      _("データのコピー"),
+      proc{
+        itr = @tree_view.selected
+        if (itr)
+          @clipboard.text = (0..Suica::COLUMN_BINARY).map {|i|
+            itr[i].to_s
+          }.join(',')
+        end
+      },
+      Gtk::Stock::COPY,
+     ],
+     [
+      "EditEditAction",
+      _("編集(_E)"),
+      _("データの編集"),
+      proc{
+        itr = @tree_view.selected
+        show_edit_window(itr[Suica::COLUMN_BINARY]) if (itr)
+      },
+      Gtk::Stock::EDIT,
+     ],
+     [
+      "SettingPreferenceAction",
+      _("設定(_P)"),
+      _("環境設定"),
+      proc{show_setup_win},
+      Gtk::Stock::PREFERENCES,
+     ],
+     [
+      "HelpAboutAction",
+      _("情報(_A)"),
+      _("このプログラムについて"),
+      proc{create_about},
+      Gtk::Stock::ABOUT,
+     ],
+     [
+      "FileMenuAction",
+      _("ファイル(_F)"),
+      _("ファイルメニュー"),
+      nil,
+      nil,
+     ],
+     [
+      "EditMenuAction",
+      _("編集(_E)"),
+      _("編集メニュー"),
+      nil,
+      nil,
+     ],
+     [
+      "SettingMenuAction",
+      _("設定(_S)"),
+      _("設定メニュー"),
+      nil,
+      nil,
+     ],
+     [
+      "HelpMenuAction",
+      _("ヘルプ(_H)"),
+      _("ヘルプメニュー"),
+      nil,
+      nil,
+     ],
+    ].each { |item|
+      action = Gtk::Action.new(item[0], item[1], item[2], item[4])
+      if (item[3])
+        action.signal_connect("activate") {
+          item[3].call
+        }
+      end
+      action_group.add_action(action)
+    }
+    action_group.translation_domain = nil
+  end
+
+  def set_action_sensitive(name, state)
+    action = @action_group.get_action(name)
+    action.sensitive = state if (action)
+  end
+
+  def init()
+    @app_conf.read
+    main_size = get_gconf('/window/main_geomtry')
+    self.parse_geometry(main_size) if (main_size)
+    set_action_sensitive("FileSaveAction", false)
+    show_all
+  end
+
+  def update
+    @tree_view.update_data
+  end
+
+  def open
+    @tree_view.clear
+
+    begin
+      @suica.get_data
+      @suica.in_out.each {|l|
+        @tree_view.append_in_out(l)
+      }
+
+      @suica.history.each {|l|
+        @tree_view.append_history(l)
+      }
+      @tree_view.update
+      set_action_sensitive("FileSaveAction", true)
+    rescue => ever
+      err_message("データの読込に失敗しました。\n#{ever.to_s}")
+      set_action_sensitive("FileSaveAction", false)
+    end
+  end
+
+  def save
+    @tree_view.save
+  end
+
+  def close
+    if (get_gconf('/general/conf_quit').to_s != "true" || conf_message(_('プログラムを終了しますか？'), false))
+      @suica.save_user_db
+      @suica.save_user_data
+      @suica.save_db
+      save_win_size
+      @app_conf.save
+      Gtk::main_quit
+    end
+  end
+
+  def save_win_size
+    main_geom  = self.size.join('x')
+    main_geom += self.position.collect{|v| sprintf('%+d', v)}.join('')
+    set_gconf('/window/main_geomtry', main_geom)
+  end
+
+  def set_gconf(path, val)
+    @app_conf["#{CONF_PATH}#{path}"] = val unless (val.nil?)
+  end
+
+  def get_gconf(path)
+    @app_conf["#{CONF_PATH}#{path}"]
+  end
+
+  def show_setup_win
+    if (@setup_win.nil?)
+      @setup_win = SetupWindow.new(self)
+      @setup_win.signal_connect('hide') {|w|
+        set_shop_region
+        @tree_view.update
+      }
+    end
+    @setup_win.show
+  end
+
+  def set_shop_region
+    shop_region = get_gconf('/general/shop_region').to_i
+    @suica.shop_region = shop_region if (shop_region)
+  end
+
+  def show_edit_window(data)
+    return unless (data)
+    @edit_window = EditWindow.new(self, @suica) unless (@edit_window)
+    @edit_window.show(data)
+  end
+
+  def create_about
+    Gtk::AboutDialog.show(self,
+                          {
+                            "program-name" => APP_NAME,
+                            "version" => APP_VERSION,
+                            "copyright" => COPY_RIGHT,
+                            "comments" => "Suica データ表示プログラム",
+                            "authors" => APP_AUTHORS,
+                            "logo" => Icon,
+                          })
+  end
+end
+
+class GsuicaConfig
+  def initialize(conf_file)
+    @conf = {}
+    @file = conf_file
+
+    read
+  end
+
+  def read
+    return unless (File.exist?(@file))
+    File.open(@file, "r:utf-8") { |f|
+      f.each { |l|
+        l.chomp!
+        n = l.index("\t")
+        key = l[0..(n - 1)]
+        val = l[(n + 1)..- 1]
+        @conf[key] = val
+      }
+    }
+  end
+
+  def save
+    File.open(@file, "w:utf-8") {|f|
+      @conf.each {|k, v|
+        f.puts("#{k}\t#{v}")
+      }
+    }
+  end
+
+  def get_conf(key)
+    @conf[key]
+  end
+
+  def set_conf(key, val)
+    @conf[key] = val
+  end
+
+  def [](key)
+    get_conf(key)
+  end
+
+  def []=(key, val)
+    set_conf(key, val)
+  end
+end
+$SUICA_XPM = [
+'128 128 336 2',
+'  	c None',
+'. 	c #040303',
+'+ 	c #1E1718',
+'@ 	c #1D1617',
+'# 	c #1E1618',
+'$ 	c #D8A2AC',
+'% 	c #CE9BA4',
+'& 	c #251C1D',
+'* 	c #FFC9D5',
+'= 	c #FFC0CB',
+'- 	c #FEBFCA',
+'; 	c #FFC3CE',
+'> 	c #FFC6D1',
+', 	c #FFC2CD',
+'" 	c #FFC6D2',
+') 	c #FFC8D4',
+'! 	c #C3939B',
+'~ 	c #846369',
+'{ 	c #89666D',
+'] 	c #86656B',
+'^ 	c #DAA4AD',
+'/ 	c #FFC5D1',
+'( 	c #FFC1CC',
+'_ 	c #FFC8D3',
+': 	c #D09DA5',
+'< 	c #BD8E96',
+'[ 	c #FFC7D2',
+'} 	c #C09099',
+'| 	c #413033',
+'1 	c #000000',
+'2 	c #694F53',
+'3 	c #BC8E96',
+'4 	c #DAA4AE',
+'5 	c #7C5E63',
+'6 	c #010000',
+'7 	c #684E53',
+'8 	c #D29EA7',
+'9 	c #FFC4D0',
+'0 	c #D6A1AA',
+'a 	c #AE838B',
+'b 	c #FDBFCA',
+'c 	c #4A383B',
+'d 	c #040203',
+'e 	c #564144',
+'f 	c #F9BBC6',
+'g 	c #A97F86',
+'h 	c #0E0B0B',
+'i 	c #070506',
+'j 	c #72565B',
+'k 	c #FFCCD8',
+'l 	c #D8A2AB',
+'m 	c #B1858D',
+'n 	c #281E20',
+'o 	c #030202',
+'p 	c #36292B',
+'q 	c #926E75',
+'r 	c #FFCEDA',
+'s 	c #FFC7D3',
+'t 	c #A97F87',
+'u 	c #100C0C',
+'v 	c #030203',
+'w 	c #8D6A70',
+'x 	c #1A1314',
+'y 	c #826167',
+'z 	c #B3878F',
+'A 	c #21181A',
+'B 	c #010101',
+'C 	c #AD8289',
+'D 	c #EEB3BD',
+'E 	c #87656C',
+'F 	c #8C6970',
+'G 	c #DDA6AF',
+'H 	c #FFC0CC',
+'I 	c #674D52',
+'J 	c #0B0809',
+'K 	c #BB8D95',
+'L 	c #FFC4CF',
+'M 	c #FFCBD7',
+'N 	c #9C767C',
+'O 	c #090607',
+'P 	c #130E0F',
+'Q 	c #423134',
+'R 	c #FFC5D0',
+'S 	c #FFD0DC',
+'T 	c #85646A',
+'U 	c #3D2E30',
+'V 	c #F8BBC5',
+'W 	c #D19DA7',
+'X 	c #0C090A',
+'Y 	c #E1A9B3',
+'Z 	c #584246',
+'` 	c #120D0E',
+' .	c #EBB1BB',
+'..	c #251B1D',
+'+.	c #100C0D',
+'@.	c #DFA8B1',
+'#.	c #FFC1CD',
+'$.	c #76595E',
+'%.	c #946F76',
+'&.	c #0F0B0C',
+'*.	c #523D41',
+'=.	c #FFC9D4',
+'-.	c #0A0708',
+';.	c #FDBEC9',
+'>.	c #FFC3CF',
+',.	c #87666C',
+'".	c #3A2B2E',
+').	c #2F2325',
+'!.	c #4D393D',
+'~.	c #533E42',
+'{.	c #B68991',
+'].	c #B98B93',
+'^.	c #E6ADB7',
+'/.	c #513C40',
+'(.	c #CD9BA3',
+'_.	c #E1AAB3',
+':.	c #88676C',
+'<.	c #5E464B',
+'[.	c #D8A3AC',
+'}.	c #C997A0',
+'|.	c #6F5358',
+'1.	c #251C1E',
+'2.	c #261D1E',
+'3.	c #564044',
+'4.	c #D9A3AC',
+'5.	c #090707',
+'6.	c #0A0808',
+'7.	c #DFA8B2',
+'8.	c #B0848C',
+'9.	c #D4A0A9',
+'0.	c #EFB4BE',
+'a.	c #61484D',
+'b.	c #75585D',
+'c.	c #FFD3DF',
+'d.	c #926D74',
+'e.	c #B2868E',
+'f.	c #AF848B',
+'g.	c #120E0F',
+'h.	c #6B5155',
+'i.	c #050404',
+'j.	c #B3878E',
+'k.	c #FFC2CE',
+'l.	c #120E0E',
+'m.	c #CC9AA2',
+'n.	c #2D2224',
+'o.	c #ECB1BC',
+'p.	c #FCBEC9',
+'q.	c #8F6B72',
+'r.	c #946F75',
+'s.	c #D9A3AD',
+'t.	c #B4878F',
+'u.	c #22191B',
+'v.	c #826168',
+'w.	c #8A676E',
+'x.	c #2E2225',
+'y.	c #B58890',
+'z.	c #060404',
+'A.	c #453337',
+'B.	c #8B686F',
+'C.	c #87656B',
+'D.	c #7B5C62',
+'E.	c #806066',
+'F.	c #6E5257',
+'G.	c #21191A',
+'H.	c #5A4347',
+'I.	c #926E74',
+'J.	c #E8AEB8',
+'K.	c #FFCBD6',
+'L.	c #4A373B',
+'M.	c #A27A81',
+'N.	c #FEC0CA',
+'O.	c #FFD1DD',
+'P.	c #8F6C72',
+'Q.	c #020202',
+'R.	c #271D1F',
+'S.	c #0B0808',
+'T.	c #594347',
+'U.	c #AA8087',
+'V.	c #8E6A71',
+'W.	c #C19199',
+'X.	c #080607',
+'Y.	c #140F10',
+'Z.	c #302426',
+'`.	c #E7AEB8',
+' +	c #CB98A1',
+'.+	c #7E5E64',
+'++	c #EAB0BA',
+'@+	c #4F3B3F',
+'#+	c #4B393C',
+'$+	c #8A686E',
+'%+	c #AC8189',
+'&+	c #FFCAD6',
+'*+	c #DEA7B1',
+'=+	c #6D5257',
+'-+	c #241B1C',
+';+	c #150F10',
+'>+	c #977278',
+',+	c #CA98A0',
+'"+	c #FFCDD9',
+')+	c #EBB0BB',
+'!+	c #A37B82',
+'~+	c #816166',
+'{+	c #5A4447',
+']+	c #E5ACB6',
+'^+	c #C6959E',
+'/+	c #B78991',
+'(+	c #554044',
+'_+	c #281D1F',
+':+	c #C7969F',
+'<+	c #4E3A3E',
+'[+	c #CA98A1',
+'}+	c #7C5D63',
+'|+	c #85636A',
+'1+	c #342729',
+'2+	c #A87E85',
+'3+	c #D19DA6',
+'4+	c #73565B',
+'5+	c #1F1719',
+'6+	c #E3ABB5',
+'7+	c #D09DA6',
+'8+	c #2E2325',
+'9+	c #6B5055',
+'0+	c #CC99A2',
+'a+	c #9F777E',
+'b+	c #9C757C',
+'c+	c #7F5F65',
+'d+	c #8E6B71',
+'e+	c #191314',
+'f+	c #2A1F21',
+'g+	c #5C4549',
+'h+	c #BA8C94',
+'i+	c #443336',
+'j+	c #705459',
+'k+	c #5F474C',
+'l+	c #987279',
+'m+	c #E5ACB7',
+'n+	c #FFCCD7',
+'o+	c #D5A0A9',
+'p+	c #ECB2BC',
+'q+	c #C2929A',
+'r+	c #473639',
+'s+	c #F2B6C1',
+'t+	c #060505',
+'u+	c #FDBFC9',
+'v+	c #AD828A',
+'w+	c #88666C',
+'x+	c #4B383C',
+'y+	c #C5949D',
+'z+	c #B88B92',
+'A+	c #C5949C',
+'B+	c #77595F',
+'C+	c #B58990',
+'D+	c #49373A',
+'E+	c #3D2E31',
+'F+	c #FABCC7',
+'G+	c #AE828A',
+'H+	c #281E1F',
+'I+	c #AE838A',
+'J+	c #F1B5C0',
+'K+	c #826267',
+'L+	c #FFD2DE',
+'M+	c #FBBDC8',
+'N+	c #2C2123',
+'O+	c #2B2022',
+'P+	c #F0B4BF',
+'Q+	c #4D3A3D',
+'R+	c #634A4F',
+'S+	c #060405',
+'T+	c #7E5F65',
+'U+	c #FFD7E3',
+'V+	c #D9A4AD',
+'W+	c #9B757B',
+'X+	c #C4939C',
+'Y+	c #D39FA8',
+'Z+	c #312527',
+'`+	c #3E2F31',
+' @	c #F6B9C4',
+'.@	c #503C3F',
+'+@	c #FFCAD5',
+'@@	c #7D5E64',
+'#@	c #2A2022',
+'$@	c #FFCFDA',
+'%@	c #624A4E',
+'&@	c #171112',
+'*@	c #D6A1AB',
+'=@	c #543F43',
+'-@	c #4D3A3E',
+';@	c #DDA7B0',
+'>@	c #60484C',
+',@	c #0C0909',
+'"@	c #B88A92',
+')@	c #987379',
+'!@	c #473539',
+'~@	c #5B4448',
+'{@	c #503C40',
+']@	c #382A2D',
+'^@	c #F3B7C2',
+'/@	c #463438',
+'(@	c #9E777D',
+'_@	c #D7A2AB',
+':@	c #916D74',
+'<@	c #DDA6B0',
+'[@	c #403033',
+'}@	c #151011',
+'|@	c #C8969F',
+'1@	c #35282B',
+'2@	c #020101',
+'3@	c #FFCFDB',
+'4@	c #8D6A71',
+'5@	c #BF9098',
+'6@	c #977178',
+'7@	c #0E0A0B',
+'8@	c #DCA6AF',
+'9@	c #C7969E',
+'0@	c #161011',
+'a@	c #664C51',
+'b@	c #89676D',
+'c@	c #EEB3BE',
+'d@	c #8C696F',
+'e@	c #916D73',
+'f@	c #C8979F',
+'g@	c #513D41',
+'h@	c #FFCED9',
+'i@	c #73565C',
+'j@	c #A87F86',
+'k@	c #E0A9B2',
+'l@	c #74575C',
+'m@	c #CC99A3',
+'n@	c #7E5F64',
+'o@	c #332628',
+'p@	c #291F21',
+'q@	c #9D767C',
+'r@	c #9A747B',
+'s@	c #936E75',
+'t@	c #0D0A0A',
+'u@	c #936F75',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'. + @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ + . ',
+'# $ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % $ # ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = - ; > > > , = = = = = = = = = = = = = = - , " > > ; - = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = - ; ) ! ~ { ] ^ / , = = = = = = = = = = - ( _ : ~ { { < [ , - = = = = = = = = = = = = = = = = = = = = = = > / ( - = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = ( } | 1 1 1 1 1 1 1 2 3 ) = - = = = = - = 4 5 6 1 1 1 1 1 1 7 8 9 - = = = = = = = = = = = = = = = = = = = 0 1 1 a , = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = b ; c 1 1 1 1 1 1 1 1 1 1 d e f = = = = = ( g h 1 1 1 1 1 1 1 1 1 i j k - = = = = = = = = = = = = = = = = = = l 1 1 m , = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = > n 1 1 o p q r s = t u v 1 1 w = = = = = - x 1 1 n y r s " z A B 1 1 C , = = = = = = = = = = = = = = = = = = D E F G H = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = - I 1 1 J K L / - = = L M N O 1 P , - = = _ 7 1 1 Q R " - = = L S T v 1 U V = = = = = = = = = = = = = = = = = = = > > ( - = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = - W X 1 X Y ( = = = = = = = > Z 1 1 E > = = k ` 1 1 = = - = = = = -  ...1 +.@.= = - L L #.- = = = = - ( L L - = = = L L ( - = = = = - , " ) ) [ L - = = = = = = = ; > ) ) ) > L - = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = ( $.1 1 %.#.= = = = = = = = (  .1 &.*.=.= = k -.1 1 ;.= = = = = = = >.,.".).4 = = ; !.~.{.>.= = = = ; ].~.!.( = = ^./.Z (.( = = - - _.:.A 1 1 &.<.[.( - = - = [ }.|.1.1 1 1 2.3.4.= - = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = R 5.1 6.7.= = = = = = = = = - R 8.9.0.= = = _ a.1 1 b.c.= = = = = = - L [ [ ( = = 9 1 1 w > = = = = R d.1 1 , = = [.1 1 e., = = = f.g.1 1 1 1 1 1 o h.* - = V I i.1 1 1 1 1 1 1 B j.= = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = k.1 1 l.k - = = = = = = = = = = = = = = = = k.m.1 1 1 n.o.f p.= = = - = = = = = = L 1 1 q./ = = = = R r.1 1 , = = s.1 1 t., = = ; 1 1 B u.v.w.x.B 1 1 8 , - y.z.1 1 A.B.C.D.1 1 1 1 R = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = " E.1 1 F.s = = = = = = = = = = = = = = = = = - > b.6 1 1 1 G.H.I.< J.K.( - = = = = L 1 1 q./ = = = = R r.1 1 , = = s.1 1 t., - k L.1 1 M.N." > O.P.Q.1 ".- - R.1 S.< =.> > [ 9 T.1 1 U.L = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = > { 1 1 V.> = = = = - L M K.K.K.K.K.K.K.; - = = - = W.1.1 1 1 1 1 X.Y.Z.`., - = = = L 1 1 q./ = = = = R r.1 1 , = = s.1 1 t., =  +. 1 b.L = - = - - e 1 .+++- @+1 #+> = = = - = k.1 1 $+> = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = > { 1 1 w > = = = = R q.1 1 1 1 1 1 1 1 %+, = = = - #.&+*+=+-+;+1 1 1 1 1 >+0.= = = L 1 1 q./ = = = = R r.1 1 , = = s.1 1 t., ( z . 1 ,+- = = = = = s "+R ( = _ k _ ( ( ; >., )+^ 1 1 B.> = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = " ~ 1 1 d./ = = = = R d.1 1 1 1 1 1 1 1 m , = = = = = - #.> = s.!+~+u.1 1 1 {+- = = L 1 1 q./ = = = = R r.1 1 , = = s.1 1 t., ( |.1 G.]+= = = = = = = = = = = - , [ ^+/+$.T.(+_+1 1 1 B.> = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = ; :+1 1 <+=.- = = = , [+}+E.E.E.|+1+1 1 m , - = = = = = = = = = - = ; 2+` 1 1 3+= = L 1 1 q./ = = = = R r.1 1 , = = s.1 1 t., ( 4+1 5+6+= = = = = = = = = = = , 7+8+1 1 1 1 1 1 1 1 1 B.> = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = - ) 1 1 6.L = = = = - k.[ " " " "+9+1 1 m , = 0+a+b+J.- = = = = = = - s ] 1 1 c+>.= L 1 1 q./ = = = = R r.1 1 , = = s.1 1 t., ( 4+1 5+6+= = = = = = = = = = - d+1 1 1 1 e+f+x.g+h+1 1 B.> = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = ; i+1 . m ( = = = = = = = = = > I 1 1 m , ( j+1 1 I.( = = = = = = = ( h+1 1 k+R = L 1 1 q./ = = = = R l+1 1 , = = s.1 1 t., ( =+1 u.m+= = = = = - , n+> ( R 1 1 1 %+o+]+p+D L M 1 1 B.> = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = - q+1 1 r+s+= - = = = = = = - s 7 1 1 m , = :+t+1 i+u+= = = = = = = , v+1 1 I R = L 1 1 w+> = = = - * x+1 1 , = = s.1 1 t., = y+i.1 z+= = = = = = A+1 =+0 B+1 1 ^.L - = = - L C+1 1 B.> = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = V D+1 1 E+F+" - = = = - ; "+G+H+1 1 I+, = J+1 6 1 K+L+= = = = - , M+N+1 6 q+H = 9 1 1 O+S - = = = @.6.1 1 , = = s.1 1 t., = P+. 1 Q+r ( - = - R R+1 S+W T+1 1 U+- = = = ( > 5+1 1 B.> = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = ( V+1 1 1 &.W+L ( ( ( > ! /.1 1 1 1 7.( - ; X+1 1 6 ".f , ( ( 9 Y+Z+1 1 `+ @- = , !.1 . U., ( , M+e+1 1 1 , = = s.1 1 t., - * A.1 1 .@++, ( +@@@1 1 #@$@}+1 1 %@* ( ( , s+&@1 1 1 B.> = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = - L *@R.1 1 1 1 =@-@@+&.1 1 1 1 O+;@L - = - " >@1 1 1 1 O+@+<+1.1 1 1 ,@"@, = = = )@1 1 1 !@@+x.1 ` ~@1 1 , = = s.1 1 t., = - $@&@1 1 o L.{@5.1 1 6 [+, > ` 1 1 ..<+@+O+1 1 ]@1 1 R+_ = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = - ( ^@b+u 1 1 1 1 1 1 1 1 /@(@ @( - = = = - = f.# 1 1 1 1 1 1 1 1 @+_@L - = = - M+{@1 1 1 1 1 1 3+:@1 1 , = = $ 1 1 m , = = = <@[@1 1 1 1 1 1 }@|@L - - _@-.1 1 1 1 1 1 ~@ @1@1 2@3@- = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = - #.&+{.4@h &@}@".d.5@[ #.- = = = = = = - ( R I+6@7@&@&@+.@@8@[ = = = = = = - ) 9@@+0@P a@n+; : V.b@= = = c@d@e@*+= = = = = =.f@g@0@}@E+6@h@= = = - , 4 @@+.&@` i@0 [ - `.V.%._.= = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = - >./ M M M * R ; - = = = = = = = = = = = L R M M M M > , - = = = = = = = - ; ) M M s - - , / > - = = = / / ( - = = = = - ; ) M M * R - = = = = - , > M M M [ , - = ( / R ( - = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = - > - = = = = = = = = - ; ( - = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = > $.p.= = = = = = = = ( j@k@= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M 7@1+D - = = = = - , l@1 m@= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M 0@  #@_ - = = - , n@  &@}.= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M }@    _+J+( = #.b@1   &@}.= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M }@      o@F+( =+      &@}.= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M }@        p@q@1       &@}.= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M }@                    &@}.= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M }@                    &@}.= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M }@                    &@}.= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M }@                    &@}.= = = = = = = = = = = = = = * & ',
+'& * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = M }@                    &@}.= = = = = = = = = = = = = = * & ',
+'}@r@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@s@b+X                     t@l@u@s@s@s@s@s@s@s@s@s@s@s@s@s@r@}@',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                ',
+'                                                                                                                                                                                                                                                                '
+]
+
+def _(s)
+  s
+end
+
+APP_VERSION = "0.9.1"
+APP_NAME = "gsuica"
+APP_AUTHORS = ["H.Ito"]
+COPY_RIGHT = "Copyright © 2007 #{APP_AUTHORS[0]}"
+
+APP_PATH = ENV["HOME"] + "/." + APP_NAME
+CONF_PATH = "/apps/#{APP_NAME}"
+CONF_FILE = "#{APP_PATH}/#{APP_NAME}.cfg"
+
+path = "#{APP_PATH}/station_code"
+
+[
+ :COLUMN_TERMINAL,
+ :COLUMN_TYPE,
+ :COLUMN_DATE,
+ :COLUMN_TIME,
+ :COLUMN_IN_LINE,
+ :COLUMN_IN_STATION,
+ :COLUMN_OUT_LINE,
+ :COLUMN_OUT_STATION,
+ :COLUMN_BALANCE,
+ :COLUMN_EXPENCE,
+ :COLUMN_NUMBER,
+ :COLUMN_REGION,
+ :COLUMN_BINARY,
+].each_with_index {|sym, i|
+  Suica.const_set(sym, i)
+}
+
+unless (FileTest.exist?(APP_PATH))
+  Dir::mkdir(APP_PATH)
+  Dir::mkdir(path)
+end
+
+Icon = Gdk::Pixbuf.new($SUICA_XPM)
+
+suica = Suica.new(path)
+
+GSuica = GSuica_ui.new(suica)
+Gtk::main if (GSuica.init())

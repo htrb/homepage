@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>edy_plugin</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+
+<h1>edy_plugin</h1>
+<h2>概要</h2>
+<ul>
+ <li> PaSoRi (MODEL RC-S320) を使って Edy の履歴を<a href="../graif/">graif</a>に保存するための graif プラグインです。
+ <li> 動作には <a href="http://ruby-gnome2.sourceforge.jp/ja/">Ruby-GNOME2</a>,
+      <A href="http://www.ruby-lang.org/ja/">Ruby</a>, <a
+      href="libpafe.html">libpafe</a> (version 0.0.4 以上),
+      <a href="libpafe-ruby.html">libpafe-ruby</a> (version 0.0.4 以上), <a href="../graif/">graif</a> が必要です。
+</ul>
+
+<h2>動作環境</h2>
+<ul>
+ <li> PaSoRi MODEL RC-S320
+ <li> graif (version 1.0.2 で動作確認)
+</ul>
+
+<h2>ダウンロード</h2>
+<p><a href="edy_plugin.rb">edy_plugin.rb</a></p>
+<p>ダウンロードしたファイルは「~/.graif/plugins/」にコピーしてください。
+
+<h2>スクリーンショット</h2>
+<p><a href="edy_plugin.png"><img src="edy_plugin_s.png" width="297" height="145"></a></p>
+
+<h2>使い方</h2>
+
+<ul>
+ <li> graif の |ファイル(F)|プラグイン(P)|Edy| から起動して「更新」ボタ
+      ンを押すと履歴が読み込まれ、表示されます。
+ <li> 「分類」や「アカウント」はカードごとにデフォルトの値を保存しますの
+      で、初めて使うカードの場合は一度「更新」でデータを読み込んでから
+      「設定」で各種の設定を行い、再度「更新」でデータを読み直してくださ
+      い。
+ <li> 「更新」ボタンを押したときは前回保存されたデータよりも新しい履歴の
+      「保存」カラムがあらかじめチェックされています。
+ <li> 「ギフト分類」「支出分類」「口座」「備考」の各カラムは直接編集できます。
+</ul>
+
+<h2>謝辞</h2>
+<ul>
+ <li> プログラムの作成にあたり、<a
+      href="http://www014.upp.so-net.ne.jp/SFCardFan/">IC SFCard Fan</a>
+      および<a href="http://wiki.osdev.info/?PaSoRi%2FRC-S320">PaSoRi/RC-S320 - osdev-j (MMA)</a>
+      で得られる情報を参考にさせていただきました。
+</ul>
+
+<h2>Link</h2>
+<ul>
+ <li> <a href="http://wiki.osdev.info/?PaSoRi%2FRC-S320">PaSoRi/RC-S320 - osdev-j (MMA)</a>
+ <li> <a href="http://ruby-gnome2.sourceforge.jp/ja/">Ruby-GNOME2</a>
+ <li> <a href="http://www.gnome.org">GNOME</a>
+ <li> <A href="http://www.ruby-lang.org/ja/">Ruby</a>
+</ul>
+
+<h2>履歴</h2>
+
+<ul>
+ <li> 2012/08/17 version 0.3
+      <ul>
+       <li> graif 1.0 対応
+      </ul>
+ <li> 2008/02/17 version 0.2
+      <ul>
+       <li> Felica#foreach を利用するように変更 (libpafe-ruby version
+	    0.0.4 以上を利用してください)。
+      </ul>
+ <li> 2008/02/03 version 0.1
+</ul>
+
+<h2>連絡先</h2>
+
+<p>ZXB01226 at nifty.com</p>
+
+</body>
+</html>

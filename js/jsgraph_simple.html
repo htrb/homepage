@@ -1,0 +1,16 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>JSGraph</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+</head>
+<body onload='graph.load("time_difference1", "time_difference2");'>
+ <script src="jsgraph.js" type="text/javascript"></script>
+ <div id="mygraph" style="width: 800px; height: 400px;"></div>
+ <script type="text/javascript">
+  graph = new JSGraph("mygraph");
+ </script>
+</body>
+</html>

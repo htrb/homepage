@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>fbg: Utilities for Linux framebuffer</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+<h1>Linux framebuffer 用画像表示プログラム</h1>
+<div>
+<hr>
+
+<h2>Download</h2>
+<p>
+<a href="fbg-0.8.0.tar.gz">fbg-0.8.0.tar.gz</a>
+</p>
+
+<h2>提供するもの</h2>
+<ul>
+  <li>fbg : framebuffer 用画像ビューア
+</ul>
+
+<h2>必要なもの</h2>
+<ul>
+  <li>GdkPixbuf, Imlib2 or <a href="../stimg/stimg-0.1.0.tar.gz">libstimg 0.1.0</a>
+  <li>TRUE-COLOR の framebuffer を利用できる環境
+</ul>
+
+<h2>コンパイル</h2>
+<ul>
+  <li>./configure; make; make install
+</ul>
+
+<h2>利用法</h2>
+<ul>
+  <li>fbg [-fFcCrR] filename
+      <dl>
+       <dt>-f</dt>
+       <dd> ディスプレイにおさまらない画像を、ディスプレイにおさまる最大の
+         大きさで表示</dd>
+       <dt>-F</dt>
+       <dd>ディスプレイ全体に拡大/縮小して表示</dd>
+       <dt>-c</dt>
+       <dd>"\033c" を出力して画面を初期化します。</dd>
+       <dt>-C</dt>
+       <dd>frame buffer を 0 クリアした後 "\033c" を出力して画面を初期化し
+       ます。</dd>
+       <dt>-b &lt;background&gt;</dt>
+       <dd>背景色を「RRGGBB」で指定します。</dd>
+
+      </dl>
+
+  <li>起動中は下記のキー操作が有効です。<br>
+    f       ディスプレイにおさまる最大の大きさで表示<br>
+    F       ディスプレイ全体に拡大/縮小して表示<br>
+    l       画像を時計回りに90度回転<br>
+    r       画像を反時計回りに90度回転<br>
+    v       画像を上下反転<br>
+    h       画像を左右反転<br>
+    o       オリジナル画像を表示<br>
+    R       再読み込み<br>
+    [BS]    前の画像を表示<br>
+    [SPACE] 次の画像を表示<br>
+    [ENTER] 再表示<br>
+    -       アニメーションの切り替えを速くします。<br>
+    +       アニメーションの切り替えを遅くします。<br>
+    A       画像縮小時にアンチエイリアスを行うかどうかを切り替えます。<br>
+    Q       画像情報などの表示の on, off を切り替えます<br>
+    q       終了<br>
+</ul>
+
+<h2>制限等</h2>
+<ul>
+  <li>framebuffer は 15,16,24,32bpp PACKED-PIXELS TRUE-COLOR
+      8bpp  PACKED-PIXELS PSEUDOCOLOR に対応しています。
+ <li> GIF animation は GdkPixbuf 利用時のみ表示できます。
+</ul>
+
+<h2>開発環境</h2>
+<ul>
+ <li> linux 2.4.18 (Vine Linux 2.5)
+ <li> gcc 2.95.3
+ <li> GdkPixbuf 0.16.0
+ <li> Imlib2 1.0.6
+ <li> libstimg 0.1.0
+ <li> framebuffer
+      <pre>
+     $ dmesg |grep vesafb
+     vesafb: framebuffer at 0xe2000000, mapped to 0xc880d000, size 8192k
+     vesafb: mode is 1024x768x16, linelength=2048, pages=4
+     vesafb: protected mode interface info at c000:4785
+     vesafb: scrolling: redraw
+     vesafb: directcolor: size=0:5:6:5, shift=0:11:5:0
+      </pre>
+ <li> ビデオカード
+       <pre>
+    VGA compatible controller: ATI Technologies Inc 3D Rage Pro AGP 1X/2X (rev 92).
+      Master Capable.  Latency=64.  Min Gnt=8.
+      Non-prefetchable 32 bit memory at 0xe2000000 [0xe2ffffff].
+      I/O at 0xd800 [0xd8ff].
+      Non-prefetchable 32 bit memory at 0xe1800000 [0xe1800fff].
+       </pre>
+</ul>
+
+<h2>その他</h2>
+<ul>
+  <li>framebuffer 描画関係のコードは、やまさきしんじさんのサンプルプログ
+    ラムをもとにしています(というかほとんどそのままです)。
+  <li>まだ開発途上であり、動作確認も不十分です。使用される際はご自身の責任
+    でお願いします。
+</ul>
+
+<H2>関連 URI</H2>
+<ul>
+ <li> <a href="http://www.sainet.or.jp/~yamasaki/"> Linux Kernel Hack Japan</a>
+ <li> <a href="http://www.enlightenment.org/pages/main.html">Imlib2</a>
+ <li> <a href="http://developer.gnome.org/arch/imaging/gdkpixbuf.html">GdkPixbuf</a>
+ <li> <a href="../stimg/stimg-0.1.0.tar.gz">libstimg 0.1.0</a>
+</ul>
+
+<h2>履歴</h2>
+<ul>
+ <li>2002/07/05 開発開始
+ <li>2002/07/07 ImageMagick 版動作確認
+ <li>2002/07/10 GdkPixbuf 版動作確認
+ <li>2002/07/11 Imlib2 版動作確認
+ <li>2002/07/14 画像の回転など機能強化
+ <li>2002/07/15 Version 0.2<br>
+     公開
+ <li>2002/07/18 Version 0.3<br>
+     デフォルトで Imlib2 を利用するように Makefile を修正<br>
+     複数の画像を指定できるようにした<br>
+     画面に収まらない画像をスクロールできるようにした<br>
+     オプションの変更<br>
+ <li>2002/07/22 Version 0.4<br>
+     画像表示の高速化<br>
+     (読み込みには従来の「読み込み+描画」程度の時間がかかります)<br>
+     画像の回転を自前のコードで行うようにした<br>
+     -b オプションの追加<br>
+     -r -R オプションの削除<br>
+ <li>2002/07/29 Version 0.5<br>
+     GIF animation 対応 (GdkPixbuf 使用時のみ)<br>
+     デフォルトで GdkPixbuf を利用するように Makefile を修正<br>
+ <li>2002/09/10 Version 0.6<br>
+     8bpp PSEUDOCOLOR 対応<br>
+     キーアサインの変更<br>
+     画像ファイル名の表示<br>
+ <li>2003/05/05 Version 0.7<br>
+      libstimg 対応<br>
+ <li>2003/07/11 Version 0.8<br>
+      overlay mode 解釈の間違いを修正。<br>
+</ul>
+
+<h2>連絡先</h2>
+  ZXB01226 at nifty.com
+<hr>
+<a href="./">戻る</a>
+</div>
+</body>
+</html>

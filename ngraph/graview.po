@@ -1,0 +1,255 @@
+# GRAView.
+# Copyright (C) 2002 H.Ito
+# Hiroyuki Ito <ZXB01226@nifty.com>, 2002.
+#
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2002-11-12 17:37:00+0900\n"
+"PO-Revision-Date: 2002-11-12 17:37:00+0900\n"
+"Last-Translator: Hiroyuki Ito <ZXB01226@nifty.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=euc-jp\n"
+
+#: graview.rb:988
+msgid "Drawing..."
+msgstr "描画中..."
+
+#: graview.rb:994
+msgid "GRA file error [%s].\n"
+msgstr "GRA ファイル エラー [%s].\n"
+
+#: graview.rb:1093 graview.rb:1761 graview.rb:1761
+msgid "Print"
+msgstr "印刷"
+
+#: graview.rb:1100
+msgid "Command: "
+msgstr "コマンド:"
+
+#: graview.rb:1103
+msgid "Option: "
+msgstr "オプション:"
+
+#: graview.rb:1106
+msgid "Print: "
+msgstr "スプーラ:"
+
+#: graview.rb:1111 graview.rb:1220 graview.rb:1710
+msgid "OK"
+msgstr "了解"
+
+#: graview.rb:1122 graview.rb:1238
+msgid "Cancel"
+msgstr "取消"
+
+#: graview.rb:1131
+msgid "Driver: "
+msgstr "ドライバー:"
+
+#: graview.rb:1190 graview.rb:1751 graview.rb:1751
+msgid "Save"
+msgstr "保存"
+
+#: graview.rb:1198
+msgid "File: "
+msgstr "ファイル:"
+
+#: graview.rb:1203
+msgid "Landscape"
+msgstr "ランドスケープ"
+
+#: graview.rb:1204
+msgid "Rotate 90 degree"
+msgstr "90°回転"
+
+#: graview.rb:1205
+msgid "Color output"
+msgstr "カラー出力"
+
+#: graview.rb:1207
+msgid "Encapsulated PostScript"
+msgstr "EPS 出力"
+
+#: graview.rb:1246
+msgid "Paper: "
+msgstr "用紙:"
+
+#: graview.rb:1278
+msgid "Browse"
+msgstr "閲覧"
+
+#: graview.rb:1354
+msgid "File"
+msgstr "ファイル"
+
+#: graview.rb:1357
+msgid "Open..."
+msgstr "開く..."
+
+#: graview.rb:1358
+msgid "Save As..."
+msgstr "別名で保存..."
+
+#: graview.rb:1360
+msgid "Print..."
+msgstr "印刷..."
+
+#: graview.rb:1363 graview.rb:1806
+msgid "Ngraph"
+msgstr "Ngraph 起動"
+
+#: graview.rb:1366 graview.rb:1756 graview.rb:1756
+msgid "Close"
+msgstr "閉じる"
+
+#: graview.rb:1368 graview.rb:1813 graview.rb:1813
+msgid "Exit"
+msgstr "終了"
+
+#: graview.rb:1373
+msgid "Draw"
+msgstr "描画"
+
+#: graview.rb:1376 graview.rb:1766 graview.rb:1766
+msgid "Redraw"
+msgstr "再描画"
+
+#: graview.rb:1379 graview.rb:1773
+msgid "First File"
+msgstr "最初のファイル"
+
+#: graview.rb:1381 graview.rb:1777
+msgid "Previous File"
+msgstr "前のファイル"
+
+#: graview.rb:1383 graview.rb:1782
+msgid "Next File"
+msgstr "次のファイル"
+
+#: graview.rb:1385 graview.rb:1787
+msgid "Last File"
+msgstr "最後のファイル"
+
+#: graview.rb:1390
+msgid "View"
+msgstr "表示"
+
+#: graview.rb:1397
+msgid "Zoom"
+msgstr "ズーム"
+
+#: graview.rb:1401 graview.rb:1794 graview.rb:1794
+msgid "Zoom In"
+msgstr "拡大"
+
+#: graview.rb:1403 graview.rb:1799 graview.rb:1799
+msgid "Zoom Out"
+msgstr "縮小"
+
+#: graview.rb:1411
+msgid "Toolbar"
+msgstr "ツールバー"
+
+#: graview.rb:1416
+msgid "Icon"
+msgstr "アイコン"
+
+#: graview.rb:1423
+msgid "Text"
+msgstr "テキスト"
+
+#: graview.rb:1429
+msgid "Icon and Text"
+msgstr "アイコンとテキスト"
+
+#: graview.rb:1435 graview.rb:1475 graview.rb:1558
+msgid "None"
+msgstr "なし"
+
+#: graview.rb:1442
+msgid "Border"
+msgstr "境界"
+
+#: graview.rb:1457
+msgid "Scrollbar"
+msgstr "スクロールバー"
+
+#: graview.rb:1462
+msgid "Always"
+msgstr "常に表示"
+
+#: graview.rb:1469
+msgid "Automatic"
+msgstr "自動表示"
+
+#: graview.rb:1481
+msgid "Menu"
+msgstr "メニュー"
+
+#: graview.rb:1495
+msgid "Statusbar"
+msgstr "ステータスバー"
+
+#: graview.rb:1510
+msgid "Auto Window Size"
+msgstr "窓の大きさを自動変更"
+
+#: graview.rb:1519
+msgid "Option"
+msgstr "オプション"
+
+#: graview.rb:1523
+msgid "Ignore Path"
+msgstr "パス情報を無視"
+
+#: graview.rb:1530
+msgid "Change current directory"
+msgstr "カレントディレクトリを移動"
+
+#: graview.rb:1540 graview.rb:1545
+msgid "Auto Scale"
+msgstr "オートスケール"
+
+#: graview.rb:1552
+msgid "Auto Scale Force"
+msgstr "強制オートスケール"
+
+#: graview.rb:1565
+msgid "Help"
+msgstr "ヘルプ"
+
+#: graview.rb:1569
+msgid "About..."
+msgstr "GraView について..."
+
+#: graview.rb:1708
+msgid "Version "
+msgstr "バージョン"
+
+#: graview.rb:1746 graview.rb:1746
+msgid "Open"
+msgstr "開く"
+
+#: graview.rb:1773
+msgid "First"
+msgstr "最初"
+
+#: graview.rb:1777
+msgid "Prev"
+msgstr "前"
+
+#: graview.rb:1782
+msgid "Next"
+msgstr "次"
+
+#: graview.rb:1787
+msgid "Last"
+msgstr "最後"
+
+#: graview.rb:1888
+msgid "Can't find %s\n\n"
+msgstr "%s が見つかりません\n\n"
+
+#: graview.rb:1894
+msgid "%s: No such file.\n\n"
+msgstr "%s: そのようなファイルはありません.\n\n"

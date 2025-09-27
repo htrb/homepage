@@ -1,0 +1,513 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>Ngraph script</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+
+<h1><a name="Top">Ngraph script 活用法</a></h1>
+<div>
+<hr>
+<h2>注意</h2>
+<div>
+<p>
+このページの内容は筆者が独自に解析した内容を含んでいます。内容には十分注意
+しているつもりですが、誤った記述が含まれている可能性もあります。また、この
+ページの内容について Ngraph の作者（石坂 智氏）に問い合わせることはしない
+でください。このページ作成にあたり、石坂 智氏には貴重な情報を提供していた
+だきました。この場をかりてお礼申し上げます。
+</p>
+<p>Ngraph は石坂 智氏作の高機能グラフ作成ソフトです
+<br>Ngraph は <a href="http://www2e.biglobe.ne.jp/~isizaka/">Ngraph Web
+Page</a> で入手できます。
+</p>
+</div>
+<hr>
+<a href="./">戻る</a>
+
+<br>
+<br>
+|マクロプログラムの実行法
+|<a href="#Object">Ngraphオブジェクト</a> 
+|<a href="#Nyumon">マクロ作成入門</a> 
+|
+
+<h2><a name="EXE">マクロプログラムの実行法</a></h2>
+<div> 
+<p>例として macro.nsc を実行させたい場合を考えます。</p>
+
+<h3>Addin メニューから実行する。</h3>
+<div>      
+<p>
+このためには、macro.nsc を Option メニューで登録しなければいけません。あと
+で、メニューに登録しなくてもマクロプログラムを呼び出せるマクロを紹介します。
+</p>
+</div>
+
+<h3>「グラフを開く」で実行する。</h3>
+<div>      
+<p>
+ngp ファイルを読み込むことはマクロの実行と等価ですので、グラフの読み込みで
+もマクロを実行できます。ただしこの場合マクロの読み込み前にすべてのオブジェ
+クトが消去されます。また、セキュリティ上の問題により、外部コマンドの実行と
+リダイレクト '&gt;' は security check のエラーが出て実行できないようになっ
+ています。
+</p>
+</div>
+<h3>Ngraph Shell の中で実行する。</h3>
+<div>      
+<p>
+次に示す２つの方法で実行させることができます。この方法は、マクロプログラム
+中で他のマクロを呼び出す場合にも使えます。（Ngraph$ は Ngraph sehll のプロ
+ンプト）
+</p>
+
+<p>1)</p>
+<pre>
+Ngraph$ . macro.nsc
+</pre>
+<p>2)</p>
+<pre>
+Ngraph$ new shell
+Ngraph$ shell::shell macro.nsc
+Ngraph$ del shell
+</pre>
+
+<p>
+1) の方法では同じ shell の中で macro.nsc が実行されるのに対して 2) の方法
+では、新しいshell を定義しその中で実行させています。このため、特にマクロプ
+ログラムから呼び出す場合、1)の方法では呼びだしたマクロ中の shell 変数が呼
+び出されたマクロでも参照できるのに対し、2) の方法では参照できません。次に
+示すような、マクロ test1.nsc と test2.nsc を作製し、実行するとこのことがよ
+くわかります。
+
+
+<p>test1.nsc</p>
+<pre>   
+test1="test1"
+echo "test1=$test1"
+echo test2.nsc を呼び出します。
+new shell
+shell::shell test2.nsc
+del shell
+echo 戻ってきました。
+echo "test2=$test2"
+echo
+echo test2.nsc を呼び出します。
+. test2.nsc
+echo 戻ってきました。
+echo "test2=$test2"
+echo
+</pre>
+   
+<p>test2.nsc</p>
+<pre>   
+echo test2.nsc です。
+echo "test1=$test1"
+test2="test2"
+</pre>  
+
+<p>実行結果は次のようになります。</p>
+<pre>
+test1=test1
+test2.nsc を呼び出します。
+test2.nsc です。
+test1=
+戻ってきました。
+test2=
+
+test2.nsc を呼び出します。
+test2.nsc です。
+test1=test1
+戻ってきました。
+test2=test2
+</pre>  
+
+<p>
+1) の方法で呼びだした場合、test1.nsc 中で定義した shell 変数が test2.nscで
+は定義されていないのがわかります。また test2.nsc 中で定義された shell変数
+も test1.nsc では定義されていません。 2) の方法の場合まったく逆に、
+test1.nsc test2.nsc で定義された shell 変数はどちらのマクロ中でも参照でき
+ています。
+</p>
+</div>
+</div>
+<hr>
+|<a href="#Top">ページの先頭</a>
+|<a href="#EXE">マクロプログラムの実行法</a> 
+|Ngraphオブジェクト 
+|<a href="#Nyumon">マクロ作成入門</a> 
+|
+
+
+<h2><a name="Object">Ngraph オブジェクト</a></h2>
+<div>
+<p>
+Ngraph で描画されるグラフは Ngraph オブジェクトの集合から成り立っています
+(Ngraph Help の「Ngraph オブジェクト」参照)。従って、Ngraph オブジェクトの
+フィールド値を設定することでNgraph の状態を変更したり、逆にフィールド値を
+得ることで Ngraph の状態を知ることができます。一般に、Ngraph のオブジェク
+トは次のように表記されます。
+</p>
+<pre>
+object:instance_list:field<br>
+</pre>
+<p>
+ここで、object はオブジェクトの名前、instance_list はインスタンスの ID番号
+か、名前を設定してあるインスタンスはその名前、field は各オブジェクトのフィー
+ルド名です。なお、instance_list は次のような表記が可能です。
+</p>
+<dl>
+ <dt>数字</dt>
+ <dd>オブジェクトIDで指定</dd>
+ <dt>@</dt><dd>カレントオブジェクトID</dd>
+ <dt>!</dt><dd>最後のオブジェクトID</dd>
+ <dt>-</dt><dd>範囲指定</dd>
+</dl>
+     
+<p>
+さらに、これらの値はカンマ(,)で複数指定できます。従って、次のような
+表記が可能です。
+</p>     
+
+<pre>
+0,1,3-!
+</pre>
+
+<p>
+これは、0, 1, 3から最後まで、となります。
+</p>  
+<p>
+オブジェクトの一覧、および各オブジェクトのフィールド一覧は、 Ngraph
+shell 中でコマンド "object" および "object object_name" を実行することで見
+ることが出来ます。
+</p>
+    
+</div>
+<hr>
+|<a href="#Top">ページの先頭</a>
+|<a href="#EXE">マクロプログラムの実行法</a> 
+|<a href="#Object">Ngraphオブジェクト</a> 
+|マクロ作成入門
+|
+
+
+<h2><a name="Nyumon">マクロ作製入門</a></h2>
+<div>
+<p>
+Ngraph のマクロの文法は UNIX の sh とほぼ同じになっています。sh の文法につ
+いて詳しいことはUNIX の参考書などを参照して下さい。(<a
+href="http://www.linux.or.jp/JF/">JF</a>に<a
+href="http://www.linux.or.jp/JF/JFdocs/Bash-Prog-Intro-HOWTO.html">BASH の
+解説</a>があります。)また、Ngraph 独自の拡張がありますが、これはNgraph の
+ヘルプを参照して下さい。そのうち、よく使うコマンドをいくつか紹介します。
+</p>
+<dl>
+ <dt>new コマンド</dt>
+ <dd>
+     "new [objecrt名]" で、そのオブジェクトのインスタンスを生成します。
+     </dd>
+ <dt>del コマンド</dt>
+ <dd>
+     "del [objecrt名]" で、そのオブジェクトのインスタンスを削除します。
+     </dd>  
+ <dt>object コマンド</dt>
+ <dd>
+     "object [object名] -instance" で、
+     そのオブジェクトのインスタンスの数を得ることができます。
+     <BR>
+     "object [object名] -instances" で、
+     そのオブジェクトのインスタンスのリストを得ることができます。
+     for 文で利用する場合に便利でしょう。
+     </dd>
+ <dt>iexpr コマンド</dt>
+ <dd>
+     "iexpr [式]" で式を評価し、結果を整数で表示します。
+     </dd>  
+ <dt>dexpr コマンド</dt>
+ <dd>
+     "dexpr [式]" で式を評価し、結果を実数で表示します。
+     </dd>
+</dl>
+     
+<h3>Ngraph の状態を取得、変更する</h3>
+<div>
+<p>
+まず Ngraph に付属の demo2.ngp を読み込んでから、Ngraph shell を立ちあげて
+ください。例えば、プロットするマークの大きさを変えることを考えてみましょう。
+ファイルID（ファイルウィンドウで各行の先頭についている数字）が 0 のファイ
+ルのマークサイズは次のようにして知ることができます。(Ngraph$ は Ngraph
+shell のプロンプト)
+</p>
+
+<pre>
+Ngraph$ echo ${file:0:mark_size}
+200
+</pre>
+  
+<p>マークサイズを 300 に変えてみましょう。</p>
+
+<pre>  
+Ngraph$ file:0:mark_size=300
+</pre>
+<p>
+いちいち、Ngraph shell を終了するのは面倒なので、Ngraph Shell の中から再描
+画させてみます。
+</p>
+
+<pre>
+Ngraph$ gra::clear
+Ngraph$ gra::draw
+</pre>
+
+<p>
+マークが大きくなったはずです。なお、上の様に ID を省略するとカレントのID 
+に対して操作を行うことになります。
+</p>
+<p>
+さて、この様な操作をオープンしてあるすべてのファイルについて自動的に行うマ
+クロを作ってみましょう。これは「<a href="#Object">Ngraph オブジェクト
+</a>」で紹介した instance の範囲指定を使えば簡単に出来ます。
+</p>
+<pre>
+file:0-!:mark_size=300
+</pre>
+
+<p>
+0-! はオブジェクトID 0 から最後までを表しますから、すべてのファイルについ
+てmark_size を 300 に設定できます。
+</p>
+</div>
+
+<h3>dialog を使用する</h3>
+<div> 
+<p>
+オープンしてあるファイルのマークサイズを自動的に変更することができる
+ようになりましたが、つぎにマクロ実行時にマークサイズを設定できるようにして
+みましょう。これは、dialog オブジェクトを使用することによって可能です。試
+しに、Ngraph shell で実行してみましょう。
+</p>
+<pre>
+Ngraph$ new dialog
+Ngraph$ SIZE=${dialog::input:'Input mark size.'}
+Ngraph$ echo $SIZE
+300
+Ngraph$ del dialog
+</pre>
+<p>
+このように、マクロ中からユーザーの入力を受け付けることができます。実際にマ
+クロに組み込む際には、次のように値が入力されたかどうかのチェックもしておく
+とよいと思います。
+</p>
+   
+<h4>データのマークサイズをまとめて設定するマクロ</h4>
+
+<pre>
+new dialog
+SIZE=${dialog::input:'Input mark size.'}
+del dialog
+if [ "$SIZE" ]
+then
+file:0-!:mark_size="$SIZE"
+fi
+</pre>  
+</div>
+<h3>オブジェクトの生成</h3>
+<div>
+      
+<p>
+先に紹介したように、"new", "del" はそれぞれオブジェクトの生成、消去を行う
+コマンドです。「<a href="#Object">Ngraph オブジェクト</a>」で述べたように、
+Ngraph のグラフはNgraph オブジェクトの集合からできていますから、たとえば、
+新しく file オブジェクトを生成することは新しいデータファイルを開くことに対
+応しますし、新しい axis オブジェクトを生成することは新しい軸を作成すること
+に対応します。このように、マクロ中で新しいオブジェクトを生成、消去すること
+により新しいデータファイルを開いたり、新しいレジェンドを作成したり、または
+逆に、すでに開いてあるデータファイルを閉じたりすることができます（というか、
+グラフを保存する ngp ファイルも Ngraph のマクロスクリプトですからこのよう
+な事ができるのは当然です）。このことを利用すれば、ある種のデータは常にある
+設定で開く、というようなこともマクロを使えば簡単にできます（すべてのデータ
+を特定の設定で開きたい場合には｜設定｜File デフォルト｜メニューを使用しま
+しょう）。
+</p>
+
+<h4>特定の設定でファイルを開くマクロ</h4>
+
+<pre>
+new dialog
+FILE=${dialog::get_open_file:'DATA_File(*.DAT) *.dat;*.DAT'}
+del dialog
+if [ "$FILE" ]
+then
+new file
+file::hidden=false
+file::R=0
+file::G=0
+file::B=0
+file::clip=true
+#中略
+file::move_data_x=
+file::move_data_y=
+file::axis_x='axis:0'
+file::axis_y='axis:1'
+file::file="$FILE"
+fi
+</pre>
+
+<p>
+このマクロは dialog::get_open_file の使用例にもなっています。
+dialog::get_open_fileを利用すると、通常の「ファイルを開く」ダイアログボッ
+クスを利用できるので、存在するファイル名を得たい場合には便利です（ファイル
+の存在も勝手にチェックしてくれます）。ただし、一度に一つのファイルしか指定
+できません。"new file" 以下の部分は手で書いてもいいですが、一度 Ngraph 上
+でデータを開いて、必要な設定をしたものを ngp ファイルに保存し、そこから切
+り貼りするのが楽でしょう。そして、"file::file=..." の部分のみ上のように書
+き換えます。これで、このマクロを使って開いたデータファイルは常にマクロ中で
+定義された設定でオープンされます。
+</p>
+<p>
+このマクロを少し変更するだけで開くファイルの拡張子に応じて設定を変えるマク
+ロができます。
+</p>
+<h4>開くファイルの拡張子に応じて、ファイルの設定を行うマクロ</h4>
+
+<pre>
+new dialog
+FILES=${dialog::get_open_files:'All(*.*) *.*'}
+del dialog
+if [ "$FILES" ]
+then
+ for file in $FILES
+ do
+  new file
+  case "$file" in
+  *.ex1|*.EX1)
+   #設定1
+  ;;
+  *.ex2|*.EX2)
+   #設定2
+  ;;
+  *.ex3|*.EX3)
+   #設定3
+  ;;
+  *)
+   #設定デフォルト
+  ;;
+  esac
+  file::file="$file"
+ done
+fi
+</pre>
+
+<p>
+case 文を用いてオープンするデータファイルの拡張子ごとにファイルの設定を行
+います。
+</p>
+<p>
+上のマクロでは dialog::get_open_files を利用して一度に複数のデータを開ける
+ようにしています（dialog::get_open_files は Ngraph for Windows Version
+6.01.02 以上で使用可能）。
+</p>
+<p>
+似た事を行うマクロとして、この節のタイトルから外れますが、すでに開いてある
+ファイルの拡張子に応じて、ファイルの設定を行うマクロを作成してみました。
+</p>
+
+<h4>すでに開いてあるファイルの拡張子に応じて、ファイルの設定を行うマクロ</h4>
+
+<pre>
+NUMBER=`object file -instance`
+if [ $NUMBER = 0 ]
+then
+ # file のインスタンスの数が 0 ならエラーを表示し終了
+ new dialog
+ dialog::message:"No data file."
+ del dialog
+ exit
+fi
+
+while [ $NUMBER -gt 0 ]
+do
+ NUMBER=`iexpr $NUMBER-1`
+ FILE=`get file:$NUMBER file`
+ case "$FILE" in
+ *.ex1|*.EX1)
+  #設定1
+  eval file:$NUMBER:mark_size=100
+  #上は設定例
+ ;;
+ *.ex2|*.EX2)
+  #設定2
+ ;;
+ *.ex3|*.EX3)
+  #設定3
+ ;;
+ *)
+  #設定デフォルト
+ ;;
+ esac
+done
+</pre>
+
+<p>
+最初の行では、オープンしてあるファイルの数（＝file object の instanceの数）
+を object コマンドを使用することで得ています。 オブジェクトのフィールドに
+値を設定するときインスタンスの指定に shell 変数を利用する場合は、設定１の
+例の様に evalコマンドを使用して下さい。
+</p>
+</div>
+<h3>スクリプト実行中のエラー処理</h3>
+<div>
+<p>
+スクリプト内でオブジェクトコマンドおよび、普通のコマンド(内部コマンド、外
+部コマンド)を実行した時にエラーレベル０以外で終了した場合、set -e (デフォ
+ルト) ではスクリプトの実行を停止しますが、set +e のときは続行します。
+</p>
+<p>
+なお、${} のオブジェクト置換の場合、戻り値でエラーかどうかが判断できるので、
+エラーレベルが 0 でなくても終了しません。戻り値は空の文字列になります。
+</p>
+</div>
+      
+<h3>その他、知っていると役に立つかもしれない機能</h3>
+<div>
+<h4>軸のオートスケール</h4>
+<div>
+<p>
+axis オブジェクトに auto_scale というメンバ関数を使えば、軸のスケールを自
+動設定できます。具体的には、
+</p>
+<pre>
+axis:0-!:auto_scale:'file:0-! 0'
+</pre>
+<p>
+で、すべての軸が適切なスケールに設定されるようです。なお、最後の "0" は余
+白の設定で、0 で余白あり 0 以外で余白なしになるようです。GUI を使わないで、
+グラフを自動作成させるような場合に使えるでしょう。
+</p>
+</div>
+</div>
+<h3>まとめ</h3>
+<div>
+<p>
+このように Ngraph object を利用することでいろいろな処理が可能です。どのよ
+うなNgraph object があるかは、Ngraph shell 中で "object" コマンドを実行す
+ることで確認できます。また、それぞれのobject がどのような field を持つかは 
+"object object_name" で確認できます。さらに、Ngraph に付属するスクリプトファ
+イル（*.ngp, *.nsc）も参考になると思います。
+</p>
+
+</div>
+</div>
+<hr>
+|<a href="#Top">ページの先頭へ</a>
+|<a href="#EXE">マクロプログラムの実行法</a> 
+|<a href="#Object">Ngraphオブジェクト</a> 
+|<a href="#Nyumon">マクロ作成入門</a> 
+|
+</div>
+</body>
+</html>

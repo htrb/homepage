@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja">
+<head>
+<title>GraView</title>
+<meta http-equiv="Content-type" content="text/html; charset=euc-jp">
+<link rel="stylesheet" title="black" href="../black.css" type="text/css">
+<link rel="stylesheet" title="white" href="../white.css" type="text/css">
+</head>
+<body>
+<h1>GraView: Ruby/GTK で作成した GRA viewer</h1>
+<hr>
+<div>
+<a href="http://www.ruby-lang.org/gtk/">Ruby/GTK</a> の勉強を兼ねて GRA ビュー
+アを作ってみました。NGP ファイルの表示もできます。
+
+<h2>本体</h2>
+<div>
+<p>こちら→<a href="graview">graview</a></p>
+
+<p><a href="graview.png">画面</a></p>
+
+<p>
+NGP ファイルを表示させる場合は
+<a href="ngp2-1.0.8.tar.gz">ngp2</a>(Version 1.06 以降)も必要です。
+</p>
+
+<p>
+日本語メニューを表示させる場合は
+<a href="http://www.ruby-lang.org/en/raa-list.rhtml?name=Ruby+GetText+Package">
+Ruby GetText Package</a> と <a href="graview.mo">moファイル</a> が必要です。
+</p>
+</div>
+
+<h2>使用法</h2>
+<div>
+<ul>
+ <li> graview [-I -r n] GRA_FILE or NGP_FILE ...<BR>
+      -r n : 解像度を設定します。<BR>
+      -I   : NGP ファイル読み込み時にデータファイルのパス情報を無視します。
+ <li> 日本語メニューを表示させる場合は
+      <a href="http://www.ruby-lang.org/en/raa-list.rhtml?name=Ruby+GetText+Package">
+      Ruby GetText Package</a> をインストールして
+      <a href="graview.mo">moファイル</a>を /usr/share/locale/ja_JP.eucJP/LC_MESSAGES/
+      辺りにコピーしてください(Ruby GetText Package がなくても英語メニューでの動作に支障はありません)。
+</ul>
+</div>
+
+
+<h2>問題点等</h2>
+<div>
+<ol>
+ <li> I コマンドの 「arg5 拡大率」は無視しています。
+ <li> A コマンドの 「arg5 Miter limit」は無視しています。
+ <li> C コマンドの 「arg7」が "2" の場合でも扇形に塗りつぶしてしまいます。
+ <li> D コマンドの 「arg2」が "2" の場合でも EvenOddRule で塗りつぶ
+      してしまいます。
+ <li> ちょっと遅い。
+</ol>
+</div>
+
+<h2>Ruby/GTK パッチ</h2>
+<div>
+<p>
+上記問題点の 3, 4 に関して。GDK には Xlib の XSetArcMode(),
+XSetFillRule() に対応するインターフェイスがないようです(たぶん)。
+XSetArcMode() については<a
+href="http://mail.gnome.org/archives/gtk-list/1998-June/msg00109.html">こ
+ちら</a>に、これから(1998年)実装するようなことが書いてあるのですが、どうなっ
+ているんでしょう？ GTK+ にないということで、Ruby/GTK にも対応するメソッド
+は無いようです(たぶん)。
+</p>
+<p>
+まぁ、上記関数が使えなくてもさほど困らないので
+すが、正常に表示できない GRA ファイルが存在するのも気になるので、
+Ruby/Gtk 用のいいかげんなパッチを作ってみました。これでいいのか全く自信は
+ないのですが、とりあえず正常に表示できるようです。興味ある方はお試しくださ
+い。
+</p>
+<p> 
+<a href="rbgdk_gra.patch">rbgdk_gra.patch</a>を ruby-gtk-0.25.tar.gzを展開
+したディレクトリにコピーして「patch -p1 &lt; rbgdk_gra.patch」を実行した後 
+README に従ってコンパイルしてください。
+</p>
+</div>
+	    
+<h2>注意事項</h2>
+<div>
+<ul>
+ <li> Xlib, GTK+, Ruby/GTK, 等のプログラムは初めてなので、変なことをし
+      ているかもしれません。ご自身の責任において使用してください。
+ <li> Ruby は Version 1.6 以上が必要です。
+</ul>
+</div>
+
+<h2>作成環境</h2>
+<div>
+<ul>
+ <li> Vine Linux 2.6
+ <li> Ruby 1.6.7
+ <li> Ruby GetText Package 0.4.0
+ <li> Rury/GTK 0.30
+ <li> GTK+ 1.2.10
+ <li> XFree86 4.2.1
+ <li> Ngraph 6.03.16
+</ul>
+</div>
+
+<h2>更新履歴</h2>
+<div>
+<ul>
+ <li> 2001/03/09 Version 0.00<BR>
+      とりあえず動くものを作る。
+ <li> 2001/03/13 Version 0.01<BR>
+      NGP ファイルも表示できるようにした。<br>
+      用紙サイズに合わせて、window サイズを変えるようにした。
+       <li> 2001/03/21 Version 0.02<BR>
+      メニュー、ツールバーを追加。<br>
+      フルスクリーンモードを無くした。<br>
+      印刷、Ngraph 起動、EPS 保存など機能追加。
+ <li> 2001/08/26 Version 0.03<BR>
+      Ruby/GTK 0.25 の仕様変更に合わせて Gdk::GC#set_dashes の引数を Array
+      に変更。<br>
+ <li> 2001/09/05 Version 0.04<BR>
+      「Redraw」を追加。
+ <li> 2001/09/25 Version 0.07<BR>
+      -I オプションの追加(ngp2 Version 1.06 以降が必要)。<br>
+      「Option」メニューの追加。<br>
+      一部の文字が正常に表示されなかったバグの修正。<br>
+ <li> Version 0.08<BR>
+      未公開
+       <li> 2002/01/23 Version 0.09<BR>
+      「Option」メニューに「Auto Scale」を追加(<a
+      href="ngp2-1.0.7.tar.gz">ngp2</a> Version 1.07 以降が必要)。<br>
+      「Help」メニューを追加(中身はありません...)。<br>
+      <a href="http://www.ruby-lang.org/en/raa-list.rhtml?name=Ruby+GetText+Package">
+      Ruby GetText Package</a>を利用して日本語メニューを表示可能にした。<br>
+ <li> 2002/02/18 Version 0.10<BR>
+      「View」メニューに「Menu」「Scrollbar」を追加、「Auto Window
+      Size」を「View」メニューに移動。
+       <li> 2002/03/06 Version 0.11<BR>
+      「Option」メニューに「Change current directory」を追加(<a
+      href="ngp2-1.0.8.tar.gz">ngp2</a> Version 1.08 以降が必要)。<br>
+      矩形、楕円が確実に描画されるようにした。
+ <li> 2002/11/12 Version 0.11<br>
+      Ngraph 6.03.16 に合わせて、Ngraph.ini の読み込み部分を更新。
+</ul>
+</div>
+<a href="./">戻る</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>³ÚÉè¸¡º÷</title>
+<meta http-equiv="content-type" content="text/html; charset=iso-2022-jp">
+<meta http-equiv="content-script-type" content="text/javascript">
+<style>
+span {color: red}
+</style>
+<script language="JavaScript">
+
+/**************************************************************
+ ¥Ç¡¼¥¿¸¡º÷ÍÑ JavaScript version 0.2  Copyright (C) H.Ito 2002
+
+ Æ°ºî³ÎÇ§ : galeon 1.1.3
+            Mozilla 0.9.8
+
+CD() ¤È¥Ç¡¼¥¿ÄêµÁ¤ò½ñ¤­´¹¤¨¤ì¤Ð¡¢¤½¤³¤½¤³ÈÆÍÑÅª¤Ë»ÈÍÑ²ÄÇ½¤$È
+»×¤¤¤Þ¤¹¡£¥é¥¤¥»¥ó¥¹¤Ï GPL ¤Ë½à¤º¤ë¤â¤Î¤È¤·¤Þ¤¹¡£
+***************************************************************/
+
+/***************************************************************
+  ¸¡º÷¹àÌÜ¤Ë±þ¤¸¤ÆÊÑ¹¹
+****************************************************************/
+function CD(title, composer, hensei, publisher, owner){
+  this.items = new Object();
+  this.items['title']     = title;
+  this.items['composer']  = composer;
+  this.items['hensei']    = hensei;
+  this.items['publisher'] = publisher;
+  this.items['owner']     = owner;
+}
+
+CD.prototype.item_name = new Object();
+CD.prototype.item_name['title']     = "¥¿¥¤¥È¥ë";
+CD.prototype.item_name['composer']  = "ºî¶Ê¼Ô";
+CD.prototype.item_name['hensei']    = "ÊÔ.";
+CD.prototype.item_name['publisher'] = "½ÐÈÇ¼Ò";
+CD.prototype.item_name['owner']     = "´ÉÍý";
+CD.prototype.item_name['all']       = "tÉô";
+
+/***************************************************************/
+
+CD.prototype.addMatch = function (node, str, reg, replace){
+  var index = 0;
+
+  if(replace){
+    while((r = reg.exec(str)) != null){
+      if(index < r.index)
+	node.appendChild(document.createTextNode(r.input.substring(index, r.index)));
+      var span = document.createElement('span');
+      span.appendChild(document.createTextNode(r[0]));
+      node.appendChild(span);
+      index = reg.lastIndex;
+    }
+    node.appendChild(document.createTextNode(str.substring(index)));
+  }else{
+    node.appendChild(document.createTextNode(str));
+  }
+}
+
+CD.prototype.addCol = function (node, str, regexp, replace){
+  var reg = new RegExp("\n", "g");
+  var index = 0;
+
+  while((r = reg.exec(str)) != null){
+    if(index < r.index)
+      this.addMatch(node, r.input.substring(index, r.index), regexp, replace);
+    node.appendChild(document.createElement('br'));
+    index = reg.lastIndex;
+  }
+  this.addMatch(node, str.substring(index), regexp, replace);
+}
+
+CD.prototype.cdSort = function (cd, key){
+  cd.sort(function(x, y){
+    var a, b;
+    a = x.items[key].toUpperCase();
+    b = y.items[key].toUpperCase();
+    if(a > b){
+      return 1;
+    }else if(a < b){
+      return -1;
+    }else{
+      return 0;
+    }
+  });
+}
+
+CD.prototype.initTable = function (table){
+  var len = table.rows.length - 1;
+  for(i = 0; i < len; i++){
+    window.status= "Initialize... " + i + "\/" + len;
+    table.deleteRow(1);
+  }
+}
+
+CD.prototype.writeTable = function (doc, item, regexp, cd){
+  var items = this.items;
+  var row = 0;
+  var col = 0;
+  var table = results;
+  var found = false;
+  var total = cd.length;
+
+  this.initTable(table);
+  for(i in cd){
+    window.status= "Search... " + i + "\/" + total;
+    found = false;
+    if(item == 'all'){
+      for(j in items){
+	if(cd[i].items[j].match(regexp)){
+	  found = true;
+	  break;
+	}
+      }
+    }else if(cd[i].items[item].match(regexp)){
+      found = true;
+    }
+    if(found){
+      row++;
+      table.insertRow(row);
+      col = 0;
+      for(j in items){
+	table.rows[row].insertCell(col);
+	if(item == 'all' || item == j){
+	  this.addCol(table.rows[row].cells[col], cd[i].items[j], regexp, true);
+	}else{
+	  this.addCol(table.rows[row].cells[col], cd[i].items[j], regexp, false);
+	}
+	col++;
+      }
+    }
+  }
+}
+
+CD.prototype.writeTableAll = function (doc, cd){
+  var items = this.items;
+  var row = 0;
+  var col = 0;
+  var table = results;
+  var total = cd.length;
+
+  this.initTable(table);
+  for(i in cd){
+    window.status= "Writing... " + i + "\/" + total;
+    row++;
+    table.insertRow(row);
+    col = 0;
+    for(j in items){
+      table.rows[row].insertCell(col);
+      this.addCol(table.rows[row].cells[col], cd[i].items[j], null, false);
+      col++;
+    }
+  }
+}
+
+CD.prototype.replaceCell = function (row, col, str){
+  info.rows[row].deleteCell(col)
+  info.rows[row].insertCell(col)
+  info.rows[row].cells[col].appendChild(document.createTextNode(str));
+}
+
+CD.prototype.dispInfo = function (word, item, key, num){
+  this.replaceCell(1, 0, word);
+  this.replaceCell(1, 1, item);
+  this.replaceCell(1, 2, key);
+  this.replaceCell(1, 3, num);
+}
+
+/******************************************************************
+  ¸¡º÷¥Õ¥©¡¼¥àºîÀ®´Ø¿ô
+*******************************************************************/
+CD.prototype.writeSearchForm = function (){
+  var items = this.items;
+  var iname = this.item_name;
+
+  document.writeln('<br id="br">')
+
+  document.writeln('<form  onsubmit="writeResultsFromForm(); return false"><table>');
+  document.writeln('<tr><td>¸¡º÷¹àÌÜ:<\/td><td><select name="item">');
+  for(i in items){
+    document.writeln('<option value="' + i +'"> ' + iname[i] +'<\/option>');
+  }
+  document.writeln('<option name="item" value="all" selected>' + iname['all'] + '<\/option>')
+  document.writeln('<\/select> ');
+  document.writeln('(¸¡º÷·ë²Ì¤ò<select name="sort">');
+  for(i in items){
+    document.writeln('<option value="' + i +'"> ' + iname[i] +'<\/option>');
+  }
+  document.writeln('<\/select>¤Ç0Îó¡£)<\/td><\/tr>');
+  document.writeln('<tr><td>¸¡º÷¸ì¶ç:<\/td><td><input type="text"  name="word" size="20" maxlength="30">');
+  document.writeln('<input type="button" value="search" onclick="writeResultsFromForm()"><\/td><\/tr>');
+  document.writeln('<tr><td><\/td><td>');
+  document.writeln('<input type="button" value="t¤Æ¤Î¥Ç¡¼¥¿¤òÉ½¼¨" onclick="writeAllFromForm()">');
+  document.writeln('<\/td><\/tr><\/table><\/form>');
+
+  document.writeln('<table name="results" id="t2" border="1" cellspacing="0">');
+  document.writeln('<tr><th>¸¡º÷¸ì<\/th><th>¸¡º÷¹àÌÜ<\/th><th>0Îó¹àÌÜ<\/th><th>·ï¿ô<\/th><\/tr>');
+  document.writeln('<tr><td>----<\/td><td>----<\/td><td>----<\/td><td>----<\/td><\/tr>');
+  document.writeln('<\/table><br>');
+
+  document.writeln('<table name="results" id="t1" border="1" cellspacing="0">');
+  var s = new String('<tr>');
+  for(i in items){
+    s += '<th>' + iname[i] + '<\/th>';
+  }
+  document.writeln(s + '<\/tr>');
+  document.writeln('<\/table>');
+
+  results=document.getElementById("t1");
+  info=document.getElementById("t2");
+}
+
+/******************************************************************
+  ¸¡º÷·ë²ÌÉ½¼¨´Ø¿ô
+*******************************************************************/
+CD.prototype.writeResults = function (doc, cd, item, key, word){
+  var r = new RegExp(word, "igm");
+  var items = this.items;
+  var iname = this.item_name;
+  var result;
+  var date = new Date();
+
+  if(word.length < 1) return;
+
+  this.cdSort(cd, key);
+  this.writeTable(doc, item, r, cd);
+
+  this.dispInfo(word, iname[item], iname[key], results.rows.length - 1);
+  date = (new Date() - date)/1000;
+  window.status= "Search: Done (" + date + " secs).";
+}
+
+/******************************************************************
+  t¥Ç¡¼¥¿É½¼¨´Ø¿ô
+*******************************************************************/
+CD.prototype.writeAll = function (doc, cd, key){
+  var items = this.items;
+  var iname = this.item_name;
+  var date = new Date();
+
+  this.cdSort(cd, key);
+  this.writeTableAll(doc, cd);
+  this.dispInfo("----", "----", iname[key], cd.length);
+  date = (new Date() - date)/1000;
+  window.status= "Document: Done (" + date + " secs).";
+}
+
+/******************************************************************/
+  
+function writeResultsFromForm(){
+  var f = document.forms[0];
+  var item = f.item.options[f.item.selectedIndex].value;
+  var key = f.sort.options[f.sort.selectedIndex].value;
+  cdObj.writeResults(document, cdArray, item, key, f.word.value);
+}
+
+function writeAllFromForm(){
+  var key = document.forms[0].sort.options[document.forms[0].sort.selectedIndex].value;
+  cdObj.writeAll(document, cdArray, key);
+}
+
+cdObj = new CD("", "", "", "");
+cdArray = new Array();
+
+/******************************************************************
+  °Ê²¼¥Ç¡¼¥¿ÄêµÁÉô
+*******************************************************************/
+i=0
+
+cdArray[i++] = new CD(
+'Reflections and Rattledance',
+'Jhon Cheetham',
+'07(T6B)',
+'International Trombone Association Manuscript Press',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Concertino for Bass Trombone and Trombone Chor',
+'Eric Ewazen',
+'08+1(T6B2+B)',
+'International Trombone Association Manuscript Press',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Mini Overture',
+'James Kazik',
+'10(AT7B2)',
+'Kagarice Brass Editions',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Sanctuary for solo trombone',
+'James Kazik',
+'08+1(T6B2+T)',
+'Kagarice Brass Editions',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'The Chief',
+'John Stevens',
+'06+1(T5B+B)',
+'WILLIAMS MUSIC PUBLISHING COMPANY',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Transformation',
+'Irvin L. Wagner',
+'10(T8B2)',
+'Accura Music',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Three Miniatures for Trombone Choir',
+'Jack End',
+'16(T14B2)',
+'Accura Music',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Procession of the Nobles',
+'Nicolai Rimsky-Korsakov',
+'10(A3T5B2)',
+'Kagarice Brass Editions',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Prelude in C# Minor Op.3, No.2',
+'Serge Rachmaninoff',
+'12(T9B3)',
+'WEHR\'S MUSIC HOUSE',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Celebration 2001',
+'Walter Hartley',
+'12(T8B4)',
+'Ensemble Publications',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Scherzo Funebre',
+'Derek Bourgeois',
+'08(AT4B2)',
+'Warwick Music',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Eight Aphorisms',
+'Wilfred Josephs',
+'08(A2T4B2)',
+'Warwick Music',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Provence',
+'Jeremy Dibb',
+'08(T6B2)',
+'Warwick Music',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'A Breach of the Peace',
+'Simon Wills',
+'08(T6B2)',
+'Warwick Music',
+'°ËÅì'
+);
+cdArray[i++] = new CD(
+'Weiner Fanfare',
+'R.Strauss',
+'10(T8B2)',
+'original',
+'°ËÅì'
+);
+
+
+/******************************************************************
+  ¥Ç¡¼¥¿ÄêµÁÉô½ª¤ï¤ê
+*******************************************************************/
+</script>
+</head>
+<body>
+<script language="JavaScript">
+cdObj.writeSearchForm();
+</script>
+</body>
+</html>
+
