@@ -401,7 +401,7 @@ class Suica
         @in_station = [nil, nil]
         @out_line = [d[1], nil]
         @out_station = [d[2], nil]
-      end      
+      end
       @balance = [nil, nil]
       @expense = [d[7], nil]
       @number = [nil, nil]
@@ -422,7 +422,7 @@ class Suica
 
       @in_line[1], @in_station[1] =
         @db.get_station(@terminal[0], (@region[0] >> 2) & 0x3, @in_line[0], @in_station[0])
-      @out_line[1], @out_station[1] = 
+      @out_line[1], @out_station[1] =
         @db.get_station(@terminal[0], @region[0] & 0x3, @out_line[0], @out_station[0])
 
       @balance[1] = ""
@@ -485,7 +485,7 @@ class Suica
       felica.foreach(Felica::SERVICE_SUICA_IN_OUT) {|l|
         @in_out.push(Data.new(Data::TYPE_IN_OUT, l, @db))
       }
-      
+
       @history = []
       felica.foreach(Felica::SERVICE_SUICA_HISTORY) {|l|
         @history.push(Data.new(Data::TYPE_HISTORY, l, @db))
@@ -529,7 +529,7 @@ class Suica
 
   def read_type(file, hash)
     return unless (FileTest.readable?(file))
-    IO.foreach(file) { |l|
+    File.foreach(file) { |l|
       a = l.chomp.split(',')
       hash[a[0].hex] = a[1]
     }
@@ -552,7 +552,7 @@ class Suica
   def check_db_marshal(path)
     mfile = "#{path}/#{MARSHAL_FILE}"
     return false unless (File.exist?(mfile))
-    
+
     mstat = File.stat(mfile)
     DB::DB_TYPE.each {|type|
       dfile = "#{path}/#{DB::DB_FILE}#{type}.csv"
