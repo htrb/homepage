@@ -14,7 +14,6 @@ f.print <<EOF
 <html lang="ja">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=euc-jp">
-<link rev=made href="mailto:ZXB01226@nifty.ne.jp">
 <link rel="stylesheet" title="black" href="black.css" type="text/css">
 <link rel="stylesheet" title="white" href="white.css" type="text/css">
 <style>
