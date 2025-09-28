@@ -1,8 +1,8 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!DOCTYPE html>
 <html>
 <head>
 <title>quit</title>
-<meta http-equiv="content-type" content="text/html; charset=euc-jp">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta http-equiv="content-script-type" content="text/javascript">
 <link rev=made href="mailto:zxb01226@nifty.ne.jp">
 <script src="display.js">
@@ -14,21 +14,21 @@
 WAIT = 350;
 WIDTH = 30;
 
-MESSAGE = "¤в¤¦Ни¤Н¤§¤иЎЄ";
+MESSAGE = "г‚‚гЃ†жќҐгЃ­гЃ‡г‚€пјЃ";
 
 QUITSTR = new Array();
-QUITSTR[0]  = "ЎЎЎЎЎЎЎЎЎЎЎЎЁ®Ё¬ЁЇЎЎ";
-QUITSTR[1]  = "ЎЎЎЎЎЎЎЎЎЎЎЎЁ­ўЁЁ­ЎЎ";
+QUITSTR[0]  = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”Џв”Ѓв”“гЂЂ";
+QUITSTR[1]  = "гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂв”ѓвЂ»в”ѓгЂЂ";
 QUITSTR[2]  = 0;
-QUITSTR[3]  = "ЎК§ҐЎ­ЎЎЎЛЎЎЎіЎКЎ®§ҐЎ­ЎЛҐОЎіЎКЎ®§ҐЎ­ЎЛҐОЎіЎКЎ®§ҐЎ­ЎЛҐОЎЎ";
-QUITSTR[4]  = "ЈХЁЈЎїЎЎЎЛўўЎЅЁ©Ў±Ў±Ў±Ё§ЎЅЎЅЁ©Ў±Ў±Ў±Ё§ЎЅЎЅЁ©Ў±Ў±Ў±ЎГЎЎ";
-QUITSTR[5]  = "ЎэЁ±ЎгЁ¬ЎэЎЎЎЎЎЎЎ±ЎэЎ±ЎЎЎЎЎЎЎЎЎ±ЎэЎ±ЎЎЎЎЎЎЎЎЎ±ЎэЎ±ЎЎЎБЎБЎЎ";
+QUITSTR[3]  = "пј€Р”ВґгЂЂпј‰гЂЂгѓЅпј€пЅЂР”Вґпј‰гѓЋгѓЅпј€пЅЂР”Вґпј‰гѓЋгѓЅпј€пЅЂР”Вґпј‰гѓЋгЂЂ";
+QUITSTR[4]  = "пјµв”ЊпјЏгЂЂпј‰в–ЎвЂ”в”¤вЂѕвЂѕвЂѕв”њвЂ”вЂ”в”¤вЂѕвЂѕвЂѕв”њвЂ”вЂ”в”¤вЂѕвЂѕвЂѕпЅњгЂЂ";
+QUITSTR[5]  = "в—Ћв”—пјњв”Ѓв—ЋгЂЂгЂЂгЂЂвЂѕв—ЋвЂѕгЂЂгЂЂгЂЂгЂЂвЂѕв—ЋвЂѕгЂЂгЂЂгЂЂгЂЂвЂѕв—ЋвЂѕгЂЂгЂњгЂњгЂЂ";
 
 QUITSTR2 = new Array();
-QUITSTR2[0] = "ЎЎЎЎҐЧҐуЎЎЎЎЁІЁ¬Ё°ЎЎЎЎЎЎЎЎЎЎЎЎҐРҐ«ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎ";
-QUITSTR2[1] = "ҐЧҐуЎЎЎЎЎЎЎЎЁІЁ¬Ё°ЎЎЎЎЎЎЎЎЎЎЎЎҐРҐ«ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎ";
-QUITSTR2[2] = "ЎЎЎЎҐЧҐуЎЎЎЎЁІЁ¬Ё°ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎҐґҐлҐЎЎЎ"
-QUITSTR2[3] = "ҐЧҐуЎЎЎЎЎЎЎЎЁІЁ¬Ё°ЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎЎҐґҐлҐЎЎЎ"
+QUITSTR2[0] = "гЂЂгЂЂгѓ—гѓігЂЂгЂЂв”Јв”Ѓв”›гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгѓђг‚«гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂ";
+QUITSTR2[1] = "гѓ—гѓігЂЂгЂЂгЂЂгЂЂв”Јв”Ѓв”›гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгѓђг‚«гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂ";
+QUITSTR2[2] = "гЂЂгЂЂгѓ—гѓігЂЂгЂЂв”Јв”Ѓв”›гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂг‚ґгѓ«г‚ЎгЂЂ"
+QUITSTR2[3] = "гѓ—гѓігЂЂгЂЂгЂЂгЂЂв”Јв”Ѓв”›гЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂгЂЂг‚ґгѓ«г‚ЎгЂЂ"
 
 dispQuit = function(i){
   if(i < -WIDTH){
@@ -41,7 +41,7 @@ dispQuit = function(i){
     if(y == 0){
       str = QUITSTR[0];
     }else if(y > 0 && y <  len + 1){
-      str = QUITSTR[1].replace("ўЁ", MESSAGE.charAt(y - 1));
+      str = QUITSTR[1].replace("вЂ»", MESSAGE.charAt(y - 1));
     }else if(y == 1 + len){
       str = QUITSTR2[k];
     }else{
@@ -69,7 +69,7 @@ Wait: <input type="text" value="350" name="wait">
 <input type="button" value="Run" onClick="setWait();dispQuit(WIDTH);">
 </form>
 
-¤в¤ИҐНҐї¤П<a href="http://matsu-www.is.titech.ac.jp/~fukuchi/rooms/shortshort/index.html#quit">¤і¤Б¤й</a>
+г‚‚гЃЁгѓЌг‚їгЃЇ<a href="http://matsu-www.is.titech.ac.jp/~fukuchi/rooms/shortshort/index.html#quit">гЃ“гЃЎг‚‰</a>
 </body>
 </html>
 
