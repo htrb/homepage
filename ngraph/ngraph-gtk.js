@@ -88,6 +88,14 @@ function sf_badge() {
     p.parentNode.insertBefore(sc, p);
 }
 
+function escapeHTML(string){
+    return string.replace(/&/g, '&lt;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, "&#x27;");
+}
+
 function create_index() {
     var h2, index_div, index_txt, n;
 
@@ -96,9 +104,9 @@ function create_index() {
     n = h2.length;
     for (var i = 0; i < n; i++) {
 	var str;
-	str = h2[i].innerText;
-	index_txt += '<li><a href="#' + str + '">' + str + '</a>\n';
-	h2[i].innerHTML = '<a name="' + str + '">' + str + '</a>\n';
+	str = escapeHTML(h2[i].innerText);
+	index_txt += `<li><a href="#${str}">${str}</a>\n`;
+	h2[i].innerHTML = `<a name="${str}">${str}</a>\n`;
     }
     index_div = document.getElementById("navi");
     index_div.innerHTML = index_txt + "</ul>\n" + create_dl_link();
