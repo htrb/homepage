@@ -1,9 +1,8 @@
 #! /usr/bin/ruby
-$KCODE = "e"
 
 dat = []
 
-IO.foreach(ARGV[0]) {|l|
+File.foreach(ARGV[0]) {|l|
   a = l.chomp.split('&')
   next if (a.length != 4)
   dat.push(a.collect{|c| c.strip})
@@ -21,24 +20,24 @@ f.print <<EOF
 <style>
 span {color: yellow}
 </style>
-<title>²áµî¤Î±éÁÕ¶ÊÌÜ</title>
+<title>éå»ã®æ¼”å¥æ›²ç›®</title>
 </head>
 <script language="JavaScript">
 
 /**************************************************************
- ¥Ç¡¼¥¿¸¡º÷ÍÑ JavaScript version 0.3  Copyright (C) H.Ito 2002
+ ãƒ‡ãƒ¼ã‚¿æ¤œç´¢ç”¨ JavaScript version 0.3  Copyright (C) H.Ito 2002
 
- Æ°ºî³ÎÇ§ : Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0rc3)
+ å‹•ä½œç¢ºèª : Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0rc3)
                          Gecko/20020523, build 2002052316
 
-CD() ¤È¥Ç¡¼¥¿ÄêµÁ¤ò½ñ¤­´¹¤¨¤ì¤Ğ¡¢¤½¤³¤½¤³ÈÆÍÑÅª¤Ë»ÈÍÑ²ÄÇ½¤À¤È
-»×¤¤¤Ş¤¹¡£¥é¥¤¥»¥ó¥¹¤Ï GPL ¤Ë½¾¤¦¤â¤Î¤È¤·¤Ş¤¹¡£
+CD() ã¨ãƒ‡ãƒ¼ã‚¿å®šç¾©ã‚’æ›¸ãæ›ãˆã‚Œã°ã€ãã“ãã“æ±ç”¨çš„ã«ä½¿ç”¨å¯èƒ½ã ã¨
+æ€ã„ã¾ã™ã€‚ãƒ©ã‚¤ã‚»ãƒ³ã‚¹ã¯ GPL ã«å¾“ã†ã‚‚ã®ã¨ã—ã¾ã™ã€‚
 ***************************************************************/
 
 JAPANISE = /^ja/.exec(window.navigator.language);
 
 /***************************************************************
-  ¸¡º÷¹àÌÜ¤Ë±ş¤¸¤ÆÊÑ¹¹
+  æ¤œç´¢é …ç›®ã«å¿œã˜ã¦å¤‰æ›´
 ****************************************************************/
 function CD(date, piece, orchestra, hall){
   this.items = new Object();
@@ -49,13 +48,13 @@ function CD(date, piece, orchestra, hall){
 }
 
 CD.prototype.item_name = new Object();
-CD.prototype.item_name['date']  = "±éÁÕÆü";
-CD.prototype.item_name['piece'] = "¶ÊÌÜ";
-CD.prototype.item_name['orchestra'] = "ÃÄÂÎ";
-CD.prototype.item_name['hall']  = "²ñ¾ì";
+CD.prototype.item_name['date']  = "æ¼”å¥æ—¥";
+CD.prototype.item_name['piece'] = "æ›²ç›®";
+CD.prototype.item_name['orchestra'] = "å›£ä½“";
+CD.prototype.item_name['hall']  = "ä¼šå ´";
 /***************************************************************/
 
-CD.prototype.item_name['all']    = "Á´Éô";
+CD.prototype.item_name['all']    = "å…¨éƒ¨";
 
 
 CD.prototype.addMatch = function (node, str, reg, replace){
@@ -186,32 +185,32 @@ CD.prototype.dispInfo = function (word, item, key, num){
 }
 
 /******************************************************************
-  ¸¡º÷¥Õ¥©¡¼¥àºîÀ®´Ø¿ô
+  æ¤œç´¢ãƒ•ã‚©ãƒ¼ãƒ ä½œæˆé–¢æ•°
 *******************************************************************/
 CD.prototype.writeSearchForm = function (){
   var items = this.items;
   var iname = this.item_name;
 
   document.writeln('<form  onsubmit="writeResultsFromForm(); return false"><table>');
-  document.writeln('<tr><td>¸¡º÷¹àÌÜ:<\/td><td><select name="item">');
+  document.writeln('<tr><td>æ¤œç´¢é …ç›®:<\/td><td><select name="item">');
   for(i in items){
     document.writeln('<option value="' + i +'"> ' + iname[i] +'<\/option>');
   }
   document.writeln('<option name="item" value="all" selected>' + iname['all'] + '<\/option>')
   document.writeln('<\/select> ');
-  document.writeln('(¸¡º÷·ë²Ì¤ò<select name="sort">');
+  document.writeln('(æ¤œç´¢çµæœã‚’<select name="sort">');
   for(i in items){
     document.writeln('<option value="' + i +'"> ' + iname[i] +'<\/option>');
   }
-  document.writeln('<\/select>¤ÇÀ°Îó¡£)<\/td><\/tr>');
-  document.writeln('<tr><td>¸¡º÷¸ì¶ç:<\/td><td><input type="text"  name="word" size="20" maxlength="30">');
+  document.writeln('<\/select>ã§æ•´åˆ—ã€‚)<\/td><\/tr>');
+  document.writeln('<tr><td>æ¤œç´¢èªå¥:<\/td><td><input type="text"  name="word" size="20" maxlength="30">');
   document.writeln('<input type="button" value="search" onclick="writeResultsFromForm()"><\/td><\/tr>');
   document.writeln('<tr><td><\/td><td>');
-  document.writeln('<input type="button" value="Á´¤Æ¤Î¥Ç¡¼¥¿¤òÉ½¼¨" onclick="writeAllFromForm()">');
+  document.writeln('<input type="button" value="å…¨ã¦ã®ãƒ‡ãƒ¼ã‚¿ã‚’è¡¨ç¤º" onclick="writeAllFromForm()">');
   document.writeln('<\/td><\/tr><\/table><\/form>');
 
   document.writeln('<p><table name="results" id="t2" border="1">');
-  document.writeln('<tr><th>¸¡º÷¸ì<\/th><th>¸¡º÷¹àÌÜ<\/th><th>À°Îó¹àÌÜ<\/th><th>·ï¿ô<\/th><\/tr>');
+  document.writeln('<tr><th>æ¤œç´¢èª<\/th><th>æ¤œç´¢é …ç›®<\/th><th>æ•´åˆ—é …ç›®<\/th><th>ä»¶æ•°<\/th><\/tr>');
   document.writeln('<tr><td>----<\/td><td>----<\/td><td>----<\/td><td>----<\/td><\/tr>');
   document.writeln('<\/table><\/p>');
 
@@ -228,7 +227,7 @@ CD.prototype.writeSearchForm = function (){
 }
 
 /******************************************************************
-  ¸¡º÷·ë²ÌÉ½¼¨´Ø¿ô
+  æ¤œç´¢çµæœè¡¨ç¤ºé–¢æ•°
 *******************************************************************/
 CD.prototype.writeResults = function (doc, cd, item, key, word){
   var r = new RegExp(word, "igm");
@@ -248,7 +247,7 @@ CD.prototype.writeResults = function (doc, cd, item, key, word){
 }
 
 /******************************************************************
-  Á´¥Ç¡¼¥¿É½¼¨´Ø¿ô
+  å…¨ãƒ‡ãƒ¼ã‚¿è¡¨ç¤ºé–¢æ•°
 *******************************************************************/
 CD.prototype.writeAll = function (doc, cd, key){
   var items = this.items;
@@ -263,7 +262,7 @@ CD.prototype.writeAll = function (doc, cd, key){
 }
 
 /******************************************************************/
-  
+
 function writeResultsFromForm(){
   var f = document.forms[0];
   var item = f.item.options[f.item.selectedIndex].value;
@@ -288,14 +287,14 @@ f.print <<EOF
 </script>
 </head>
 <body>
-<h1>²áµî¤Î±éÁÕ¶ÊÌÜ</h1>
+<h1>éå»ã®æ¼”å¥æ›²ç›®</h1>
 <hr>
 <script language="JavaScript">
 cdObj.writeSearchForm();
 </script>
 <noscript>
 <table class="small" border="1">
-<tr><th>Æü»ş</th><th>¶ÊÌÜ</th><th>ÃÄÂÎ</th><th>²ñ¾ì</th></tr>
+<tr><th>æ—¥æ™‚</th><th>æ›²ç›®</th><th>å›£ä½“</th><th>ä¼šå ´</th></tr>
 EOF
 
   dat.each{ |l|
@@ -307,7 +306,7 @@ f.print <<EOF
 </noscript>
 <hr>
 <p>
-Æ°ºî³ÎÇ§ : Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0rc3)Gecko/20020523, build 2002052316
+å‹•ä½œç¢ºèª : Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0rc3)Gecko/20020523, build 2002052316
 </p>
 </body>
 </html>
