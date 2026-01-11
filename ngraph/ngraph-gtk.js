@@ -1,4 +1,4 @@
-var VERSION="6.09.10";
+var VERSION="6.09.11";
 var IMAGE_FILE_URL = {};
 var OS = ["linux", "windows", "mac"];
 
