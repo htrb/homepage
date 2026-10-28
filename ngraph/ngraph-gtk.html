@@ -48,10 +48,12 @@ Debian GNU/Linux Sid, Windows 11, macOS 27 で行いました。 (2026/10/24 更
 <div>
 <h2>インストール</h2>
 <dl>
- <dt>Debian, Ubuntu</dt>
- <dd>
-      <ul>
-       <li> ngraph-gtk パッケージをインストールしてください。
+  <dt>Linux</dt>
+  <dd>
+    <ul>
+      <li>Debian系
+	<ul>
+	  <li> ngraph-gtk パッケージをインストールしてください。
 	    また必要に応じて次のパッケージも利用できます。
 	    ngraph-gtk-doc,
 	    ngraph-gtk-addins,
@@ -61,20 +63,23 @@ Debian GNU/Linux Sid, Windows 11, macOS 27 で行いました。 (2026/10/24 更
 	    ngraph-gtk-addin-tex-equation,
 	    ngraph-gtk-plugin-ruby,
 	    ruby-ngraph
-      </ul>
-</dd>
- <dt>Linux</dt>
- <dd>
-      <ul>
-       <li> <a href="https://snapcraft.io/ngraph-gtk-htrb">snap パッケージ</a>を配布しています。
-       <li> 下記コマンドでインストールできます。
+	</ul>
+      <li>Red Hat 系
+	<ul>
+	  <li> <a href="https://en.altlinux.org/">ALT Linux</a>で <a href="https://packages.altlinux.org/en/sisyphus/srpms/ngraph-gtk/">RPM パッケージ</a>が作成されています。
+	</ul>
+      <li> その他
+	<ul>
+	  <li> <a href="https://snapcraft.io/ngraph-gtk-htrb">snap パッケージ</a>を配布しています。
+	  <li> 下記コマンドでインストールできます。
 	    <pre>
-	    sudo snap install ngraph-gtk-htrb
+	      sudo snap install ngraph-gtk-htrb
 	    </pre>
-      </ul>
-</dd>
- <dt>Windows</dt>
- <dd>
+	</ul>
+    </ul>
+  </dd>
+  <dt>Windows</dt>
+  <dd>
       <ul>
        <li> <a href="https://learn.microsoft.com/ja-jp/windows/package-manager/winget/">WinGet</a> でインストールできるようになりました。
 	    <pre>
