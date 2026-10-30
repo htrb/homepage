@@ -37,8 +37,8 @@ function show_ss(os) {
 function create_dl_link() {
     const base_url = "https://github.com/htrb/ngraph-gtk/releases/download/v%VERSION%/ngraph-gtk-%VERSION%";
     //    const mac_ext = ".dmg";
-    const win32_ext = "-win64.msi";
-    const win64_ext = "-win64.msi";
+    const win32_ext = "-win64.zip";
+    const win64_ext = "-win64.zip";
     const src_ext = ".tar.gz";
 
     const url = base_url.replace(/%VERSION%/g, VERSION);
